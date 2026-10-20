@@ -4,759 +4,1232 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="no-referrer" />
+  <meta name="color-scheme" content="dark light" />
   <title>NBAI · IP 与网络分流诊断工具</title>
+  <script>
+    /* 首屏前应用主题，避免浅色模式用户看到深色闪烁 */
+    (function () {
+      var theme = null;
+      try { theme = localStorage.getItem('nbai:theme'); } catch (e) {}
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      }
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
   <style>
+
     :root {
-      --bg-main: #0b0f17;
-      --bg-card: #131b2e;
-      --bg-card-hover: #19233c;
-      --bg-subtle: #1b253d;
-      --border-color: rgba(255, 255, 255, 0.08);
-      --border-highlight: rgba(56, 189, 248, 0.35);
-      --text-main: #f1f5f9;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
+      color-scheme: dark;
+      --bg-main: #060a12;
+      --bg-card: #0d1626;
+      --bg-card-2: #111c30;
+      --bg-subtle: #16223a;
+      --bg-input: #0a1322;
+      --border: rgba(148, 163, 184, 0.14);
+      --border-strong: rgba(148, 163, 184, 0.26);
+      --border-glow: rgba(56, 189, 248, 0.38);
+      --text: #e9f0fc;
+      --text-2: #9fb0c9;
+      --text-3: #6b7c94;
       --primary: #38bdf8;
-      --primary-bg: rgba(56, 189, 248, 0.12);
-      --success: #10b981;
-      --success-bg: rgba(16, 185, 129, 0.12);
-      --warning: #f59e0b;
-      --warning-bg: rgba(245, 158, 11, 0.12);
-      --danger: #ef4444;
-      --danger-bg: rgba(239, 68, 68, 0.12);
-      --radius-lg: 14px;
-      --radius-md: 10px;
-      --radius-sm: 6px;
-      --shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.35);
+      --primary-2: #0ea5e9;
+      --primary-soft: rgba(56, 189, 248, 0.12);
+      --success: #34d399;
+      --success-soft: rgba(52, 211, 153, 0.12);
+      --warning: #fbbf24;
+      --warning-soft: rgba(251, 191, 36, 0.12);
+      --danger: #fb7185;
+      --danger-soft: rgba(251, 113, 133, 0.12);
+      --violet: #a78bfa;
+      --violet-soft: rgba(167, 139, 250, 0.14);
+      --radius-xl: 20px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --shadow-sm: 0 1px 2px rgba(2, 6, 23, 0.45);
+      --shadow-md: 0 18px 40px -26px rgba(2, 6, 23, 0.95);
+      --shadow-lg: 0 30px 60px -32px rgba(2, 6, 23, 1);
+      --nav-bg: rgba(6, 10, 18, 0.74);
+      --card-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0) 44%);
+      --backdrop: rgba(3, 7, 14, 0.68);
+      --track: rgba(148, 163, 184, 0.16);
       --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
       --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     }
 
     html[data-theme="light"] {
-      --bg-main: #f1f5f9;
+      color-scheme: light;
+      --bg-main: #eef2f9;
       --bg-card: #ffffff;
-      --bg-card-hover: #f8fafc;
-      --bg-subtle: #e2e8f0;
-      --border-color: rgba(15, 23, 42, 0.09);
-      --border-highlight: rgba(2, 132, 199, 0.35);
-      --text-main: #0f172a;
-      --text-secondary: #475569;
-      --text-muted: #64748b;
+      --bg-card-2: #f7f9fd;
+      --bg-subtle: #f1f5fb;
+      --bg-input: #ffffff;
+      --border: rgba(15, 23, 42, 0.09);
+      --border-strong: rgba(15, 23, 42, 0.18);
+      --border-glow: rgba(2, 132, 199, 0.35);
+      --text: #0b1526;
+      --text-2: #475569;
+      --text-3: #7b8aa1;
       --primary: #0284c7;
-      --primary-bg: rgba(2, 132, 199, 0.1);
+      --primary-2: #0369a1;
+      --primary-soft: rgba(2, 132, 199, 0.1);
       --success: #059669;
-      --success-bg: rgba(5, 150, 105, 0.1);
+      --success-soft: rgba(5, 150, 105, 0.1);
       --warning: #d97706;
-      --warning-bg: rgba(217, 119, 6, 0.1);
+      --warning-soft: rgba(217, 119, 6, 0.1);
       --danger: #dc2626;
-      --danger-bg: rgba(220, 38, 38, 0.1);
-      --shadow: 0 6px 20px -4px rgba(15, 23, 42, 0.07);
+      --danger-soft: rgba(220, 38, 38, 0.1);
+      --violet: #7c3aed;
+      --violet-soft: rgba(124, 58, 237, 0.1);
+      --shadow-md: 0 14px 34px -26px rgba(15, 23, 42, 0.55);
+      --shadow-lg: 0 24px 50px -30px rgba(15, 23, 42, 0.4);
+      --nav-bg: rgba(238, 242, 249, 0.78);
+      --card-sheen: linear-gradient(180deg, rgba(15, 23, 42, 0.018), rgba(15, 23, 42, 0) 40%);
+      --backdrop: rgba(15, 23, 42, 0.42);
+      --track: rgba(15, 23, 42, 0.1);
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: var(--font-sans);
       background-color: var(--bg-main);
-      color: var(--text-main);
-      line-height: 1.5;
+      background-image:
+        radial-gradient(52% 42% at 12% -8%, rgba(56, 189, 248, 0.14), transparent 70%),
+        radial-gradient(46% 38% at 88% -10%, rgba(139, 92, 246, 0.13), transparent 72%);
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      color: var(--text);
+      line-height: 1.55;
       min-height: 100vh;
       transition: background-color 0.2s ease, color 0.2s ease;
+      -webkit-text-size-adjust: 100%;
+      -webkit-font-smoothing: antialiased;
     }
+
+    html[data-theme="light"] body {
+      background-image:
+        radial-gradient(56% 42% at 8% -10%, rgba(2, 132, 199, 0.12), transparent 70%),
+        radial-gradient(48% 38% at 92% -12%, rgba(99, 102, 241, 0.12), transparent 72%);
+    }
+
+    button { font-family: inherit; }
+
+    :focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 6px;
+    }
+
+    ::selection { background: var(--primary-soft); color: var(--text); }
 
     .container {
-      max-width: 1260px;
+      max-width: 1240px;
       margin: 0 auto;
-      padding: 0 18px 48px;
+      padding: 0 22px 56px;
     }
 
-    /* 顶部导航栏 */
+    /* ============ 顶部导航 ============ */
     .navbar {
       position: sticky;
       top: 0;
       z-index: 50;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      background: color-mix(in srgb, var(--bg-main) 85%, transparent);
-      border-bottom: 1px solid var(--border-color);
-      margin-bottom: 20px;
+      backdrop-filter: blur(16px) saturate(150%);
+      -webkit-backdrop-filter: blur(16px) saturate(150%);
+      background: var(--nav-bg);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 22px;
+      padding-top: env(safe-area-inset-top);
     }
 
     .navbar-inner {
-      max-width: 1260px;
+      max-width: 1240px;
       margin: 0 auto;
-      padding: 12px 18px;
+      padding: 11px 22px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 14px;
       flex-wrap: wrap;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    .brand { display: flex; align-items: center; gap: 11px; min-width: 0; color: inherit; text-decoration: none; }
+
+    .brand:hover .brand-title { color: var(--primary); }
+
+    .brand-title { transition: color 0.16s ease; }
 
     .brand-logo {
-      width: 34px;
-      height: 34px;
-      border-radius: 9px;
-      background: linear-gradient(135deg, #38bdf8, #6366f1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 11px;
+      background: linear-gradient(140deg, #22d3ee, #4f46e5);
+      display: grid;
+      place-items: center;
       color: #fff;
       font-weight: 800;
-      font-size: 15px;
-      letter-spacing: -0.5px;
-      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+      font-size: 14px;
+      letter-spacing: -0.4px;
+      box-shadow: 0 6px 18px -6px rgba(56, 189, 248, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      flex-shrink: 0;
     }
 
-    .brand-title-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
+    .brand-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+
+    .brand-title-wrap { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
     .brand-title {
-      font-size: 17px;
+      font-size: 15.5px;
       font-weight: 700;
-      letter-spacing: -0.2px;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-3);
+      font-family: var(--font-mono);
+      letter-spacing: 0.02em;
     }
 
     .version-badge {
       font-family: var(--font-mono);
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 600;
-      padding: 2px 7px;
+      padding: 1px 7px;
       border-radius: 999px;
-      background: var(--primary-bg);
+      background: var(--primary-soft);
       color: var(--primary);
-      border: 1px solid var(--border-highlight);
+      border: 1px solid var(--border-glow);
+      line-height: 1.6;
     }
 
-    .nav-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
+    .nav-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .nav-sep {
+      width: 1px;
+      height: 22px;
+      background: var(--border);
+      margin: 0 2px;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      padding: 7px 12px;
-      font-size: 13px;
+      gap: 7px;
+      height: 34px;
+      padding: 0 13px;
+      font-size: 12.5px;
       font-weight: 500;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      border: 1px solid var(--border);
       background: var(--bg-card);
-      color: var(--text-main);
+      color: var(--text);
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
       text-decoration: none;
       user-select: none;
+      white-space: nowrap;
     }
 
+    .btn > span { flex-shrink: 0; }
+
     .btn:hover {
-      background: var(--bg-card-hover);
-      border-color: var(--border-highlight);
+      background: var(--bg-card-2);
+      border-color: var(--border-strong);
+    }
+
+    .btn:active { transform: translateY(1px); }
+    .btn:disabled { cursor: progress; opacity: 0.72; }
+
+    .btn[aria-pressed="true"] {
+      border-color: var(--border-glow);
+      color: var(--primary);
+      background: var(--primary-soft);
     }
 
     .btn-primary {
-      background: var(--primary);
+      background: linear-gradient(135deg, #0ea5e9, #2563eb);
       color: #fff;
       border-color: transparent;
       font-weight: 600;
+      box-shadow: 0 8px 20px -10px rgba(14, 165, 233, 0.9);
     }
 
     .btn-primary:hover {
-      opacity: 0.92;
-      background: var(--primary);
+      background: linear-gradient(135deg, #38bdf8, #3b82f6);
       border-color: transparent;
     }
 
-    .btn-icon {
-      width: 34px;
-      height: 34px;
-      padding: 0;
-    }
+    .btn-icon { width: 34px; padding: 0; }
 
-    .btn svg {
-      width: 15px;
-      height: 15px;
-      flex-shrink: 0;
-    }
+    .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
 
-    /* 顶部智能分流诊断横幅 */
-    .summary-banner {
+    .is-spinning svg { animation: spin 0.9s linear infinite; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ============ 顶部结论卡片 ============ */
+    .hero {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 22px;
+      align-items: center;
+      padding: 22px 24px;
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border);
       background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg);
-      padding: 16px 20px;
-      margin-bottom: 20px;
-      box-shadow: var(--shadow);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 14px;
+      background-image: var(--card-sheen);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      transition: border-color 0.25s ease;
     }
 
-    .summary-left {
-      display: flex;
-      align-items: center;
-      gap: 14px;
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(90% 160% at 0% 50%, var(--hero-glow, transparent), transparent 62%);
+      opacity: 0.75;
     }
+
+    .hero[data-state="loading"] { --hero-glow: rgba(56, 189, 248, 0.1); border-color: var(--border-glow); }
+    .hero[data-state="ok"]      { --hero-glow: rgba(52, 211, 153, 0.12); }
+    .hero[data-state="warn"]    { --hero-glow: rgba(251, 191, 36, 0.12); }
+    .hero[data-state="danger"]  { --hero-glow: rgba(251, 113, 133, 0.12); }
+
+    .hero-main { display: flex; align-items: center; gap: 16px; min-width: 0; position: relative; z-index: 1; }
+
+    .status-orb {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--primary-soft);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      transition: background-color 0.25s ease;
+    }
+
+    .hero[data-state="ok"] .status-orb { background: var(--success-soft); border-color: rgba(52, 211, 153, 0.3); }
+    .hero[data-state="warn"] .status-orb { background: var(--warning-soft); border-color: rgba(251, 191, 36, 0.3); }
+    .hero[data-state="danger"] .status-orb { background: var(--danger-soft); border-color: rgba(251, 113, 133, 0.3); }
 
     .status-dot {
       width: 12px;
       height: 12px;
       border-radius: 50%;
       background: var(--primary);
-      box-shadow: 0 0 0 4px var(--primary-bg);
-      flex-shrink: 0;
+      box-shadow: 0 0 0 4px var(--primary-soft);
+      animation: pulse 2.4s ease-in-out infinite;
     }
 
-    .status-dot.ok {
-      background: var(--success);
-      box-shadow: 0 0 0 4px var(--success-bg);
+    .status-dot.ok { background: var(--success); box-shadow: 0 0 0 4px var(--success-soft); }
+    .status-dot.warn { background: var(--warning); box-shadow: 0 0 0 4px var(--warning-soft); }
+    .status-dot.danger { background: var(--danger); box-shadow: 0 0 0 4px var(--danger-soft); }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(0.86); opacity: 0.75; }
     }
 
-    .status-dot.warn {
-      background: var(--warning);
-      box-shadow: 0 0 0 4px var(--warning-bg);
-    }
+    .hero-text { min-width: 0; }
 
-    .summary-title {
-      font-size: 15px;
-      font-weight: 700;
-    }
-
-    .summary-desc {
-      font-size: 13px;
-      color: var(--text-secondary);
-      margin-top: 2px;
-    }
-
-    .dualstack-pills {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .stack-pill {
+    .hero-eyebrow {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 5px 11px;
-      border-radius: var(--radius-md);
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 5px;
+    }
+
+    .hero-title {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .hero-desc {
+      font-size: 12.5px;
+      color: var(--text-2);
+      margin-top: 4px;
+      line-height: 1.6;
+      word-break: break-word;
+    }
+
+    .hero-side { display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+
+    .stack-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 13px;
+      border-radius: 12px;
       background: var(--bg-subtle);
-      border: 1px solid var(--border-color);
-      font-size: 12px;
-      font-family: var(--font-mono);
+      border: 1px solid var(--border);
+      min-width: 178px;
     }
 
     .stack-tag {
-      font-weight: 700;
-      padding: 1px 5px;
-      border-radius: 4px;
-      font-size: 11px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      padding: 2px 6px;
+      border-radius: 5px;
+      flex-shrink: 0;
     }
 
-    .stack-tag.v4 {
-      background: var(--primary-bg);
-      color: var(--primary);
+    .stack-tag.v4 { background: var(--primary-soft); color: var(--primary); }
+    .stack-tag.v6 { background: var(--violet-soft); color: var(--violet); }
+
+    .stack-value {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
     }
 
-    .stack-tag.v6 {
-      background: var(--success-bg);
-      color: var(--success);
-    }
-
-    /* 分区标题 */
-    .section-header {
+    /* ============ 区块标题 ============ */
+    .section-head {
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: space-between;
-      margin: 22px 0 12px;
-      gap: 10px;
+      gap: 16px;
+      margin: 34px 0 14px;
       flex-wrap: wrap;
     }
 
-    .section-title {
+    .section-eyebrow {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 15px;
+      gap: 7px;
+      font-size: 10.5px;
       font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 4px;
     }
 
-    .section-sub {
+    .section-eyebrow::before {
+      content: '';
+      width: 14px;
+      height: 2px;
+      border-radius: 2px;
+      background: currentColor;
+      opacity: 0.6;
+    }
+
+    .section-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+    }
+
+    .section-hint {
       font-size: 12px;
-      color: var(--text-secondary);
+      color: var(--text-3);
+      max-width: 560px;
+      line-height: 1.6;
     }
 
-    /* 6 路 IP 卡片网格 */
+    /* ============ IP 卡片 ============ */
     .ip-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 14px;
     }
 
-    @media (max-width: 1024px) {
-      .ip-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (max-width: 640px) {
-      .ip-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+    @media (max-width: 1024px) { .ip-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 640px)  { .ip-grid { grid-template-columns: minmax(0, 1fr); } }
 
     .ip-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
+      position: relative;
+      padding: 15px 16px 13px 19px;
       border-radius: var(--radius-lg);
-      padding: 16px;
-      box-shadow: var(--shadow);
+      background: var(--bg-card);
+      background-image: var(--card-sheen);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-md);
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      transition: transform 0.15s ease, border-color 0.15s ease;
+      gap: 11px;
+      overflow: hidden;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .ip-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 14px;
+      bottom: 14px;
+      width: 3px;
+      border-radius: 0 3px 3px 0;
+      background: linear-gradient(180deg, var(--success), rgba(52, 211, 153, 0));
+      opacity: 0.85;
+    }
+
+    .ip-card[data-region="anycast"]::before {
+      background: linear-gradient(180deg, var(--primary), rgba(56, 189, 248, 0));
+    }
+
+    .ip-card[data-region="global"]::before {
+      background: linear-gradient(180deg, var(--violet), rgba(167, 139, 250, 0));
     }
 
     .ip-card:hover {
-      border-color: var(--border-highlight);
+      transform: translateY(-2px);
+      border-color: var(--border-strong);
+      box-shadow: var(--shadow-lg);
     }
 
-    .ip-card-head {
+    .ip-top {
       display: flex;
       align-items: flex-start;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 10px;
+      gap: 10px;
     }
+
+    .ip-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      line-height: 1;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .ip-names { min-width: 0; flex: 1; }
 
     .ip-source-name {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .ip-source-desc {
-      font-size: 11.5px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .badge {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 2px 7px;
-      border-radius: 5px;
+      letter-spacing: -0.01em;
+      overflow: hidden;
+      text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    .badge-cn {
-      background: var(--success-bg);
-      color: var(--success);
+    .ip-source-desc {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-top: 1px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
-    .badge-global {
-      background: var(--primary-bg);
-      color: var(--primary);
+    .badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      line-height: 1.7;
+      border: 1px solid transparent;
     }
+
+    .badge-cn { background: var(--success-soft); color: var(--success); border-color: rgba(52, 211, 153, 0.22); }
+    .badge-anycast { background: var(--primary-soft); color: var(--primary); border-color: rgba(56, 189, 248, 0.22); }
+    .badge-global { background: var(--violet-soft); color: var(--violet); border-color: rgba(167, 139, 250, 0.22); }
+    .badge-warn { background: var(--warning-soft); color: var(--warning); border-color: rgba(251, 191, 36, 0.24); }
+    .badge-danger { background: var(--danger-soft); color: var(--danger); border-color: rgba(251, 113, 133, 0.24); }
+    .badge-muted { background: var(--bg-subtle); color: var(--text-3); border-color: var(--border); }
 
     .ip-main-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
-      margin: 8px 0 10px;
-      padding: 9px 11px;
-      background: var(--bg-subtle);
-      border-radius: var(--radius-md);
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      min-height: 46px;
     }
 
     .ip-addr {
       font-family: var(--font-mono);
-      font-size: 15.5px;
-      font-weight: 700;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
       word-break: break-all;
-      color: var(--text-main);
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      min-width: 0;
     }
 
-    .privacy-blur .ip-addr,
-    .privacy-blur .mask-target {
-      filter: blur(6px);
-      user-select: none;
+    .ip-addr.is-v6 { font-size: 11.5px; letter-spacing: -0.5px; }
+
+    .ip-addr.is-muted {
+      color: var(--text-3);
+      font-size: 12.5px;
+      font-weight: 500;
+      font-family: var(--font-sans);
     }
 
-    .copy-mini {
+    .ip-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+    .chip {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 2px 5px;
+      border-radius: 5px;
+      background: var(--bg-subtle);
+      color: var(--text-3);
+      border: 1px solid var(--border);
+    }
+
+    .icon-btn {
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      border-radius: 7px;
+      border: 1px solid transparent;
       background: transparent;
-      border: none;
-      color: var(--text-secondary);
+      color: var(--text-3);
       cursor: pointer;
-      padding: 4px;
-      border-radius: 4px;
-      display: inline-flex;
+      transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
     }
 
-    .copy-mini:hover {
-      color: var(--primary);
-      background: var(--primary-bg);
-    }
+    .icon-btn:hover { color: var(--primary); background: var(--primary-soft); border-color: var(--border-glow); }
+    .icon-btn svg { width: 13px; height: 13px; }
 
     .ip-meta {
       display: flex;
       flex-direction: column;
-      gap: 5px;
-      font-size: 12.5px;
-      color: var(--text-secondary);
+      gap: 4px;
+      font-size: 12px;
+      color: var(--text-2);
     }
 
-    .ip-meta-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .ip-meta-row { display: flex; align-items: center; gap: 7px; min-width: 0; }
+
+    .ip-meta-row .ico { font-size: 11px; opacity: 0.85; flex-shrink: 0; }
+
+    .ip-meta-row > span:last-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .ip-card-foot {
-      margin-top: 12px;
+      margin-top: auto;
       padding-top: 9px;
-      border-top: 1px dashed var(--border-color);
+      border-top: 1px dashed var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 11.5px;
-      color: var(--text-muted);
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-3);
       font-family: var(--font-mono);
     }
 
+    .ip-card-foot > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .retest-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
       background: transparent;
-      border: 1px solid var(--border-color);
-      color: var(--text-secondary);
-      border-radius: 5px;
-      padding: 2px 7px;
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      border-radius: 7px;
+      padding: 2px 8px;
       font-size: 11px;
+      font-family: var(--font-sans);
       cursor: pointer;
+      flex-shrink: 0;
+      transition: color 0.16s ease, border-color 0.16s ease, background-color 0.16s ease;
     }
 
-    .retest-btn:hover {
-      color: var(--primary);
-      border-color: var(--primary);
+    .retest-btn:hover { color: var(--primary); border-color: var(--border-glow); background: var(--primary-soft); }
+
+    .ip-card[data-loading="true"] .ip-addr { animation: breathe 1.6s ease-in-out infinite; }
+
+    @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+    .grid-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 12px;
+      font-size: 11.5px;
+      color: var(--text-3);
     }
 
-    /* HTTP 延迟测速 */
+    .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+
+    .legend-swatch { width: 3px; height: 12px; border-radius: 2px; }
+    .legend-swatch.cn { background: var(--success); }
+    .legend-swatch.global { background: var(--violet); }
+    .legend-swatch.anycast { background: var(--primary); }
+
+    /* ============ 延迟面板 ============ */
     .latency-columns {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 14px;
     }
 
-    @media (max-width: 900px) {
-      .latency-columns {
-        grid-template-columns: 1fr;
-      }
-    }
+    @media (max-width: 900px) { .latency-columns { grid-template-columns: minmax(0, 1fr); } }
 
-    .panel-card {
+    .panel {
       background: var(--bg-card);
-      border: 1px solid var(--border-color);
+      background-image: var(--card-sheen);
+      border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 16px;
-      box-shadow: var(--shadow);
+      padding: 15px 16px 14px;
+      box-shadow: var(--shadow-md);
+      min-width: 0;
     }
 
     .panel-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
       margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 11px;
+      border-bottom: 1px solid var(--border);
     }
 
     .panel-title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .panel-title .flag { font-size: 15px; line-height: 1; }
+
+    .panel-sub {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--text-3);
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+    }
+
+    .avg-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--bg-subtle);
+      color: var(--text-2);
+      border: 1px solid var(--border);
+      white-space: nowrap;
     }
 
     .site-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 9px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
     }
 
-    @media (max-width: 520px) {
-      .site-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+    @media (max-width: 520px) { .site-grid { grid-template-columns: minmax(0, 1fr); } }
 
     .site-item {
-      background: var(--bg-subtle);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 10px 12px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      flex-direction: column;
+      gap: 7px;
+      padding: 9px 11px;
+      border-radius: 11px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
       cursor: pointer;
-      transition: border-color 0.15s ease;
+      text-align: left;
+      color: inherit;
+      font: inherit;
+      transition: border-color 0.16s ease, background-color 0.16s ease, transform 0.16s ease;
+      min-width: 0;
     }
 
-    .site-item:hover {
-      border-color: var(--border-highlight);
-    }
+    .site-item:hover { border-color: var(--border-glow); background: var(--bg-card-2); }
+    .site-item:active { transform: scale(0.995); }
+
+    .site-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
 
     .site-name {
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
+    .site-bottom { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
     .site-domain {
-      font-size: 11px;
-      color: var(--text-muted);
+      font-size: 10.5px;
+      color: var(--text-3);
       font-family: var(--font-mono);
+      flex-shrink: 0;
+      max-width: 58%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .ping-badge {
       font-family: var(--font-mono);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
-      padding: 3px 8px;
+      padding: 2px 7px;
       border-radius: 6px;
+      white-space: nowrap;
+      letter-spacing: -0.01em;
+      font-variant-numeric: tabular-nums;
     }
 
-    .ping-fast {
-      background: var(--success-bg);
-      color: var(--success);
+    .ping-fast { background: var(--success-soft); color: var(--success); }
+    .ping-mid { background: var(--warning-soft); color: var(--warning); }
+    .ping-slow, .ping-fail { background: var(--danger-soft); color: var(--danger); }
+    .ping-wait { background: var(--primary-soft); color: var(--primary); }
+
+    .ping-bar {
+      flex: 1;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--track);
+      overflow: hidden;
+      min-width: 30px;
     }
 
-    .ping-mid {
-      background: var(--warning-bg);
-      color: var(--warning);
+    .ping-bar > i {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: 999px;
+      background: var(--text-3);
+      transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease;
     }
 
-    .ping-slow, .ping-fail {
-      background: var(--danger-bg);
-      color: var(--danger);
-    }
+    .ping-bar > i.fast { background: var(--success); }
+    .ping-bar > i.mid { background: var(--warning); }
+    .ping-bar > i.slow, .ping-bar > i.fail { background: var(--danger); }
+    .ping-bar > i.wait { background: var(--primary); width: 18%; opacity: 0.5; }
 
-    .ping-wait {
-      background: var(--primary-bg);
-      color: var(--primary);
-    }
-
-    /* 自定义域名测速栏 */
-    .custom-ping-bar {
+    .panel-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
       margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border);
+      font-size: 10.5px;
+      color: var(--text-3);
+    }
+
+    .legend-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 5px; vertical-align: middle; }
+
+    /* ============ 自定义测速 ============ */
+    .search-bar {
+      margin-top: 14px;
       display: flex;
       gap: 8px;
+      padding: 9px;
+      border-radius: var(--radius-lg);
+      background: var(--bg-card);
+      background-image: var(--card-sheen);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-md);
+      align-items: center;
       flex-wrap: wrap;
     }
 
+    .search-field {
+      flex: 1;
+      min-width: 220px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 0 12px;
+      height: 38px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .search-field:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+
+    .search-field svg { width: 14px; height: 14px; color: var(--text-3); flex-shrink: 0; }
+
     .input-box {
       flex: 1;
-      min-width: 200px;
-      background: var(--bg-subtle);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 8px 12px;
-      color: var(--text-main);
-      font-size: 13px;
+      min-width: 0;
+      background: transparent;
+      border: 0;
       outline: none;
+      color: var(--text);
+      font-size: 13px;
+      font-family: var(--font-mono);
+      height: 100%;
     }
 
-    .input-box:focus {
-      border-color: var(--primary);
+    .input-box::placeholder { color: var(--text-3); font-family: var(--font-sans); }
+
+    .custom-result {
+      align-self: center;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      color: var(--text-2);
+      padding: 0 6px;
+      white-space: nowrap;
     }
 
-    /* WebRTC & DNS & 环境信息 */
+    /* ============ 安全 / 环境 ============ */
     .diag-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 14px;
     }
 
-    @media (max-width: 960px) {
-      .diag-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+    @media (max-width: 960px) { .diag-grid { grid-template-columns: minmax(0, 1fr); } }
 
-    .kv-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      font-size: 12.5px;
-    }
+    .kv-list { display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
 
     .kv-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      padding: 7px 10px;
+      gap: 12px;
+      padding: 8px 10px;
       background: var(--bg-subtle);
+      border: 1px solid transparent;
       border-radius: var(--radius-sm);
     }
 
-    .kv-key {
-      color: var(--text-secondary);
-    }
+    .kv-key { color: var(--text-3); flex-shrink: 0; font-size: 11.5px; }
+
+    .kv-row.stacked { flex-direction: column; align-items: stretch; gap: 3px; }
+
+    .kv-row.stacked .kv-val { text-align: left; line-height: 1.55; }
 
     .kv-val {
       font-family: var(--font-mono);
       font-weight: 600;
+      font-size: 11.5px;
       text-align: right;
-      word-break: break-all;
+      overflow-wrap: anywhere;
+      color: var(--text);
     }
 
-    /* 弹窗样式 */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.65);
-      backdrop-filter: blur(4px);
-      z-index: 100;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-
-    .modal-backdrop.open {
-      display: flex;
-    }
-
-    .modal-box {
+    /* ============ 弹窗 ============ */
+    dialog.report-modal {
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-xl);
       background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg);
-      max-width: 680px;
-      width: 100%;
+      background-image: var(--card-sheen);
+      color: var(--text);
       padding: 20px;
-      box-shadow: var(--shadow);
+      margin: auto;
+      width: min(720px, calc(100vw - 28px));
+      max-height: calc(100dvh - 32px);
+      overflow: auto;
+      box-shadow: var(--shadow-lg);
+    }
+
+    dialog.report-modal::backdrop {
+      background: var(--backdrop);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    dialog.report-modal[open] { animation: pop 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
+
+    @keyframes pop {
+      from { opacity: 0; transform: translateY(10px) scale(0.985); }
+      to { opacity: 1; transform: none; }
     }
 
     .modal-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .tab-row {
       display: flex;
-      gap: 8px;
-      margin-bottom: 10px;
+      gap: 6px;
+      margin-bottom: 12px;
       flex-wrap: wrap;
+      align-items: center;
+      padding: 4px;
+      border-radius: 12px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
     }
+
+    .tab-row .btn {
+      height: 30px;
+      border-radius: 8px;
+      border-color: transparent;
+      background: transparent;
+      font-size: 12px;
+      color: var(--text-2);
+    }
+
+    .tab-row .btn:hover { background: var(--bg-card); color: var(--text); }
+
+    .tab-row .btn[aria-pressed="true"] {
+      border-color: var(--border);
+      background: var(--bg-card);
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .mask-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      margin-left: auto;
+      padding-right: 6px;
+      cursor: pointer;
+      color: var(--text-2);
+      user-select: none;
+    }
+
+    .mask-label input { accent-color: var(--primary); }
 
     .report-textarea {
       width: 100%;
-      height: 260px;
-      background: var(--bg-subtle);
-      border: 1px solid var(--border-color);
+      height: min(280px, 45dvh);
+      background: var(--bg-input);
+      border: 1px solid var(--border);
       border-radius: var(--radius-md);
-      color: var(--text-main);
+      color: var(--text);
       font-family: var(--font-mono);
-      font-size: 12px;
-      padding: 12px;
+      font-size: 11.5px;
+      line-height: 1.7;
+      padding: 13px;
       resize: vertical;
       outline: none;
     }
 
-    /* 页脚 */
+    .report-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+
+    .modal-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+
+    /* ============ 页脚 ============ */
     .footer {
-      margin-top: 36px;
-      padding-top: 18px;
-      border-top: 1px solid var(--border-color);
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 16px;
       font-size: 12px;
-      color: var(--text-muted);
+      color: var(--text-3);
     }
+
+    .footer-brand { display: flex; align-items: center; gap: 10px; }
+
+    .footer-brand .brand-logo { width: 30px; height: 30px; border-radius: 9px; font-size: 12px; }
+
+    .footer-title { font-size: 12.5px; color: var(--text-2); font-weight: 600; }
+
+    .footer-note { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+
+    .footer-links { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 
     .footer a {
-      color: var(--text-secondary);
+      color: var(--text-2);
       text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.16s ease;
     }
 
-    .footer a:hover {
-      color: var(--primary);
+    .footer a:hover { color: var(--primary); }
+    .footer a svg { width: 13px; height: 13px; }
+
+    /* ============ Toast ============ */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 26px;
+      transform: translate(-50%, 16px);
+      padding: 9px 16px;
+      border-radius: 999px;
+      background: var(--bg-card-2);
+      border: 1px solid var(--border-strong);
+      color: var(--text);
+      font-size: 12.5px;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      z-index: 200;
+      max-width: calc(100vw - 32px);
+    }
+
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    body:has(dialog.report-modal[open]) { overflow: hidden; }
+
+    .noscript-tip {
+      margin: 20px auto;
+      max-width: 640px;
+      padding: 14px 18px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--warning);
+      background: var(--warning-soft);
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: minmax(0, 1fr); }
+      .hero-side { width: 100%; }
+      .stack-card { flex: 1; min-width: 150px; }
+    }
+
+    @media (max-width: 640px) {
+      .container { padding: 0 15px 44px; }
+      .navbar-inner { padding: 10px 15px; }
+      .brand-title { font-size: 14px; }
+      .brand-sub { display: none; }
+      .nav-actions { gap: 6px; }
+      .nav-sep, .nav-x { display: none; }
+      .btn { height: 32px; padding: 0 10px; font-size: 12px; }
+      .btn-icon { width: 32px; padding: 0; }
+      .hero { padding: 18px 16px; gap: 16px; }
+      .hero-title { font-size: 16.5px; }
+      .hero-side { flex-direction: column; }
+      .stack-card { width: 100%; }
+      .stack-value { font-size: 11px; letter-spacing: -0.3px; }
+      .status-orb { width: 40px; height: 40px; }
+      .section-head { margin-top: 28px; }
+      .section-hint { font-size: 11.5px; }
+      .ip-main-row { padding: 9px 10px; }
+      .ip-addr { font-size: 14.5px; }
+      .ip-addr.is-v6 { font-size: 11.5px; letter-spacing: -0.5px; }
+      .chip { display: none; }
+      .input-box { font-size: 16px; }
+    }
+
+    @media (max-width: 480px) {
+      .version-badge { display: none; }
+      .brand-title { font-size: 13.5px; }
+      .stack-card { min-width: 0; width: 100%; }
+      .custom-result { width: 100%; padding: 2px 4px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+      .ip-card:hover { transform: none; }
     }
   </style>
 </head>
 <body>
 
+  <noscript>
+    <p class="noscript-tip">本工具依赖 JavaScript 完成探测，请启用 JavaScript 后重新打开页面。</p>
+  </noscript>
+
   <!-- 顶部导航栏 -->
   <header class="navbar">
     <div class="navbar-inner">
-      <div class="brand">
-        <div class="brand-logo">NB</div>
-        <div class="brand-title-wrap">
-          <span class="brand-title">NBAI · IP 与网络分流诊断</span>
-          <span class="version-badge">v2.5.0</span>
+      <a class="brand" href="https://ip.nbai.dev" target="_blank" rel="noopener noreferrer" title="打开 ip.nbai.dev">
+        <span class="brand-logo" aria-hidden="true">NB</span>
+        <div class="brand-text">
+          <div class="brand-title-wrap">
+            <h1 class="brand-title">NBAI · IP 与网络分流诊断</h1>
+            <span class="version-badge" data-ref="version">v2.7.0</span>
+          </div>
+          <span class="brand-sub">ip.nbai.dev · 浏览器本地检测</span>
         </div>
-      </div>
+      </a>
 
       <div class="nav-actions">
-        <!-- 隐私打码开关 -->
-        <button class="btn" id="btnPrivacy" onclick="togglePrivacy()" title="隐藏部分 IP 方便截图">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button type="button" class="btn" data-action="toggle-privacy" aria-pressed="false" title="隐藏部分 IP 方便截图">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
             <circle cx="12" cy="12" r="3"/>
           </svg>
-          <span id="privacyText">隐藏 IP</span>
+          <span data-ref="privacyText">隐藏 IP</span>
         </button>
 
-        <!-- 生成诊断摘要 -->
-        <button class="btn" onclick="openReportModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button type="button" class="btn" data-action="open-report">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
             <polyline points="14 2 14 8 20 8"/>
           </svg>
           <span>诊断摘要</span>
         </button>
 
-        <!-- 重新检测 -->
-        <button class="btn btn-primary" onclick="runAllChecks()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button type="button" class="btn btn-primary" data-action="run-all" data-ref="runBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <polyline points="23 4 23 10 17 10"/>
             <polyline points="1 20 1 14 7 14"/>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
           </svg>
-          <span>重新检测</span>
+          <span data-ref="runText">重新检测</span>
         </button>
 
-        <!-- 主题切换 -->
-        <button class="btn btn-icon" onclick="toggleTheme()" title="切换深色/浅色模式">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <span class="nav-sep" aria-hidden="true"></span>
+
+        <button type="button" class="btn btn-icon" data-action="toggle-theme" title="切换深色/浅色模式" aria-label="切换深色/浅色模式">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <circle cx="12" cy="12" r="5"/>
             <line x1="12" y1="1" x2="12" y2="3"/>
             <line x1="12" y1="21" x2="12" y2="23"/>
@@ -767,9 +1240,14 @@
           </svg>
         </button>
 
-        <!-- 极简 X 图标按钮 -->
-        <a class="btn btn-icon" href="https://x.com/NBAI_dev" target="_blank" rel="noopener noreferrer" title="NBAI X">
-          <svg viewBox="0 0 24 24" fill="currentColor">
+        <a class="btn btn-icon" href="https://github.com/nbai-dev/ip.nbai.dev" target="_blank" rel="noopener noreferrer" title="GitHub 开源仓库" aria-label="GitHub 开源仓库">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 .5C5.73.5.5 5.73.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2.17c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.04 1.78 2.73 1.27 3.4.97.1-.75.4-1.27.73-1.56-2.56-.29-5.26-1.28-5.26-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.19-1.49 3.15-1.18 3.15-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.71 5.4-5.29 5.69.42.36.79 1.08.79 2.18v3.23c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/>
+          </svg>
+        </a>
+
+        <a class="btn btn-icon nav-x" href="https://x.com/NBAI_dev" target="_blank" rel="noopener noreferrer" title="NBAI 官方 X" aria-label="NBAI 官方 X">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
           </svg>
         </a>
@@ -779,120 +1257,150 @@
 
   <main class="container" id="appRoot">
     <!-- 智能分流诊断横幅 -->
-    <section class="summary-banner">
-      <div class="summary-left">
-        <div class="status-dot" id="summaryDot"></div>
-        <div>
-          <div class="summary-title" id="summaryTitle">正在并发探测国内外分流链路...</div>
-          <div class="summary-desc" id="summaryDesc">国内直连通道优先响应，不会受海外节点超时阻塞</div>
+    <section class="hero" id="summaryCard" data-state="loading">
+      <div class="hero-main">
+        <div class="status-orb">
+          <span class="status-dot" id="summaryDot" aria-hidden="true"></span>
+        </div>
+        <div class="hero-text">
+          <div class="hero-eyebrow">Routing Diagnosis</div>
+          <h2 class="hero-title" id="summaryTitle" role="status" aria-live="polite">正在并发探测国内外分流链路…</h2>
+          <p class="hero-desc" id="summaryDesc">国内直连通道优先响应，不会被海外节点超时阻塞</p>
         </div>
       </div>
-      <div class="dualstack-pills">
-        <div class="stack-pill">
+      <div class="hero-side">
+        <div class="stack-card">
           <span class="stack-tag v4">IPv4</span>
-          <span id="v4Status" class="mask-target">检测中...</span>
+          <span class="stack-value" id="v4Status">检测中…</span>
         </div>
-        <div class="stack-pill">
+        <div class="stack-card">
           <span class="stack-tag v6">IPv6</span>
-          <span id="v6Status" class="mask-target">检测中...</span>
+          <span class="stack-value" id="v6Status">检测中…</span>
         </div>
       </div>
     </section>
 
     <!-- 多源 IP 出口分流矩阵 -->
-    <div class="section-header">
-      <div class="section-title">
-        <span>🌐 多源分流出口 IP 检测 (6 路容灾矩阵)</span>
+    <header class="section-head">
+      <div>
+        <div class="section-eyebrow">01 / IP 出口</div>
+        <h2 class="section-title">多源分流检测</h2>
       </div>
-      <div class="section-sub">支持点击单张卡片底部「重测」独立刷新</div>
+      <p class="section-hint">6 路独立数据源并行竞速，任一路失败自动补位；点击卡片「重测」可单独刷新</p>
+    </header>
+    <section class="ip-grid" id="ipGrid" aria-busy="true"></section>
+    <div class="grid-legend">
+      <span class="legend-item"><i class="legend-swatch cn"></i>国内直连 / 国内 BGP</span>
+      <span class="legend-item"><i class="legend-swatch anycast"></i>Cloudflare Anycast</span>
+      <span class="legend-item"><i class="legend-swatch global"></i>海外分流出口</span>
     </div>
-    <section class="ip-grid" id="ipGrid"></section>
 
     <!-- 国内外 HTTP / CDN 延迟对比 -->
-    <div class="section-header">
-      <div class="section-title">
-        <span>⚡ 国内外主流服务实时延迟测速</span>
+    <header class="section-head">
+      <div>
+        <div class="section-eyebrow">02 / 实时延迟</div>
+        <h2 class="section-title">国内外服务连通性</h2>
       </div>
-      <div class="section-sub">采用无痕 Image + Fetch 双擎竞速，绕过国内 CDN 防盗链，点击任意站点可重测</div>
-    </div>
+      <p class="section-hint">Image + Fetch 双擎竞速，绕过 CDN 防盗链；条形越长延迟越高，点击任意站点可重测</p>
+    </header>
     <section class="latency-columns">
-      <div class="panel-card">
+      <div class="panel">
         <div class="panel-head">
-          <div class="panel-title">🇨🇳 国内主流服务 (直连测速)</div>
-          <span class="badge badge-cn" id="cnAvgBadge">计算中...</span>
+          <div class="panel-title"><span class="flag">🇨🇳</span>国内主流服务<span class="panel-sub">直连</span></div>
+          <span class="avg-badge" id="cnAvgBadge">计算中…</span>
         </div>
         <div class="site-grid" id="cnSiteGrid"></div>
+        <div class="panel-legend">
+          <span><i class="legend-dot" style="background:var(--success)"></i>快 &lt; 120ms</span>
+          <span><i class="legend-dot" style="background:var(--warning)"></i>中 120–350ms</span>
+          <span><i class="legend-dot" style="background:var(--danger)"></i>慢 &gt; 350ms</span>
+        </div>
       </div>
 
-      <div class="panel-card">
+      <div class="panel">
         <div class="panel-head">
-          <div class="panel-title">🌍 国际与 AI 平台 (代理分流测速)</div>
-          <span class="badge badge-global" id="globalAvgBadge">计算中...</span>
+          <div class="panel-title"><span class="flag">🌍</span>国际与 AI 平台<span class="panel-sub">代理分流</span></div>
+          <span class="avg-badge" id="globalAvgBadge">计算中…</span>
         </div>
         <div class="site-grid" id="globalSiteGrid"></div>
+        <div class="panel-legend">
+          <span><i class="legend-dot" style="background:var(--success)"></i>快 &lt; 120ms</span>
+          <span><i class="legend-dot" style="background:var(--warning)"></i>中 120–350ms</span>
+          <span><i class="legend-dot" style="background:var(--danger)"></i>慢 &gt; 350ms</span>
+        </div>
       </div>
     </section>
 
     <!-- 自定义域名测速 -->
-    <div class="custom-ping-bar">
-      <input type="text" id="customUrlInput" class="input-box" placeholder="输入自定义网址测速，例如 https://www.qq.com 或 https://openai.com" />
-      <button class="btn" onclick="runCustomPing()">立即测速</button>
-      <span id="customPingResult" style="align-self:center;font-size:13px;font-family:var(--font-mono);"></span>
+    <div class="search-bar">
+      <div class="search-field">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="url" id="customUrlInput" class="input-box" inputmode="url" autocomplete="off"
+               aria-label="自定义网址"
+               placeholder="自定义测速：www.qq.com / openai.com / 任意网址" />
+      </div>
+      <button type="button" class="btn" data-action="custom-ping" data-ref="customBtn">立即测速</button>
+      <span class="custom-result" id="customPingResult" role="status" aria-live="polite"></span>
     </div>
 
     <!-- WebRTC、DNS 与终端环境信息 -->
-    <div class="section-header">
-      <div class="section-title">
-        <span>🛡️ 安全泄露与网络底层环境</span>
+    <header class="section-head">
+      <div>
+        <div class="section-eyebrow">03 / 安全与环境</div>
+        <h2 class="section-title">泄露检测与底层协议</h2>
       </div>
-    </div>
+      <p class="section-hint">WebRTC 只做 STUN 候选收集，本页不会发起通话或上传任何检测数据</p>
+    </header>
     <section class="diag-grid">
-      <div class="panel-card">
+      <div class="panel">
         <div class="panel-head">
-          <div class="panel-title">🔒 WebRTC 真实 IP 泄露检测</div>
+          <div class="panel-title"><span class="flag">🔒</span>WebRTC 泄露检测</div>
           <span class="badge badge-cn" id="webrtcBadge">探测中</span>
         </div>
         <div class="kv-list">
-          <div class="kv-row">
+          <div class="kv-row stacked">
             <span class="kv-key">公网反射地址 (srflx)</span>
-            <span class="kv-val mask-target" id="rtcPublicIp">正在通过腾讯/小米 STUN 探测...</span>
+            <span class="kv-val" id="rtcPublicIp">正在通过 STUN 探测…</span>
           </div>
-          <div class="kv-row">
+          <div class="kv-row stacked">
             <span class="kv-key">局域网 / 候选地址</span>
-            <span class="kv-val mask-target" id="rtcLocalIp">检测中...</span>
+            <span class="kv-val" id="rtcLocalIp">检测中…</span>
           </div>
           <div class="kv-row">
             <span class="kv-key">安全评估结论</span>
-            <span class="kv-val" id="rtcVerdict">分析中...</span>
+            <span class="kv-val" id="rtcVerdict">分析中…</span>
           </div>
         </div>
       </div>
 
-      <div class="panel-card">
+      <div class="panel">
         <div class="panel-head">
-          <div class="panel-title">📡 Anycast 边缘机房与协议</div>
+          <div class="panel-title"><span class="flag">📡</span>Anycast 边缘节点</div>
           <span class="badge badge-global" id="dnsBadge">探测中</span>
         </div>
         <div class="kv-list">
           <div class="kv-row">
-            <span class="kv-key">命中 Anycast 边缘节点</span>
-            <span class="kv-val" id="cfColoVal">检测中...</span>
+            <span class="kv-key">命中机房</span>
+            <span class="kv-val" id="cfColoVal">检测中…</span>
           </div>
           <div class="kv-row">
-            <span class="kv-key">传输层 HTTP / TLS 协议</span>
-            <span class="kv-val" id="cfHttpVal">检测中...</span>
+            <span class="kv-key">HTTP / TLS 协议</span>
+            <span class="kv-val" id="cfHttpVal">检测中…</span>
           </div>
           <div class="kv-row">
             <span class="kv-key">WARP / 隧道状态</span>
-            <span class="kv-val" id="cfWarpVal">检测中...</span>
+            <span class="kv-val" id="cfWarpVal">检测中…</span>
           </div>
         </div>
       </div>
 
-      <div class="panel-card">
+      <div class="panel">
         <div class="panel-head">
-          <div class="panel-title">💻 终端环境与连接参数</div>
-          <span class="badge badge-cn">本地环境</span>
+          <div class="panel-title"><span class="flag">💻</span>终端环境</div>
+          <span class="badge badge-muted">本地</span>
         </div>
         <div class="kv-list" id="envList"></div>
       </div>
@@ -900,37 +1408,67 @@
 
     <!-- 页脚 -->
     <footer class="footer">
-      <div>© 2026 <strong>NBAI</strong> All Rights Reserved. · Version <span style="font-family:var(--font-mono);">v2.5.0</span></div>
-      <div>
-        <a href="https://x.com/NBAI_dev" target="_blank" rel="noopener noreferrer">NBAI Official X</a>
+      <div class="footer-brand">
+        <span class="brand-logo" aria-hidden="true">NB</span>
+        <div>
+          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.7.0</span></div>
+          <div class="footer-note">© 2026 NBAI · 检测在浏览器本地完成，无需登录</div>
+        </div>
       </div>
+      <nav class="footer-links" aria-label="相关链接">
+        <a href="https://github.com/nbai-dev/ip.nbai.dev" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 .5C5.73.5.5 5.73.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2.17c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.04 1.78 2.73 1.27 3.4.97.1-.75.4-1.27.73-1.56-2.56-.29-5.26-1.28-5.26-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.19-1.49 3.15-1.18 3.15-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.71 5.4-5.29 5.69.42.36.79 1.08.79 2.18v3.23c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/>
+          </svg>
+          GitHub 开源仓库
+        </a>
+        <a href="https://ip.nbai.dev" target="_blank" rel="noopener noreferrer">ip.nbai.dev</a>
+        <a href="https://x.com/NBAI_dev" target="_blank" rel="noopener noreferrer">NBAI X</a>
+      </nav>
     </footer>
   </main>
 
   <!-- 诊断摘要弹窗 -->
-  <div class="modal-backdrop" id="reportModal">
-    <div class="modal-box">
-      <div class="modal-top">
-        <div style="font-weight:700;font-size:15px;">📋 网络分流诊断报告 (v2.5.0)</div>
-        <button class="btn" onclick="closeReportModal()">关闭</button>
-      </div>
-      <div class="tab-row">
-        <button class="btn" onclick="switchReportFormat('text')">💬 简洁文本 (适合发群)</button>
-        <button class="btn" onclick="switchReportFormat('md')">📝 Markdown 表格</button>
-        <button class="btn" onclick="switchReportFormat('ai')">🤖 AI 排障指令 + JSON</button>
-        <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin-left:auto;cursor:pointer;">
-          <input type="checkbox" id="maskCheck" checked onchange="renderReportText()" />
-          自动打码 IP 保护隐私
-        </label>
-      </div>
-      <textarea class="report-textarea" id="reportOutput" readonly></textarea>
-      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
-        <button class="btn btn-primary" onclick="copyReportText()">一键复制报告内容</button>
-      </div>
+  <dialog class="report-modal" id="reportModal" aria-labelledby="reportTitle">
+    <div class="modal-top">
+      <div class="modal-title" id="reportTitle">📋 网络分流诊断报告 <span class="version-badge">v2.7.0</span></div>
+      <button type="button" class="btn" data-action="close-report">关闭</button>
     </div>
-  </div>
+    <div class="tab-row" aria-label="报告格式">
+      <button type="button" class="btn" data-action="report-format" data-format="text" aria-pressed="true">💬 简洁文本</button>
+      <button type="button" class="btn" data-action="report-format" data-format="md" aria-pressed="false">📝 Markdown 表格</button>
+      <button type="button" class="btn" data-action="report-format" data-format="ai" aria-pressed="false">🤖 AI 排障 + JSON</button>
+      <label class="mask-label">
+        <input type="checkbox" id="maskCheck" checked />
+        自动打码 IP
+      </label>
+    </div>
+    <textarea class="report-textarea" id="reportOutput" readonly spellcheck="false"></textarea>
+    <div class="modal-actions">
+      <a class="btn" href="https://github.com/nbai-dev/ip.nbai.dev" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 .5C5.73.5.5 5.73.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2.17c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.04 1.78 2.73 1.27 3.4.97.1-.75.4-1.27.73-1.56-2.56-.29-5.26-1.28-5.26-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.19-1.49 3.15-1.18 3.15-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.71 5.4-5.29 5.69.42.36.79 1.08.79 2.18v3.23c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/>
+        </svg>
+        <span>项目源码</span>
+      </a>
+      <button type="button" class="btn btn-primary" data-action="copy-report">一键复制报告内容</button>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
+  (() => {
+    'use strict';
+
+    /* ============================================================
+     * 0. 常量与数据
+     * ==========================================================*/
+    const VERSION = 'v2.7.0';
+    const REPO_URL = 'https://github.com/nbai-dev/ip.nbai.dev';
+    const SITE_URL = 'https://ip.nbai.dev';
+    const STORE_PREFIX = 'nbai:';
+
     const COLO_MAP = {
       SHA: '中国上海', PEK: '中国北京', CAN: '中国广州', SZX: '中国深圳', CTU: '中国成都',
       HGH: '中国杭州', TSN: '中国天津', CKG: '中国重庆', XIY: '中国西安', WUH: '中国武汉',
@@ -940,727 +1478,1537 @@
       AMS: '荷兰阿姆斯特丹', LHR: '英国伦敦', CDG: '法国巴黎', SYD: '澳大利亚悉尼'
     };
 
-    const STATE = {
-      privacy: false,
-      reportFormat: 'text',
-      v4: '',
-      v6: '',
-      ipResults: {},
-      pingResults: { cn: {}, global: {} },
-      webrtc: { publicIp: '', localIp: '', verdict: '检测中' },
-      trace: { colo: '-', http: '-', warp: '-' }
-    };
-
     const IP_CHANNELS = [
-      { id: 'cn_direct', name: '国内直连 (太平洋/腾讯)', desc: '检测本地宽带直连出口与省市运营商', tag: '国内直连', tagClass: 'badge-cn' },
-      { id: 'cn_bgp', name: '国内分流 (国内 BGP 节点)', desc: '检验国内分流规则，内置 4 级 CORS/JSONP 容灾', tag: '国内 BGP', tagClass: 'badge-cn' },
-      { id: 'cf_cn', name: 'Cloudflare 中国 / 混合', desc: '京东云合作节点与全球 Anycast 连通探测', tag: 'Anycast', tagClass: 'badge-cn' },
-      { id: 'global_ipsb', name: '国际分流 (IP.SB / 全球)', desc: '检验常用海外代理规则是否正常生效', tag: '海外分流', tagClass: 'badge-global' },
-      { id: 'global_ipinfo', name: '国际分流 (IPInfo.io)', desc: '海外主流 ASN 与数据中心归属地库', tag: '海外分流', tagClass: 'badge-global' },
-      { id: 'global_geo', name: '国际分流 (IPWhois / GeoJS)', desc: '检验全局代理或兜底规则出口 IP', tag: '海外分流', tagClass: 'badge-global' }
+      { id: 'cn_direct',     region: 'cn',     icon: '🏠', name: '国内直连 (太平洋/腾讯)',        desc: '本地宽带直连出口与省市运营商',       tag: '国内直连', tagClass: 'badge-cn' },
+      { id: 'cn_bgp',        region: 'cn',     icon: '🇨🇳', name: '国内分流 (国内 BGP 节点)',      desc: '检验国内分流规则，多源自动补位',     tag: '国内 BGP', tagClass: 'badge-cn' },
+      { id: 'cf_cn',         region: 'anycast', icon: '☁️', name: 'Cloudflare 中国 / 混合',        desc: 'Anycast 边缘节点与 TLS 协议探测',    tag: 'Anycast', tagClass: 'badge-anycast' },
+      { id: 'global_ipsb',   region: 'global', icon: '🌍', name: '国际分流 (IP.SB / ipapi.is)',   desc: '检验常用海外代理规则是否正常生效',   tag: '海外分流', tagClass: 'badge-global' },
+      { id: 'global_ipinfo', region: 'global', icon: '🗂️', name: '国际分流 (IPInfo / FreeIPAPI)', desc: '海外主流 ASN 与数据中心归属地库',    tag: '海外分流', tagClass: 'badge-global' },
+      { id: 'global_geo',    region: 'global', icon: '🛰️', name: '国际分流 (GeoJS 全球节点)',      desc: '检验全局代理或兜底规则出口 IP',      tag: '海外分流', tagClass: 'badge-global' }
     ];
 
     const CN_SITES = [
-      { id: 'baidu', name: '百度搜索', domain: 'baidu.com', img: 'https://www.baidu.com/img/flexible/logo/pc/result.png', url: 'https://www.baidu.com/favicon.ico' },
-      { id: 'taobao', name: '淘宝网', domain: 'alicdn.com', img: 'https://img.alicdn.com/tfs/TB1_uT8a5ERMeJjSspiXXbZLFXa-143-59.png', url: 'https://www.taobao.com/favicon.ico' },
-      { id: 'wechat', name: '微信 / 腾讯', domain: 'qq.com', img: 'https://mat1.gtimg.com/www/icon/favicon2.ico', url: 'https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico' },
-      { id: 'bilibili', name: '哔哩哔哩', domain: 'bilibili.com', img: 'https://www.bilibili.com/favicon.ico', url: 'https://s1.hdslb.com/bfs/static/jinkela/long/images/favicon.ico' },
-      { id: 'jd', name: '京东商城', domain: 'jd.com', img: 'https://www.jd.com/favicon.ico', url: 'https://m.jd.com/favicon.ico' },
-      { id: 'netease', name: '网易云音乐', domain: '163.com', img: 'https://s1.music.126.net/style/favicon.ico', url: 'https://www.163.com/favicon.ico' },
-      { id: 'douyin', name: '字节 / 抖音', domain: 'toutiao.com', img: 'https://sf1-cdn-tos.toutiaostatic.com/obj/eden-cn/uhbfnupkbps/toutiao_favicon.ico', url: 'https://www.toutiao.com/favicon.ico' },
-      { id: 'zhihu', name: '知乎社区', domain: 'zhihu.com', img: 'https://static.zhihu.com/heifetz/favicon.ico', url: 'https://www.zhihu.com/favicon.ico' }
+      { id: 'baidu',    name: '百度搜索',     domain: 'baidu.com',    img: 'https://www.baidu.com/img/flexible/logo/pc/result.png', url: 'https://www.baidu.com/favicon.ico' },
+      { id: 'taobao',   name: '淘宝网',       domain: 'alicdn.com',   img: 'https://img.alicdn.com/tfs/TB1_uT8a5ERMeJjSspiXXbZLFXa-143-59.png', url: 'https://www.taobao.com/favicon.ico' },
+      { id: 'wechat',   name: '微信 / 腾讯',  domain: 'qq.com',       img: 'https://mat1.gtimg.com/www/icon/favicon2.ico', url: 'https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico' },
+      { id: 'bilibili', name: '哔哩哔哩',     domain: 'bilibili.com', img: 'https://www.bilibili.com/favicon.ico', url: 'https://s1.hdslb.com/bfs/static/jinkela/long/images/favicon.ico' },
+      { id: 'jd',       name: '京东商城',     domain: 'jd.com',       img: 'https://www.jd.com/favicon.ico', url: 'https://m.jd.com/favicon.ico' },
+      { id: 'netease',  name: '网易云音乐',   domain: '163.com',      img: 'https://s1.music.126.net/style/favicon.ico', url: 'https://www.163.com/favicon.ico' },
+      { id: 'douyin',   name: '字节 / 抖音',  domain: 'toutiao.com',  img: 'https://sf1-cdn-tos.toutiaostatic.com/obj/eden-cn/uhbfnupkbps/toutiao_favicon.ico', url: 'https://www.toutiao.com/favicon.ico' },
+      { id: 'zhihu',    name: '知乎社区',     domain: 'zhihu.com',    img: 'https://static.zhihu.com/heifetz/favicon.ico', url: 'https://www.zhihu.com/favicon.ico' }
     ];
 
     const GLOBAL_SITES = [
-      { id: 'google', name: 'Google', domain: 'google.com', img: 'https://www.google.com/favicon.ico', url: 'https://www.google.com/generate_204' },
-      { id: 'github', name: 'GitHub', domain: 'github.com', img: 'https://github.githubassets.com/favicons/favicon.svg', url: 'https://github.com/favicon.ico' },
-      { id: 'x', name: 'X (Twitter)', domain: 'x.com', img: 'https://abs.twimg.com/favicons/twitter.3.ico', url: 'https://x.com/favicon.ico' },
-      { id: 'youtube', name: 'YouTube', domain: 'youtube.com', img: 'https://www.youtube.com/favicon.ico', url: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/default.jpg' },
-      { id: 'chatgpt', name: 'ChatGPT / OpenAI', domain: 'chatgpt.com', img: 'https://chatgpt.com/favicon.ico', url: 'https://cdn.oaistatic.com/assets/favicon-o20kmmos.svg' },
-      { id: 'claude', name: 'Claude AI', domain: 'claude.ai', img: 'https://claude.ai/favicon.ico', url: 'https://anthropic.com/favicon.ico' },
-      { id: 'gemini', name: 'Google Gemini', domain: 'gemini.google.com', img: 'https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg', url: 'https://gemini.google.com/favicon.ico' },
-      { id: 'wikipedia', name: 'Wikipedia', domain: 'wikipedia.org', img: 'https://www.wikipedia.org/static/favicon/wikipedia.ico', url: 'https://en.wikipedia.org/favicon.ico' }
+      { id: 'google',    name: 'Google',         domain: 'google.com',     img: 'https://www.google.com/favicon.ico', url: 'https://www.google.com/generate_204' },
+      { id: 'github',    name: 'GitHub',         domain: 'github.com',     img: 'https://github.githubassets.com/favicons/favicon.svg', url: 'https://github.com/favicon.ico' },
+      { id: 'x',         name: 'X (Twitter)',    domain: 'x.com',          img: 'https://abs.twimg.com/favicons/twitter.3.ico', url: 'https://x.com/favicon.ico' },
+      { id: 'youtube',   name: 'YouTube',        domain: 'youtube.com',    img: 'https://www.youtube.com/favicon.ico', url: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/default.jpg' },
+      { id: 'chatgpt',   name: 'ChatGPT / OpenAI', domain: 'chatgpt.com',  img: 'https://chatgpt.com/favicon.ico', url: 'https://cdn.oaistatic.com/assets/favicon-o20kmmos.svg' },
+      { id: 'claude',    name: 'Claude AI',      domain: 'claude.ai',      img: 'https://claude.ai/favicon.ico', url: 'https://anthropic.com/favicon.ico' },
+      { id: 'gemini',    name: 'Google Gemini',  domain: 'gemini.google.com', img: 'https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg', url: 'https://gemini.google.com/favicon.ico' },
+      { id: 'wikipedia', name: 'Wikipedia',      domain: 'wikipedia.org',  img: 'https://www.wikipedia.org/static/favicon/wikipedia.ico', url: 'https://en.wikipedia.org/favicon.ico' }
     ];
 
-    async function fetchWithTimeout(url, options = {}, timeout = 4200) {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), timeout);
-      try {
-        const res = await fetch(url, { ...options, referrerPolicy: 'no-referrer', signal: controller.signal });
-        clearTimeout(timer);
-        return res;
-      } catch (e) {
-        clearTimeout(timer);
-        throw e;
-      }
+    const ICONS = {
+      copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'
+    };
+
+    /* ============================================================
+     * 1. 通用工具
+     * ==========================================================*/
+    const $ = (sel, root = document) => root.querySelector(sel);
+
+    const isValidIPv4 = (s) =>
+      /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/.test(s || '');
+
+    const isValidIPv6 = (s) =>
+      typeof s === 'string' && s.includes(':') && s.length >= 3 && /^[0-9a-f:.]+$/i.test(s);
+
+    const isIP = (s) => isValidIPv4(s) || isValidIPv6(s);
+
+    const escapeHtml = (str) => String(str).replace(/[&<>"']/g, (c) => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+
+    /** 打码：用于隐私开关与报告勾选 */
+    function maskIpText(text) {
+      if (!text) return text;
+      return String(text)
+        .replace(/\b(\d{1,3}\.\d{1,3})\.\d{1,3}\.\d{1,3}\b/g, '$1.*.*')
+        // 至少 4 段才视为 IPv6，避免把 18:25:33 这类时间戳误伤
+        .replace(/\b[0-9a-f]{1,4}(?::[0-9a-f]{0,4}){3,}\b/gi, (token) => {
+          const groups = token.split(':').filter(Boolean);
+          if (groups.length < 3) return token;
+          return `${groups[0]}:${groups[1]}:*:*`;
+        })
+        .replace(/\b[0-9a-f-]{6,}\.local\b/gi, '*.local');
     }
 
-    let pconlineLock = Promise.resolve();
-    function fetchPconlineJsonp(timeout = 3800) {
-      const run = () => new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        const timer = setTimeout(() => { cleanup(); reject(new Error('JSONP Timeout')); }, timeout);
-
-        function cleanup() {
-          clearTimeout(timer);
-          if (script.parentNode) script.parentNode.removeChild(script);
-        }
-
-        window.IPCAllback = function(data) {
-          cleanup();
-          if (data && data.ip) {
-            resolve({
-              ip: data.ip,
-              location: [data.pro, data.city, data.region].filter(Boolean).join(' ') || data.addr || '中国',
-              isp: (data.addr || '').split(' ').pop() || '国内宽带',
-              source: 'PConline JSONP',
-              isCN: true
-            });
-          } else {
-            reject(new Error('Invalid PConline Data'));
-          }
-        };
-
-        script.referrerPolicy = 'no-referrer';
-        script.src = 'https://whois.pconline.com.cn/ipJson.jsp?callback=IPCAllback&_=' + Date.now();
-        script.onerror = () => { cleanup(); reject(new Error('Script Error')); };
-        document.head.appendChild(script);
-      });
-      pconlineLock = pconlineLock.then(run, run);
-      return pconlineLock;
-    }
-
-    function fetchQqVideoJsonp(timeout = 3500) {
-      return new Promise((resolve, reject) => {
-        const cbName = 'qqIpCb_' + Math.floor(Math.random() * 100000);
-        const script = document.createElement('script');
-        const timer = setTimeout(() => { cleanup(); reject(new Error('QQ JSONP Timeout')); }, timeout);
-
-        function cleanup() {
-          clearTimeout(timer);
-          delete window[cbName];
-          if (script.parentNode) script.parentNode.removeChild(script);
-        }
-
-        window[cbName] = function(data) {
-          cleanup();
-          if (data && data.ip) {
-            resolve({
-              ip: data.ip,
-              location: '中国大陆节点',
-              isp: '腾讯云边缘探测',
-              source: 'Tencent Video JSONP',
-              isCN: true
-            });
-          } else {
-            reject(new Error('No IP in QQ response'));
-          }
-        };
-
-        script.referrerPolicy = 'no-referrer';
-        script.src = `https://vv.video.qq.com/checktime?otype=json&callback=${cbName}&_=${Date.now()}`;
-        script.onerror = () => { cleanup(); reject(new Error('QQ Script Error')); };
-        document.head.appendChild(script);
-      });
-    }
-
-    function parseCfTrace(text, sourceLabel) {
-      const lines = {};
-      text.split('\n').forEach(line => {
-        const idx = line.indexOf('=');
-        if (idx > 0) lines[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
-      });
-      if (!lines.ip) throw new Error('Invalid Trace');
-      const colo = lines.colo || '';
-      const city = COLO_MAP[colo] || colo || 'Anycast';
-      const isCN = lines.loc === 'CN' || ['SHA','PEK','CAN','SZX','CTU','HGH','TSN','CKG','XIY','WUH'].includes(colo);
-      STATE.trace = {
-        colo: colo ? `${colo} (${city})` : '-',
-        http: `${lines.http || '-'} / ${lines.tls || '-'}`,
-        warp: lines.warp || 'off'
-      };
-      updateTracePanel();
-      return {
-        ip: lines.ip,
-        location: `${lines.loc || ''} · ${city}机房`.trim(),
-        isp: `Cloudflare (${colo || 'Edge'})`,
-        source: sourceLabel,
-        isCN
-      };
-    }
-
-    async function probeChannel(channelId) {
-      const t0 = performance.now();
-      const wrap = async (fn) => {
-        const res = await fn();
-        res.ms = Math.max(1, Math.round(performance.now() - t0));
-        return res;
-      };
-
-      const adapters = {
-        cn_direct: [
-          () => fetchPconlineJsonp(3500),
-          async () => {
-            const r = await fetchWithTimeout('https://ip.useragentinfo.com/json', {}, 3500);
-            const d = await r.json();
-            if (!d.ip) throw new Error('Empty');
-            return {
-              ip: d.ip,
-              location: [d.country, d.province, d.city, d.area].filter(Boolean).join(' '),
-              isp: [d.isp, d.net].filter(Boolean).join(' ') || '国内网络',
-              source: 'UserAgentInfo',
-              isCN: d.country === '中国' || d.short_name === 'CN'
-            };
-          },
-          () => fetchQqVideoJsonp(3500)
-        ],
-        cn_bgp: [
-          async () => {
-            const r = await fetchWithTimeout('https://ip.useragentinfo.com/json', {}, 3500);
-            const d = await r.json();
-            if (!d.ip) throw new Error('Empty');
-            return {
-              ip: d.ip,
-              location: [d.country, d.province, d.city].filter(Boolean).join(' '),
-              isp: [d.isp, d.net].filter(Boolean).join(' ') || '国内 BGP',
-              source: 'UserAgentInfo BGP',
-              isCN: d.country === '中国' || d.short_name === 'CN'
-            };
-          },
-          async () => {
-            const r = await fetchWithTimeout('https://api.vore.top/api/IPdata', {}, 3600);
-            const d = await r.json();
-            const info = d.ipinfo || {};
-            const data = d.ipdata || {};
-            if (!info.text) throw new Error('Empty Vore');
-            return {
-              ip: info.text,
-              location: [data.info1, data.info2, data.info3].filter(Boolean).join(' '),
-              isp: data.isp || '国内运营商',
-              source: 'Vore BGP',
-              isCN: info.cnip !== false
-            };
-          },
-          () => fetchPconlineJsonp(3600),
-          () => fetchQqVideoJsonp(3600)
-        ],
-        cf_cn: [
-          async () => {
-            const r = await fetchWithTimeout('https://www.cloudflare-cn.com/cdn-cgi/trace', {}, 3600);
-            return parseCfTrace(await r.text(), 'cloudflare-cn.com');
-          },
-          async () => {
-            const r = await fetchWithTimeout('https://www.visa.cn/cdn-cgi/trace', {}, 3600);
-            return parseCfTrace(await r.text(), 'visa.cn Trace');
-          },
-          async () => {
-            const r = await fetchWithTimeout('https://1.0.0.1/cdn-cgi/trace', {}, 3600);
-            return parseCfTrace(await r.text(), '1.0.0.1 Trace');
-          }
-        ],
-        global_ipsb: [
-          async () => {
-            const r = await fetchWithTimeout('https://api.ip.sb/geoip', {}, 4000);
-            const d = await r.json();
-            return {
-              ip: d.ip,
-              location: [d.country, d.region, d.city].filter(Boolean).join(' '),
-              isp: d.organization || d.isp || `AS${d.asn || ''}`,
-              source: 'IP.SB GeoIP',
-              isCN: d.country_code === 'CN'
-            };
-          },
-          async () => {
-            const r = await fetchWithTimeout('https://ipwho.is/?lang=zh-CN', {}, 4000);
-            const d = await r.json();
-            if (!d.ip) throw new Error('No IP');
-            return {
-              ip: d.ip,
-              location: [d.country, d.region, d.city].filter(Boolean).join(' '),
-              isp: (d.connection && (d.connection.isp || d.connection.org)) || 'Global ISP',
-              source: 'ipwho.is',
-              isCN: d.country_code === 'CN'
-            };
-          }
-        ],
-        global_ipinfo: [
-          async () => {
-            const r = await fetchWithTimeout('https://ipinfo.io/json', {}, 4000);
-            const d = await r.json();
-            return {
-              ip: d.ip,
-              location: [d.country, d.region, d.city].filter(Boolean).join(' '),
-              isp: d.org || 'IPInfo ASN',
-              source: 'ipinfo.io',
-              isCN: d.country === 'CN'
-            };
-          },
-          async () => {
-            const r = await fetchWithTimeout('https://freeipapi.com/api/json', {}, 4000);
-            const d = await r.json();
-            return {
-              ip: d.ipAddress,
-              location: [d.countryName, d.regionName, d.cityName].filter(Boolean).join(' '),
-              isp: d.asnOrganization || 'Global Network',
-              source: 'FreeIPAPI',
-              isCN: d.countryCode === 'CN'
-            };
-          }
-        ],
-        global_geo: [
-          async () => {
-            const r = await fetchWithTimeout('https://get.geojs.io/v1/ip/geo.json', {}, 4000);
-            const d = await r.json();
-            return {
-              ip: d.ip,
-              location: [d.country, d.region, d.city].filter(Boolean).join(' '),
-              isp: d.organization_name || d.organization || 'GeoJS ASN',
-              source: 'GeoJS.io',
-              isCN: d.country_code === 'CN'
-            };
-          },
-          async () => {
-            const r = await fetchWithTimeout('https://api.ipify.org?format=json', {}, 4000);
-            const d = await r.json();
-            return {
-              ip: d.ip,
-              location: '国际出口节点',
-              isp: 'Ipify Global',
-              source: 'ipify.org',
-              isCN: false
-            };
-          }
-        ]
-      };
-
-      const list = adapters[channelId] || [];
-      let lastErr = null;
-      for (const fn of list) {
+    /** 本地存储（file:// 与隐私模式下可能抛错，全部降级为内存态） */
+    const store = {
+      memory: {},
+      get(key, fallback) {
         try {
-          return await wrap(fn);
-        } catch (e) {
-          lastErr = e;
+          const raw = localStorage.getItem(STORE_PREFIX + key);
+          return raw === null ? fallback : JSON.parse(raw);
+        } catch {
+          return key in this.memory ? this.memory[key] : fallback;
         }
+      },
+      set(key, value) {
+        this.memory[key] = value;
+        try { localStorage.setItem(STORE_PREFIX + key, JSON.stringify(value)); } catch { /* ignore */ }
       }
-      throw lastErr || new Error('连接超时');
+    };
+
+    /* ============================================================
+     * 2. 全局状态
+     * ==========================================================*/
+    const state = {
+      privacy: false,
+      reportFormat: 'text',
+      running: false,
+      v4: '',
+      v6: '',
+      ip: {},                                  // channelId -> { loading } | { error, reason } | result
+      ping: { cn: {}, global: {} },            // group -> siteId -> ms(-1 失败)
+      webrtc: { publicIp: [], localIp: [], verdict: '检测中…', status: 'probing', leak: false },
+      trace: { colo: '-', http: '-', warp: '-' },
+      traceReady: false,
+      summary: {
+        kind: 'loading',
+        title: '正在并发探测国内外分流链路…',
+        desc: '国内直连通道优先响应，不会被海外节点超时阻塞'
+      }
+    };
+
+    /* 令牌 & 中断控制：避免旧请求回写新 DOM */
+    const tokens = new Map();
+    const bumpToken = (key) => {
+      const next = (tokens.get(key) || 0) + 1;
+      tokens.set(key, next);
+      return next;
+    };
+    const isCurrent = (key, token) => tokens.get(key) === token;
+
+    const channelScopes = new Map();   // channelId -> AbortController
+    const siteScopes = new Map();      // "group:siteId" -> AbortController
+    let runScope = null;               // 整轮检测的 AbortController
+
+    /** 并发闸门：避免 Chrome 每域 6 连接上限导致探测互相排队 */
+    function createLimiter(max) {
+      let active = 0;
+      const queue = [];
+      const pump = () => {
+        while (active < max && queue.length) {
+          const job = queue.shift();
+          active += 1;
+          Promise.resolve()
+            .then(job.fn)
+            .then(job.resolve, job.reject)
+            .finally(() => { active -= 1; pump(); });
+        }
+      };
+      return (fn) => new Promise((resolve, reject) => {
+        queue.push({ fn, resolve, reject });
+        pump();
+      });
+    }
+
+    const siteLimit = createLimiter(6);   // 站点测速
+
+    /* ============================================================
+     * 3. 网络层
+     * ==========================================================*/
+
+    /** 创建带超时、可被父级取消的 AbortSignal */
+    function createSignal(timeout, parent) {
+      const controller = new AbortController();
+      const timer = timeout
+        ? setTimeout(() => controller.abort(new DOMException('请求超时', 'TimeoutError')), timeout)
+        : null;
+      const relay = () => controller.abort(new DOMException('已取消', 'AbortError'));
+
+      if (parent) {
+        if (parent.aborted) relay();
+        else parent.addEventListener('abort', relay, { once: true });
+      }
+
+      return {
+        signal: controller.signal,
+        dispose() {
+          if (timer) clearTimeout(timer);
+          if (parent) parent.removeEventListener('abort', relay);
+        }
+      };
+    }
+
+    /** fetch 封装：超时 + 取消 + 统一 CORS/缓存策略 */
+    async function request(url, options = {}) {
+      const { timeout = 4500, signal: parentSignal, type = 'text', init = {} } = options;
+      const handle = createSignal(timeout, parentSignal);
+      try {
+        const res = await fetch(url, {
+          cache: 'no-store',
+          credentials: 'omit',
+          referrerPolicy: 'no-referrer',
+          ...init,
+          signal: handle.signal
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (type === 'json') return await res.json();
+        if (type === 'response') return res;
+        return await res.text();
+      } finally {
+        handle.dispose();
+      }
+    }
+
+    /** JSONP：自定义回调名，支持超时/取消，避免 window 全局污染 */
+    function jsonp(urlTemplate, options = {}) {
+      const { timeout = 4000, signal } = options;
+      return new Promise((resolve, reject) => {
+        const callbackName = '__nbai_cb_' + Math.random().toString(36).slice(2, 10);
+        const script = document.createElement('script');
+        let timer = null;
+
+        const cleanup = () => {
+          if (timer) clearTimeout(timer);
+          if (signal) signal.removeEventListener('abort', onAbort);
+          try { delete window[callbackName]; } catch { window[callbackName] = undefined; }
+          script.remove();
+        };
+        const fail = (err) => { cleanup(); reject(err); };
+        const onAbort = () => fail(new DOMException('已取消', 'AbortError'));
+
+        window[callbackName] = (data) => { cleanup(); resolve(data); };
+
+        timer = setTimeout(() => fail(new Error('JSONP 超时')), timeout);
+
+        if (signal) {
+          if (signal.aborted) return fail(new DOMException('已取消', 'AbortError'));
+          signal.addEventListener('abort', onAbort, { once: true });
+        }
+
+        script.referrerPolicy = 'no-referrer';
+        script.async = true;
+        script.onerror = () => fail(new Error('JSONP 加载失败'));
+        script.src = urlTemplate.replace('{cb}', callbackName);
+        document.head.appendChild(script);
+      });
+    }
+
+    /** 统一结果结构 + 合法性校验，杜绝空 IP / 脏数据进入 UI */
+    function normalize({ ip, location, isp, source, isCN }) {
+      const addr = typeof ip === 'string' ? ip.trim() : '';
+      if (!isIP(addr)) throw new Error(`无有效 IP（${source}）`);
+      return {
+        ip: addr,
+        location: String(location || '').trim() || '未知位置',
+        isp: String(isp || '').trim() || '未知运营商',
+        source,
+        isCN: typeof isCN === 'boolean' ? isCN : null,
+        isV6: addr.includes(':')
+      };
+    }
+
+    /* ---------- 3.1 国内数据源 ---------- */
+
+    async function pconline({ signal }) {
+      const data = await jsonp(
+        'https://whois.pconline.com.cn/ipJson.jsp?callback={cb}&_=' + Date.now(),
+        { timeout: 4000, signal }
+      );
+      return normalize({
+        ip: data && data.ip,
+        location: [data && data.pro, data && data.city, data && data.region].filter(Boolean).join(' ') ||
+                  (data && data.addr) || '中国',
+        isp: String((data && data.addr) || '').split(' ').pop() || '国内宽带',
+        source: 'PConline JSONP',
+        isCN: true
+      });
+    }
+
+    /** ipip.net：UTF-8 JSON + 全站 CORS，国内归属地最完整 */
+    async function ipipNet({ signal }) {
+      const d = await request('https://myip.ipip.net/json', { type: 'json', timeout: 4000, signal });
+      if (!d || d.ret !== 'ok' || !d.data) throw new Error('ipip.net 返回异常');
+      const [country, province, city, district, isp] = d.data.location || [];
+      return normalize({
+        ip: d.data.ip,
+        location: [country, province, city, district].filter(Boolean).join(' '),
+        isp,
+        source: 'ipip.net',
+        isCN: country === '中国'
+      });
+    }
+
+    async function voreApi({ signal }) {
+      const d = await request('https://api.vore.top/api/IPdata', { type: 'json', timeout: 4000, signal });
+      const info = (d && d.ipinfo) || {};
+      const data = (d && d.ipdata) || {};
+      return normalize({
+        ip: info.text || info.ip || (d && d.ip),
+        location: [data.info1, data.info2, data.info3].filter(Boolean).join(' '),
+        isp: data.isp,
+        source: 'Vore API',
+        isCN: info.cnip !== false
+      });
+    }
+
+    /* ---------- 3.2 Cloudflare Trace ---------- */
+
+    async function cfTrace(host, { signal }) {
+      const text = await request(`https://${host}/cdn-cgi/trace`, { timeout: 4500, signal });
+      const fields = {};
+      String(text).split('\n').forEach((line) => {
+        const idx = line.indexOf('=');
+        if (idx > 0) fields[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+      });
+      if (!isIP(fields.ip)) throw new Error('Trace 数据无效');
+
+      const colo = fields.colo || '';
+      const city = COLO_MAP[colo] || '';
+      const edgeLabel = city ? `${colo} (${city})` : (colo || 'Anycast');
+      const cnColos = ['SHA', 'PEK', 'CAN', 'SZX', 'CTU', 'HGH', 'TSN', 'CKG', 'XIY', 'WUH'];
+
+      const result = normalize({
+        ip: fields.ip,
+        location: `${fields.loc || ''} · ${city || colo || 'Anycast'}机房`.trim(),
+        isp: `Cloudflare (${colo || 'Edge'})`,
+        source: host,
+        isCN: fields.loc === 'CN' || cnColos.includes(colo)
+      });
+
+      result.trace = {
+        colo: edgeLabel,
+        http: `${fields.http || '-'} / ${fields.tls || '-'}`,
+        warp: fields.warp || 'off'
+      };
+      return result;
+    }
+
+    /* ---------- 3.3 国际数据源 ---------- */
+
+    async function ipSb({ signal }) {
+      const d = await request('https://api.ip.sb/geoip', { type: 'json', timeout: 4500, signal });
+      return normalize({
+        ip: d && d.ip,
+        location: [d && d.country, d && d.region, d && d.city].filter(Boolean).join(' '),
+        isp: (d && (d.organization || d.isp)) || (d && d.asn ? `AS${d.asn}` : ''),
+        source: 'IP.SB GeoIP',
+        isCN: d && d.country_code === 'CN'
+      });
+    }
+
+    async function ipInfo({ signal }) {
+      const d = await request('https://ipinfo.io/json', { type: 'json', timeout: 4500, signal });
+      return normalize({
+        ip: d && d.ip,
+        location: [d && d.country, d && d.region, d && d.city].filter(Boolean).join(' '),
+        isp: (d && d.org) || 'IPInfo ASN',
+        source: 'ipinfo.io',
+        isCN: d && d.country === 'CN'
+      });
+    }
+
+    /** ipapi.is：免费额度充足、CORS 开放，作为海外通道主备 */
+    async function ipapiIs({ signal }) {
+      const d = await request('https://api.ipapi.is/', { type: 'json', timeout: 4500, signal });
+      return normalize({
+        ip: d && d.ip,
+        location: [d && d.country, d && d.region, d && d.city].filter(Boolean).join(' '),
+        isp: (d && (d.company || d.asn)) || 'Global ISP',
+        source: 'ipapi.is',
+        isCN: d && d.country === 'China'
+      });
+    }
+
+    async function freeIpApi({ signal }) {
+      const d = await request('https://freeipapi.com/api/json', { type: 'json', timeout: 4500, signal });
+      return normalize({
+        ip: d && d.ipAddress,
+        location: [d && d.countryName, d && d.regionName, d && d.cityName].filter(Boolean).join(' '),
+        isp: (d && d.asnOrganization) || 'Global Network',
+        source: 'FreeIPAPI',
+        isCN: d && d.countryCode === 'CN'
+      });
+    }
+
+    async function geoJs({ signal }) {
+      const d = await request('https://get.geojs.io/v1/ip/geo.json', { type: 'json', timeout: 4500, signal });
+      return normalize({
+        ip: d && d.ip,
+        location: [d && d.country, d && d.region, d && d.city].filter(Boolean).join(' '),
+        isp: (d && (d.organization_name || d.organization)) || 'GeoJS ASN',
+        source: 'GeoJS.io',
+        isCN: d && d.country_code === 'CN'
+      });
+    }
+
+    /** 只返回 IP、不提供归属地：作为最后兜底，isCN 标记为未知 */
+    async function ipify({ signal }) {
+      const d = await request('https://api.ipify.org?format=json', { type: 'json', timeout: 4000, signal });
+      return normalize({
+        ip: d && d.ip,
+        location: '国际出口节点',
+        isp: 'Ipify Global',
+        source: 'ipify.org',
+        isCN: null
+      });
+    }
+
+    /* ---------- 3.4 通道 → 数据源映射（按顺序回退） ---------- */
+
+    const CHANNEL_SOURCES = {
+      cn_direct: [
+        { label: 'PConline', run: pconline },
+        { label: 'ipip.net', run: ipipNet },
+        { label: 'Vore', run: voreApi }
+      ],
+      cn_bgp: [
+        { label: 'ipip.net', run: ipipNet },
+        { label: 'Vore', run: voreApi },
+        { label: 'PConline', run: pconline }
+      ],
+      cf_cn: [
+        { label: 'cloudflare-cn.com', run: (ctx) => cfTrace('www.cloudflare-cn.com', ctx) },
+        { label: 'visa.cn', run: (ctx) => cfTrace('www.visa.cn', ctx) },
+        { label: '1.0.0.1', run: (ctx) => cfTrace('1.0.0.1', ctx) }
+      ],
+      global_ipsb: [
+        { label: 'IP.SB', run: ipSb },
+        { label: 'ipapi.is', run: ipapiIs },
+        { label: 'ipify', run: ipify }
+      ],
+      global_ipinfo: [
+        { label: 'ipinfo.io', run: ipInfo },
+        { label: 'FreeIPAPI', run: freeIpApi },
+        { label: 'ipapi.is', run: ipapiIs }
+      ],
+      global_geo: [
+        { label: 'GeoJS', run: geoJs },
+        { label: 'ipapi.is', run: ipapiIs },
+        { label: 'IP.SB', run: ipSb }
+      ]
+    };
+
+    /**
+     * 竞速式回退（hedged request）：
+     * 先请求首选数据源，超过 hedgeDelay 仍未返回就并行补一路，谁先成功用谁，
+     * 其余请求立即取消。相比串行回退，最坏等待从 N×timeout 降到约 1×timeout。
+     */
+    function probeWithFallback(sources, parentSignal, hedgeDelay = 1100) {
+      return new Promise((resolve, reject) => {
+        const controllers = new Set();
+        const failures = [];
+        let next = 0;
+        let pending = 0;
+        let settled = false;
+        let hedgeTimer = null;
+
+        const cleanup = () => {
+          settled = true;
+          if (hedgeTimer) { clearInterval(hedgeTimer); hedgeTimer = null; }
+          controllers.forEach((c) => { try { c.abort(); } catch { /* ignore */ } });
+          controllers.clear();
+          if (parentSignal) parentSignal.removeEventListener('abort', onParentAbort);
+        };
+
+        const fail = () => {
+          const detail = failures.join(' | ');
+          cleanup();
+          reject(new Error(detail ? `全部数据源失败（${detail}）` : '无可用数据源'));
+        };
+
+        const onParentAbort = () => {
+          if (settled) return;
+          cleanup();
+          reject(new DOMException('已取消', 'AbortError'));
+        };
+
+        const startNext = () => {
+          if (settled) return;
+          if (next >= sources.length) {
+            if (pending === 0) fail();
+            return;
+          }
+
+          const source = sources[next++];
+          const controller = new AbortController();
+          controllers.add(controller);
+          pending += 1;
+          const t0 = performance.now();
+
+          source.run({ signal: controller.signal })
+            .then((res) => {
+              pending -= 1;
+              controllers.delete(controller);
+              if (settled) return;
+              cleanup();
+              res.ms = Math.max(1, Math.round(performance.now() - t0));
+              res.hedged = next;
+              resolve(res);
+            })
+            .catch((err) => {
+              pending -= 1;
+              controllers.delete(controller);
+              if (settled) return;
+              failures.push(`${source.label}: ${(err && err.message) || err}`);
+              if (next < sources.length) startNext();
+              else if (pending === 0) fail();
+            });
+        };
+
+        if (parentSignal) {
+          if (parentSignal.aborted) {
+            reject(new DOMException('已取消', 'AbortError'));
+            return;
+          }
+          parentSignal.addEventListener('abort', onParentAbort, { once: true });
+        }
+
+        startNext();
+        hedgeTimer = setInterval(() => {
+          if (settled) return;
+          if (pending === 0 && next >= sources.length) return;
+          startNext();
+        }, hedgeDelay);
+      });
+    }
+
+    /* ============================================================
+     * 4. 渲染层
+     * ==========================================================*/
+    const fmtIp = (ip) => (state.privacy ? maskIpText(ip) : ip);
+
+    function setText(el, text) {
+      if (el && el.textContent !== text) el.textContent = text;
+    }
+
+    function paintSummary() {
+      const dot = $('#summaryDot');
+      const card = $('#summaryCard');
+      const kinds = { loading: '', ok: 'ok', warn: 'warn', danger: 'danger' };
+      const mask = (text) => (state.privacy ? maskIpText(text) : text);
+      dot.className = 'status-dot ' + (kinds[state.summary.kind] || '');
+      if (card) card.dataset.state = state.summary.kind;
+      setText($('#summaryTitle'), mask(state.summary.title));
+      setText($('#summaryDesc'), mask(state.summary.desc));
+    }
+
+    function setSummary(kind, title, desc) {
+      state.summary = { kind, title, desc };
+      paintSummary();
     }
 
     function renderIpSkeletons() {
-      const grid = document.getElementById('ipGrid');
-      grid.innerHTML = IP_CHANNELS.map(ch => `
-        <div class="ip-card" id="card_${ch.id}">
-          <div>
-            <div class="ip-card-head">
-              <div>
-                <div class="ip-source-name">${ch.name}</div>
-                <div class="ip-source-desc">${ch.desc}</div>
-              </div>
-              <span class="badge ${ch.tagClass}">${ch.tag}</span>
+      const grid = $('#ipGrid');
+      grid.innerHTML = IP_CHANNELS.map((ch) => `
+        <article class="ip-card" data-channel="${ch.id}" data-region="${ch.region}" data-loading="true">
+          <div class="ip-top">
+            <span class="ip-icon" aria-hidden="true">${ch.icon}</span>
+            <div class="ip-names">
+              <h3 class="ip-source-name">${escapeHtml(ch.name)}</h3>
+              <p class="ip-source-desc">${escapeHtml(ch.desc)}</p>
             </div>
-            <div class="ip-main-row">
-              <span class="ip-addr" id="ip_${ch.id}">正在探测...</span>
-              <button class="copy-mini" onclick="copyIp('${ch.id}')" title="复制 IP">📋</button>
-            </div>
-            <div class="ip-meta">
-              <div class="ip-meta-row">📍 <span id="loc_${ch.id}">正在获取归属地...</span></div>
-              <div class="ip-meta-row">🏢 <span id="isp_${ch.id}">正在识别运营商...</span></div>
-            </div>
+            <span class="badge ${ch.tagClass}">${escapeHtml(ch.tag)}</span>
+          </div>
+          <div class="ip-main-row">
+            <span class="ip-addr" data-field="ip">正在探测…</span>
+            <span class="ip-actions">
+              <span class="chip" data-field="stack">—</span>
+              <button type="button" class="icon-btn" data-action="copy-ip" data-id="${ch.id}" title="复制 IP" aria-label="复制 ${escapeHtml(ch.name)} 的 IP">${ICONS.copy}</button>
+            </span>
+          </div>
+          <div class="ip-meta">
+            <div class="ip-meta-row"><span class="ico" aria-hidden="true">📍</span><span data-field="loc">正在获取归属地…</span></div>
+            <div class="ip-meta-row"><span class="ico" aria-hidden="true">🏢</span><span data-field="isp">正在识别运营商…</span></div>
           </div>
           <div class="ip-card-foot">
-            <span id="src_${ch.id}">探测中...</span>
-            <button class="retest-btn" onclick="runSingleIpChannel('${ch.id}')">重测</button>
+            <span data-field="src">探测中…</span>
+            <button type="button" class="retest-btn" data-action="retest-ip" data-id="${ch.id}">重测</button>
           </div>
-        </div>
+        </article>
       `).join('');
     }
 
-    async function runSingleIpChannel(channelId) {
-      document.getElementById(`ip_${channelId}`).textContent = '正在探测...';
-      document.getElementById(`src_${channelId}`).textContent = '重测中...';
-      try {
-        const res = await probeChannel(channelId);
-        STATE.ipResults[channelId] = res;
-        document.getElementById(`ip_${channelId}`).textContent = res.ip;
-        document.getElementById(`loc_${channelId}`).textContent = res.location || '未知位置';
-        document.getElementById(`isp_${channelId}`).textContent = res.isp || '未知运营商';
-        document.getElementById(`src_${channelId}`).textContent = `${res.source} · ${res.ms}ms`;
-      } catch (e) {
-        STATE.ipResults[channelId] = { error: true };
-        document.getElementById(`ip_${channelId}`).textContent = '连接超时 / 未连通';
-        document.getElementById(`loc_${channelId}`).textContent = '当前网络环境无法访问该节点';
-        document.getElementById(`isp_${channelId}`).textContent = '可能是纯直连或规则拦截';
-        document.getElementById(`src_${channelId}`).textContent = '超时';
-      }
-      evaluateRoutingSummary();
-    }
+    /** 单一数据源渲染：所有网络数据一律走 textContent，杜绝 XSS */
+    function paintIpCard(channelId) {
+      const card = document.querySelector(`.ip-card[data-channel="${channelId}"]`);
+      if (!card) return;
+      const r = state.ip[channelId];
+      const field = (name) => card.querySelector(`[data-field="${name}"]`);
+      const ipEl = field('ip');
+      const srcEl = field('src');
+      const stackEl = field('stack');
 
-    function evaluateRoutingSummary() {
-      const dot = document.getElementById('summaryDot');
-      const title = document.getElementById('summaryTitle');
-      const desc = document.getElementById('summaryDesc');
+      ipEl.classList.remove('is-muted', 'is-v6');
+      card.dataset.loading = String(!r || !!r.loading);
 
-      const cn = STATE.ipResults.cn_direct || STATE.ipResults.cn_bgp;
-      const gl = STATE.ipResults.global_ipsb || STATE.ipResults.global_ipinfo || STATE.ipResults.global_geo;
-
-      if (cn && !cn.error && gl && !gl.error) {
-        if (cn.ip !== gl.ip && cn.isCN && !gl.isCN) {
-          dot.className = 'status-dot ok';
-          title.textContent = '✅ 智能分流运行正常（国内直连 + 海外代理分流）';
-          desc.textContent = `国内出口 ${cn.ip} (${cn.location})，海外出口 ${gl.ip} (${gl.location})`;
-        } else if (cn.ip === gl.ip && cn.isCN) {
-          dot.className = 'status-dot warn';
-          title.textContent = '🌐 当前处于「纯国内直连」模式';
-          desc.textContent = `国内外探测通道均返回国内 IP (${cn.ip})，未检测到海外代理分流`;
-        } else {
-          dot.className = 'status-dot warn';
-          title.textContent = '🚀 当前处于「全局代理 / TUN」模式';
-          desc.textContent = `国内与国际通道均走代理出口 (${gl.ip})，建议检查国内直连规则`;
-        }
-      } else if (cn && !cn.error && (!gl || gl.error)) {
-        dot.className = 'status-dot warn';
-        title.textContent = '🇨🇳 国内直连正常 · 海外节点未开启代理或无法连接';
-        desc.textContent = `国内出口 ${cn.ip} (${cn.location}) 响应正常`;
-      }
-    }
-
-    async function checkDualStack() {
-      const v4El = document.getElementById('v4Status');
-      const v6El = document.getElementById('v6Status');
-      v4El.textContent = '探测中...';
-      v6El.textContent = '探测中...';
-
-      (async () => {
-        const urls = ['https://4.ipw.cn', 'https://v4.ident.me', 'https://api4.ipify.org'];
-        for (const u of urls) {
-          try {
-            const r = await fetchWithTimeout(u, {}, 3200);
-            const t = (await r.text()).trim();
-            if (/^\d+\.\d+\.\d+\.\d+$/.test(t)) {
-              STATE.v4 = t;
-              v4El.textContent = t;
-              return;
-            }
-          } catch {}
-        }
-        v4El.textContent = '不支持 / 超时';
-      })();
-
-      (async () => {
-        const urls = ['https://6.ipw.cn', 'https://v6.ident.me', 'https://api6.ipify.org'];
-        for (const u of urls) {
-          try {
-            const r = await fetchWithTimeout(u, {}, 3200);
-            const t = (await r.text()).trim();
-            if (t.includes(':')) {
-              STATE.v6 = t;
-              v6El.textContent = t;
-              return;
-            }
-          } catch {}
-        }
-        v6El.textContent = '未开启 IPv6';
-      })();
-    }
-
-    function probeSiteLatency(site, timeout = 3600) {
-      return new Promise((resolve) => {
-        const t0 = performance.now();
-        let settled = false;
-        const finish = (ok) => {
-          if (settled) return;
-          settled = true;
-          clearTimeout(timer);
-          const ms = Math.max(1, Math.round(performance.now() - t0));
-          resolve(ok ? ms : -1);
-        };
-
-        const timer = setTimeout(() => finish(false), timeout);
-
-        const img = new Image();
-        img.referrerPolicy = 'no-referrer';
-        img.onload = () => finish(true);
-        img.onerror = () => {};
-        img.src = site.img + (site.img.includes('?') ? '&' : '?') + '_t=' + Date.now() + Math.random();
-
-        fetch(site.url + (site.url.includes('?') ? '&' : '?') + '_t=' + Date.now(), {
-          mode: 'no-cors',
-          cache: 'no-store',
-          referrerPolicy: 'no-referrer'
-        }).then(() => finish(true)).catch(() => {});
-      });
-    }
-
-    function renderLatencyGrids() {
-      const renderGroup = (list, groupKey, containerId) => {
-        document.getElementById(containerId).innerHTML = list.map(s => `
-          <div class="site-item" onclick="pingSingleSite('${groupKey}', '${s.id}')">
-            <div>
-              <div class="site-name">${s.name}</div>
-              <div class="site-domain">${s.domain}</div>
-            </div>
-            <span class="ping-badge ping-wait" id="ping_${groupKey}_${s.id}">测速中</span>
-          </div>
-        `).join('');
-      };
-      renderGroup(CN_SITES, 'cn', 'cnSiteGrid');
-      renderGroup(GLOBAL_SITES, 'global', 'globalSiteGrid');
-    }
-
-    async function pingSingleSite(groupKey, siteId) {
-      const list = groupKey === 'cn' ? CN_SITES : GLOBAL_SITES;
-      const site = list.find(x => x.id === siteId);
-      if (!site) return;
-
-      const badge = document.getElementById(`ping_${groupKey}_${site.id}`);
-      badge.className = 'ping-badge ping-wait';
-      badge.textContent = '测速中';
-
-      const ms = await probeSiteLatency(site, 3600);
-      STATE.pingResults[groupKey][site.id] = ms;
-
-      if (ms > 0) {
-        badge.textContent = `${ms} ms`;
-        badge.className = 'ping-badge ' + (ms < 120 ? 'ping-fast' : ms < 350 ? 'ping-mid' : 'ping-slow');
-      } else {
-        badge.textContent = '超时';
-        badge.className = 'ping-badge ping-fail';
-      }
-      updateGroupAverage(groupKey);
-    }
-
-    function updateGroupAverage(groupKey) {
-      const vals = Object.values(STATE.pingResults[groupKey]).filter(v => v > 0);
-      const total = (groupKey === 'cn' ? CN_SITES : GLOBAL_SITES).length;
-      const badge = document.getElementById(groupKey === 'cn' ? 'cnAvgBadge' : 'globalAvgBadge');
-      if (vals.length === 0) {
-        badge.textContent = `连通 0/${total}`;
-      } else {
-        const avg = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
-        badge.textContent = `均值 ${avg} ms (${vals.length}/${total})`;
-      }
-    }
-
-    async function runCustomPing() {
-      let url = document.getElementById('customUrlInput').value.trim();
-      const out = document.getElementById('customPingResult');
-      if (!url) return;
-      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-      out.textContent = '正在测速...';
-      const ms = await probeSiteLatency({ img: url + '/favicon.ico', url }, 4000);
-      out.textContent = ms > 0 ? `✅ 响应耗时: ${ms} ms` : '❌ 连接超时或不可达';
-    }
-
-    function checkWebRTC() {
-      const pubEl = document.getElementById('rtcPublicIp');
-      const locEl = document.getElementById('rtcLocalIp');
-      const verEl = document.getElementById('rtcVerdict');
-      const badge = document.getElementById('webrtcBadge');
-
-      const RTCPeer = window.RTCPeerConnection || window.webkitRTCPeerConnection;
-      if (!RTCPeer) {
-        pubEl.textContent = '当前浏览器已禁用 WebRTC';
-        locEl.textContent = '无';
-        verEl.textContent = '✅ WebRTC 已禁用，无泄露风险';
-        badge.textContent = '已禁用';
+      if (!r) {
+        setText(ipEl, '等待检测…');
+        setText(field('loc'), '—');
+        setText(field('isp'), '—');
+        setText(stackEl, '—');
+        setText(srcEl, '未开始');
         return;
       }
 
-      const publicIps = new Set();
-      const localIps = new Set();
-
-      try {
-        const pc = new RTCPeer({
-          iceServers: [
-            { urls: 'stun:stun.qq.com:3478' },
-            { urls: 'stun:stun.miwifi.com:3478' },
-            { urls: 'stun:stun.cloudflare.com:3478' }
-          ]
-        });
-
-        pc.createDataChannel('nbai_probe');
-        pc.onicecandidate = (e) => {
-          if (!e.candidate || !e.candidate.candidate) return;
-          const cand = e.candidate.candidate;
-          const ipMatch = cand.match(/([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){3,7})/i);
-          const mDnsMatch = cand.match(/[a-f0-9-]+\.local/i);
-          if (mDnsMatch) localIps.add(mDnsMatch[0]);
-          if (ipMatch) {
-            const ip = ipMatch[1];
-            if (/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|127\.|fe80:)/i.test(ip)) {
-              localIps.add(ip);
-            } else {
-              publicIps.add(ip);
-            }
-          }
-          renderRtcStatus();
-        };
-
-        pc.createOffer().then(o => pc.setLocalDescription(o)).catch(() => {});
-        setTimeout(() => {
-          try { pc.close(); } catch {}
-          renderRtcStatus(true);
-        }, 3000);
-      } catch {
-        pubEl.textContent = '受限或已拦截';
+      if (r.loading) {
+        ipEl.classList.add('is-muted');
+        setText(ipEl, '正在探测…');
+        setText(field('loc'), '正在获取归属地…');
+        setText(field('isp'), '正在识别运营商…');
+        setText(stackEl, '—');
+        setText(srcEl, '探测中…');
+        return;
       }
 
-      function renderRtcStatus(done = false) {
-        const pubs = Array.from(publicIps);
-        const locs = Array.from(localIps);
-        pubEl.textContent = pubs.length ? pubs.join(', ') : (done ? '未发现公网 STUN 反射 IP' : '探测中...');
-        locEl.textContent = locs.length ? locs.join(', ') : (done ? '已隐藏 (mDNS 保护生效)' : '探测中...');
-        STATE.webrtc.publicIp = pubEl.textContent;
-        STATE.webrtc.localIp = locEl.textContent;
+      if (r.error) {
+        ipEl.classList.add('is-muted');
+        setText(ipEl, '连接超时 / 未连通');
+        setText(field('loc'), '当前网络环境无法访问该节点');
+        setText(field('isp'), '可能是纯直连或规则拦截');
+        setText(stackEl, '—');
+        setText(srcEl, '全部数据源失败');
+        card.title = r.reason || '';
+        return;
+      }
 
-        if (pubs.length === 0 && done) {
-          verEl.textContent = '✅ 安全（未暴露公网 UDP IP）';
-          badge.textContent = '安全';
-        } else if (pubs.length > 0) {
-          verEl.textContent = `ℹ️ 检测到 UDP 出口 (${pubs[0]})`;
-          badge.textContent = '正常';
+      card.removeAttribute('title');
+      ipEl.classList.toggle('is-v6', !!r.isV6);
+      setText(ipEl, fmtIp(r.ip));
+      setText(field('loc'), r.location || '未知位置');
+      setText(field('isp'), r.isp || '未知运营商');
+      setText(stackEl, r.isV6 ? 'IPv6' : 'IPv4');
+      const hedge = r.hedged > 1 ? ` · 并发${r.hedged}路` : '';
+      setText(srcEl, `${r.source} · ${r.ms}ms${hedge}`);
+    }
+
+    function paintAllIpCards() {
+      IP_CHANNELS.forEach((ch) => paintIpCard(ch.id));
+    }
+
+    function paintDualStack() {
+      const v4El = $('#v4Status');
+      const v6El = $('#v6Status');
+      const busy = state.running;
+      const v4Text = state.v4 ? fmtIp(state.v4) : (busy ? '探测中…' : '不支持 / 超时');
+      const v6Text = state.v6 ? fmtIp(state.v6) : (busy ? '探测中…' : '未开启 IPv6');
+      setText(v4El, v4Text);
+      setText(v6El, v6Text);
+      v4El.title = state.v4 && !state.privacy ? state.v4 : v4Text;
+      v6El.title = state.v6 && !state.privacy ? state.v6 : v6Text;
+    }
+
+    function renderSiteGrids() {
+      const build = (list, group, containerId) => {
+        $('#' + containerId).innerHTML = list.map((s) => `
+          <button type="button" class="site-item" data-action="ping-site" data-group="${group}" data-id="${s.id}"
+                  aria-label="重测 ${escapeHtml(s.name)} 延迟">
+            <span class="site-top">
+              <span class="site-name">${escapeHtml(s.name)}</span>
+              <span class="ping-badge ping-wait" id="ping_${group}_${s.id}">测速中</span>
+            </span>
+            <span class="site-bottom">
+              <span class="site-domain">${escapeHtml(s.domain)}</span>
+              <span class="ping-bar" aria-hidden="true"><i class="wait" id="bar_${group}_${s.id}"></i></span>
+            </span>
+          </button>
+        `).join('');
+      };
+      build(CN_SITES, 'cn', 'cnSiteGrid');
+      build(GLOBAL_SITES, 'global', 'globalSiteGrid');
+    }
+
+    function paintSiteBadge(group, site) {
+      const badge = document.getElementById(`ping_${group}_${site.id}`);
+      if (!badge) return;
+      const bar = document.getElementById(`bar_${group}_${site.id}`);
+      const ms = state.ping[group][site.id];
+
+      if (ms === undefined) {
+        badge.className = 'ping-badge ping-wait';
+        setText(badge, '测速中');
+        if (bar) { bar.className = 'wait'; bar.style.width = ''; }
+        return;
+      }
+
+      if (ms > 0) {
+        const level = ms < 120 ? 'fast' : ms < 350 ? 'mid' : 'slow';
+        badge.className = 'ping-badge ping-' + level;
+        setText(badge, `${ms} ms`);
+        if (bar) {
+          bar.className = level;
+          bar.style.width = Math.max(6, Math.min(100, (ms / 600) * 100)).toFixed(1) + '%';
         }
-        STATE.webrtc.verdict = verEl.textContent;
+        return;
+      }
+
+      badge.className = 'ping-badge ping-fail';
+      setText(badge, '超时');
+      if (bar) { bar.className = 'fail'; bar.style.width = '100%'; }
+    }
+
+    function paintAverage(group) {
+      const list = group === 'cn' ? CN_SITES : GLOBAL_SITES;
+      const results = state.ping[group];
+      const badge = document.getElementById(group === 'cn' ? 'cnAvgBadge' : 'globalAvgBadge');
+      const done = list.filter((s) => typeof results[s.id] === 'number');
+      const ok = done.filter((s) => results[s.id] > 0);
+
+      if (state.running && done.length < list.length && ok.length === 0) {
+        setText(badge, '计算中…');
+        return;
+      }
+      if (!ok.length) {
+        setText(badge, `连通 0/${list.length}`);
+        return;
+      }
+      const avg = Math.round(ok.reduce((sum, s) => sum + results[s.id], 0) / ok.length);
+      setText(badge, `均值 ${avg} ms (${ok.length}/${list.length})`);
+    }
+
+    function paintAverages() {
+      paintAverage('cn');
+      paintAverage('global');
+    }
+
+    function paintWebrtc() {
+      const w = state.webrtc;
+      const pubEl = $('#rtcPublicIp');
+      const locEl = $('#rtcLocalIp');
+      const verEl = $('#rtcVerdict');
+      const badge = $('#webrtcBadge');
+      const join = (arr) => (state.privacy ? arr.map(maskIpText).join(', ') : arr.join(', '));
+
+      if (w.status === 'disabled') {
+        setText(pubEl, '当前浏览器已禁用 WebRTC');
+        setText(locEl, '无');
+        setText(verEl, '✅ WebRTC 已禁用，无泄露风险');
+        setText(badge, '已禁用');
+        badge.className = 'badge badge-cn';
+        return;
+      }
+
+      if (w.status === 'probing') {
+        setText(pubEl, '正在通过 STUN 探测…');
+        setText(locEl, '检测中…');
+        setText(verEl, '分析中…');
+        setText(badge, '探测中');
+        badge.className = 'badge badge-global';
+        return;
+      }
+
+      setText(pubEl, w.publicIp.length ? join(w.publicIp) : '未发现公网 STUN 反射 IP');
+      setText(locEl, w.localIp.length ? join(w.localIp) : '已隐藏 (mDNS 保护生效)');
+      setText(verEl, w.verdict);
+
+      if (w.leak) {
+        setText(badge, '需注意');
+        badge.className = 'badge badge-warn';
+      } else if (w.publicIp.length) {
+        setText(badge, '正常');
+        badge.className = 'badge badge-global';
+      } else {
+        setText(badge, '安全');
+        badge.className = 'badge badge-cn';
       }
     }
 
-    function updateTracePanel() {
-      document.getElementById('cfColoVal').textContent = STATE.trace.colo;
-      document.getElementById('cfHttpVal').textContent = STATE.trace.http;
-      document.getElementById('cfWarpVal').textContent = STATE.trace.warp;
-      document.getElementById('dnsBadge').textContent = '已就绪';
+    function paintTrace() {
+      setText($('#cfColoVal'), state.trace.colo);
+      setText($('#cfHttpVal'), state.trace.http);
+      setText($('#cfWarpVal'), state.trace.warp);
+      const badge = $('#dnsBadge');
+      setText(badge, state.traceReady ? '已就绪' : (state.running ? '探测中' : '未命中'));
+      badge.className = 'badge ' + (state.traceReady ? 'badge-cn' : 'badge-global');
     }
 
-    function renderEnvInfo() {
+    function renderEnv() {
       const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection || {};
       const rows = [
-        ['浏览器语言 / 时区', `${navigator.language} · ${Intl.DateTimeFormat().resolvedOptions().timeZone || '-'}`],
+        ['浏览器语言 / 时区', `${navigator.language || '-'} · ${Intl.DateTimeFormat().resolvedOptions().timeZone || '-'}`],
         ['屏幕分辨率与像素比', `${window.screen.width}×${window.screen.height} (@${window.devicePixelRatio || 1}x)`],
         ['CPU 核心 / 内存估算', `${navigator.hardwareConcurrency || '-'} 核 / ${navigator.deviceMemory ? navigator.deviceMemory + ' GB' : '-'}`],
-        ['网络类型 / 预估带宽', `${conn.effectiveType || '宽带/Wi-Fi'} ${conn.downlink ? '(' + conn.downlink + ' Mbps)' : ''}`]
+        ['网络类型 / 预估带宽', `${conn.effectiveType || '宽带/Wi-Fi'}${conn.downlink ? ' (' + conn.downlink + ' Mbps)' : ''}`],
+        ['安全上下文', isSecureContext ? 'HTTPS / 安全上下文' : '非 HTTPS（剪贴板等能力受限）']
       ];
-      document.getElementById('envList').innerHTML = rows.map(([k, v]) => `
+      $('#envList').innerHTML = rows.map(([k, v]) => `
         <div class="kv-row">
-          <span class="kv-key">${k}</span>
-          <span class="kv-val">${v}</span>
+          <span class="kv-key">${escapeHtml(k)}</span>
+          <span class="kv-val">${escapeHtml(v)}</span>
         </div>
       `).join('');
     }
 
-    function togglePrivacy() {
-      STATE.privacy = !STATE.privacy;
-      document.getElementById('appRoot').classList.toggle('privacy-blur', STATE.privacy);
-      document.getElementById('privacyText').textContent = STATE.privacy ? '显示 IP' : '隐藏 IP';
-    }
+    /* ============================================================
+     * 5. 分流结论评估（穷举所有状态，避免横幅卡在初始文案）
+     * ==========================================================*/
+    function evaluateSummary() {
+      const finished = IP_CHANNELS.filter((ch) => {
+        const r = state.ip[ch.id];
+        return r && !r.loading;
+      }).length;
 
-    function toggleTheme() {
-      const html = document.documentElement;
-      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      html.setAttribute('data-theme', next);
-    }
-
-    function copyIp(channelId) {
-      const ip = (STATE.ipResults[channelId] && STATE.ipResults[channelId].ip) || '';
-      if (!ip) return;
-      navigator.clipboard.writeText(ip);
-    }
-
-    function maskIpString(str) {
-      if (!str || !document.getElementById('maskCheck').checked) return str;
-      return str
-        .replace(/(\d{1,3}\.\d{1,3})\.\d{1,3}\.\d{1,3}/g, '$1.*.*')
-        .replace(/([a-f0-9]{1,4}:[a-f0-9]{1,4}):[a-f0-9:]+/gi, '$1:*:*');
-    }
-
-    function openReportModal() {
-      document.getElementById('reportModal').classList.add('open');
-      renderReportText();
-    }
-
-    function closeReportModal() {
-      document.getElementById('reportModal').classList.remove('open');
-    }
-
-    function switchReportFormat(fmt) {
-      STATE.reportFormat = fmt;
-      renderReportText();
-    }
-
-    function renderReportText() {
-      const timeStr = new Date().toLocaleString('zh-CN');
-      const summary = document.getElementById('summaryTitle').textContent;
-      const lines = [];
-
-      if (STATE.reportFormat === 'text') {
-        lines.push(`📊 NBAI 网络分流诊断报告 v2.5.0 (${timeStr})`);
-        lines.push(`综合结论：${summary}`);
-        lines.push(`IPv4 出口：${maskIpString(STATE.v4 || '无')} | IPv6 出口：${maskIpString(STATE.v6 || '无')}`);
-        lines.push(`\n🌐 多源出口状态：`);
-        IP_CHANNELS.forEach(ch => {
-          const r = STATE.ipResults[ch.id];
-          if (r && !r.error) {
-            lines.push(`• ${ch.name}：${maskIpString(r.ip)} (${r.location} | ${r.isp} | ${r.ms}ms)`);
-          } else {
-            lines.push(`• ${ch.name}：连接超时`);
-          }
-        });
-        lines.push(`\n⚡ 站点连通均值：`);
-        lines.push(`• 国内主流服务：${document.getElementById('cnAvgBadge').textContent}`);
-        lines.push(`• 国际与 AI 平台：${document.getElementById('globalAvgBadge').textContent}`);
-        lines.push(`\n🛡️ WebRTC 与 Anycast：`);
-        lines.push(`• WebRTC 公网：${maskIpString(STATE.webrtc.publicIp)} (${STATE.webrtc.verdict})`);
-        lines.push(`• Anycast 节点：${STATE.trace.colo}`);
-        lines.push(`\nGenerated by NBAI v2.5.0 · https://x.com/NBAI_dev`);
-      } else if (STATE.reportFormat === 'md') {
-        lines.push(`### 📊 NBAI 网络分流诊断报告 v2.5.0`);
-        lines.push(`- **检测时间**：${timeStr}`);
-        lines.push(`- **综合结论**：${summary}\n`);
-        lines.push(`| 通道名称 | 出口 IP | 归属地与运营商 | 延迟 |`);
-        lines.push(`| :--- | :--- | :--- | :--- |`);
-        IP_CHANNELS.forEach(ch => {
-          const r = STATE.ipResults[ch.id];
-          if (r && !r.error) {
-            lines.push(`| ${ch.name} | \`${maskIpString(r.ip)}\` | ${r.location} ${r.isp} | ${r.ms}ms |`);
-          } else {
-            lines.push(`| ${ch.name} | 超时 | - | - |`);
-          }
-        });
-      } else {
-        lines.push(`请帮我分析以下 NBAI v2.5.0 网络分流诊断数据，检查我的国内直连与海外代理规则是否合理：\n`);
-        lines.push(maskIpString(JSON.stringify({
-          version: 'v2.5.0',
-          summary,
-          dualStack: { v4: STATE.v4, v6: STATE.v6 },
-          ipChannels: STATE.ipResults,
-          pingMs: STATE.pingResults,
-          webrtc: STATE.webrtc,
-          anycast: STATE.trace
-        }, null, 2)));
+      if (state.running && finished < 2) {
+        setSummary('loading', '正在并发探测国内外分流链路…', '国内直连通道优先响应，不会被海外节点超时阻塞');
+        return;
       }
 
-      document.getElementById('reportOutput').value = lines.join('\n');
+      const cnChannels = ['cn_direct', 'cn_bgp', 'cf_cn'];
+      const globalChannels = ['global_ipsb', 'global_ipinfo', 'global_geo'];
+      const pick = (ids) => ids.map((id) => state.ip[id]).filter((r) => r && !r.error && !r.loading);
+      const cn = pick(cnChannels);
+      const gl = pick(globalChannels);
+
+      if (!cn.length && !gl.length) {
+        setSummary('danger', '❌ 所有探测通道均失败',
+          '请检查本机网络、浏览器扩展拦截或代理软件是否阻断全部请求');
+        return;
+      }
+
+      if (!gl.length) {
+        const sample = cn[0];
+        setSummary('warn', '🇨🇳 国内直连正常 · 海外节点未开启代理或无法连接',
+          `国内出口 ${sample.ip} (${sample.location}) 响应正常，海外通道 ${globalChannels.length} 路全部超时`);
+        return;
+      }
+
+      if (!cn.length) {
+        setSummary('warn', '🌍 仅海外通道可用 · 国内通道全部失败',
+          `海外出口 ${gl[0].ip} (${gl[0].location})，国内直连规则可能被误代理或节点不可达`);
+        return;
+      }
+
+      const cnIps = new Set(cn.map((r) => r.ip));
+      const shared = [...new Set(gl.map((r) => r.ip))].filter((ip) => cnIps.has(ip));
+      const foreign = gl.filter((r) => r.isCN === false);
+      const allDomestic = gl.every((r) => r.isCN === true);
+      const cnIpList = [...cnIps].slice(0, 2).join(' / ');
+      const glIpList = [...new Set(gl.map((r) => r.ip))].slice(0, 2).join(' / ');
+      const counts = `国内 ${cn.length}/3 · 海外 ${gl.length}/3`;
+
+      if (shared.length === 0 && foreign.length > 0) {
+        setSummary('ok', '✅ 智能分流运行正常（国内直连 + 海外代理分流）',
+          `国内出口 ${cnIpList} (${cn[0].location})，海外出口 ${glIpList} (${foreign[0].location}) · ${counts}`);
+        return;
+      }
+
+      if (shared.length > 0 && allDomestic) {
+        setSummary('warn', '🌐 当前处于「纯国内直连」模式',
+          `国内外探测通道均返回国内 IP (${shared[0]})，未检测到海外代理分流 · ${counts}`);
+        return;
+      }
+
+      if (shared.length > 0) {
+        setSummary('warn', '🚀 当前处于「全局代理 / TUN」模式',
+          `国内与国际通道共用出口 ${shared[0]}，建议检查国内直连规则 · ${counts}`);
+        return;
+      }
+
+      setSummary('warn', '⚠️ 分流结果不一致，请查看各通道明细',
+        `部分海外通道返回国内 IP，可能存在规则漏配 · ${counts}`);
     }
 
-    function copyReportText() {
-      const el = document.getElementById('reportOutput');
-      el.select();
-      navigator.clipboard.writeText(el.value);
+    /* ============================================================
+     * 6. IP 通道探测
+     * ==========================================================*/
+
+    async function runChannel(channelId, parentSignal) {
+      const token = bumpToken('ip:' + channelId);
+
+      const controller = new AbortController();
+      const previous = channelScopes.get(channelId);
+      channelScopes.set(channelId, controller);
+      if (previous) previous.abort();
+
+      const relay = () => controller.abort(new DOMException('已取消', 'AbortError'));
+      if (parentSignal) {
+        if (parentSignal.aborted) relay();
+        else parentSignal.addEventListener('abort', relay, { once: true });
+      }
+
+      state.ip[channelId] = { loading: true };
+      paintIpCard(channelId);
+
+      let result = null;
+      let failure = null;
+
+      try {
+        result = await probeWithFallback(CHANNEL_SOURCES[channelId] || [], controller.signal);
+      } catch (err) {
+        failure = err;
+      } finally {
+        if (parentSignal) parentSignal.removeEventListener('abort', relay);
+      }
+
+      // 已被更新的一轮检测 / 重测取代
+      if (!isCurrent('ip:' + channelId, token)) return;
+
+      if (result) {
+        state.ip[channelId] = result;
+        if (result.trace) {
+          state.trace = result.trace;
+          state.traceReady = true;
+          paintTrace();
+        }
+      } else {
+        state.ip[channelId] = { error: true, reason: (failure && failure.message) || '连接超时' };
+      }
+
+      paintIpCard(channelId);
+      evaluateSummary();
     }
 
-    function runAllChecks() {
-      renderIpSkeletons();
-      renderLatencyGrids();
-      renderEnvInfo();
+    /* ============================================================
+     * 7. 双栈探测
+     * ==========================================================*/
+    async function detectFamily(family, signal) {
+      const urls = family === 4
+        ? ['https://4.ipw.cn', 'https://v4.ident.me', 'https://api4.ipify.org']
+        : ['https://6.ipw.cn', 'https://v6.ident.me', 'https://api6.ipify.org'];
+      const validate = family === 4 ? isValidIPv4 : isValidIPv6;
 
-      requestAnimationFrame(() => {
-        checkDualStack();
-        IP_CHANNELS.forEach(ch => runSingleIpChannel(ch.id));
-        CN_SITES.forEach(s => pingSingleSite('cn', s.id));
-        GLOBAL_SITES.forEach(s => pingSingleSite('global', s.id));
-        checkWebRTC();
+      for (const url of urls) {
+        if (signal && signal.aborted) return '';
+        try {
+          const text = (await request(url, { timeout: 3500, signal })).trim();
+          if (validate(text)) return text;
+        } catch { /* 尝试下一个 */ }
+      }
+      return '';
+    }
+
+    async function runDualStack(signal) {
+      const [v4, v6] = await Promise.all([detectFamily(4, signal), detectFamily(6, signal)]);
+      if (signal && signal.aborted) return;
+      state.v4 = v4;
+      state.v6 = v6;
+      paintDualStack();
+    }
+
+    /* ============================================================
+     * 8. 站点延迟测速
+     * ==========================================================*/
+
+    function withCacheBust(rawUrl) {
+      try {
+        const url = new URL(rawUrl, location.href);
+        url.searchParams.set('_t', Date.now().toString(36) + Math.random().toString(36).slice(2, 7));
+        return url.toString();
+      } catch {
+        return rawUrl;
+      }
+    }
+
+    /**
+     * 双擎竞速：Image 适合图片/CDN，fetch(no-cors) 适合 4xx 也算连通的场景。
+     * 任一成功即记录耗时；abort 时清理挂起的 Image 请求。
+     */
+    function probeLatency(site, timeout, signal) {
+      return new Promise((resolve) => {
+        const t0 = performance.now();
+        let settled = false;
+        let timer = null;
+        let img = null;
+
+        const finish = (ok) => {
+          if (settled) return;
+          settled = true;
+          if (timer) clearTimeout(timer);
+          if (signal) signal.removeEventListener('abort', onAbort);
+          if (img) {
+            img.onload = null;
+            img.onerror = null;
+            if (!ok) img.src = 'data:,';
+          }
+          resolve(ok ? Math.max(1, Math.round(performance.now() - t0)) : -1);
+        };
+
+        const onAbort = () => finish(false);
+
+        timer = setTimeout(() => finish(false), timeout);
+        if (signal) {
+          if (signal.aborted) return finish(false);
+          signal.addEventListener('abort', onAbort, { once: true });
+        }
+
+        if (site.img) {
+          img = new Image();
+          img.referrerPolicy = 'no-referrer';
+          img.onload = () => finish(true);
+          img.onerror = () => { /* 交给 fetch 兜底与超时 */ };
+          img.src = withCacheBust(site.img);
+        }
+
+        fetch(withCacheBust(site.url), {
+          mode: 'no-cors',
+          cache: 'no-store',
+          credentials: 'omit',
+          referrerPolicy: 'no-referrer',
+          signal
+        })
+          .then((res) => {
+            if (res.type === 'opaque' || res.ok) finish(true);
+          })
+          .catch(() => { /* 超时或失败，等待另一路 */ });
       });
     }
 
-    window.addEventListener('DOMContentLoaded', runAllChecks);
+    async function runSite(group, siteId, parentSignal) {
+      const list = group === 'cn' ? CN_SITES : GLOBAL_SITES;
+      const site = list.find((s) => s.id === siteId);
+      if (!site) return;
+
+      const key = `ping:${group}:${siteId}`;
+      const token = bumpToken(key);
+
+      const controller = new AbortController();
+      const prev = siteScopes.get(`${group}:${siteId}`);
+      siteScopes.set(`${group}:${siteId}`, controller);
+      if (prev) prev.abort();
+
+      const relay = () => controller.abort(new DOMException('已取消', 'AbortError'));
+      if (parentSignal) {
+        if (parentSignal.aborted) relay();
+        else parentSignal.addEventListener('abort', relay, { once: true });
+      }
+
+      delete state.ping[group][siteId];
+      paintSiteBadge(group, site);
+      paintAverage(group);
+
+      let ms = -1;
+      try {
+        ms = await siteLimit(() => probeLatency(site, 4200, controller.signal));
+      } catch {
+        ms = -1;
+      } finally {
+        if (parentSignal) parentSignal.removeEventListener('abort', relay);
+      }
+
+      if (!isCurrent(key, token)) return;
+
+      state.ping[group][siteId] = ms;
+      paintSiteBadge(group, site);
+      paintAverage(group);
+    }
+
+    /* ============================================================
+     * 9. WebRTC 泄露检测
+     * ==========================================================*/
+    let rtcPeer = null;
+    let rtcTimer = null;
+
+    function checkWebRTC() {
+      return new Promise((resolve) => {
+        const RTCPeer = window.RTCPeerConnection || window.webkitRTCPeerConnection;
+
+        if (rtcPeer) { try { rtcPeer.close(); } catch { /* ignore */ } rtcPeer = null; }
+        if (rtcTimer) clearTimeout(rtcTimer);
+
+        if (!RTCPeer) {
+          state.webrtc = { publicIp: [], localIp: [], verdict: '✅ WebRTC 已禁用，无泄露风险', status: 'disabled', leak: false };
+          paintWebrtc();
+          resolve();
+          return;
+        }
+
+        const publicIps = new Set();
+        const localIps = new Set();
+        let done = false;
+
+        state.webrtc = { publicIp: [], localIp: [], verdict: '分析中…', status: 'probing', leak: false };
+        paintWebrtc();
+
+        const finish = (failed) => {
+          if (done) return;
+          done = true;
+          if (rtcTimer) { clearTimeout(rtcTimer); rtcTimer = null; }
+          try { pc.close(); } catch { /* ignore */ }
+          if (rtcPeer === pc) rtcPeer = null;
+
+          const pubs = [...publicIps];
+          const httpIp = state.v4 || (state.ip.cn_direct && state.ip.cn_direct.ip) || '';
+          const leak = pubs.some((ip) => isValidIPv4(ip) && httpIp && ip !== httpIp);
+
+          let verdict;
+          if (failed && !pubs.length) verdict = '⚠️ 探测失败（STUN 不可达或已被拦截）';
+          else if (!pubs.length) verdict = '✅ 安全（未暴露公网 UDP IP）';
+          else if (leak) verdict = `⚠️ UDP 出口 ${pubs[0]} 与 HTTP 出口不一致`;
+          else verdict = `ℹ️ 检测到 UDP 出口 (${pubs[0]})，与 HTTP 出口一致`;
+
+          state.webrtc = {
+            publicIp: pubs,
+            localIp: [...localIps],
+            verdict,
+            status: 'done',
+            leak
+          };
+          paintWebrtc();
+          resolve();
+        };
+
+        let pc;
+        try {
+          pc = new RTCPeer({
+            iceServers: [
+              { urls: 'stun:stun.qq.com:3478' },
+              { urls: 'stun:stun.miwifi.com:3478' },
+              { urls: 'stun:stun.cloudflare.com:3478' }
+            ]
+          });
+          rtcPeer = pc;
+        } catch {
+          state.webrtc = { publicIp: [], localIp: [], verdict: '受限或已拦截', status: 'done', leak: false };
+          paintWebrtc();
+          resolve();
+          return;
+        }
+
+        const parseCandidate = (candidate) => {
+          const mDns = candidate.match(/[0-9a-f-]+\.local/gi);
+          if (mDns) mDns.forEach((name) => localIps.add(name));
+
+          const ipv4 = candidate.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g);
+          const ipv6 = candidate.match(/\b[0-9a-f]{1,4}(?::[0-9a-f]{0,4}){2,7}\b/gi) || [];
+          [...(ipv4 || []), ...ipv6].forEach((ip) => {
+            if (/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|127\.|169\.254\.)/.test(ip) || /^fe80:/i.test(ip)) {
+              localIps.add(ip);
+            } else if (isIP(ip)) {
+              publicIps.add(ip);
+            }
+          });
+        };
+
+        pc.addEventListener('icecandidate', (event) => {
+          if (!event.candidate || !event.candidate.candidate) return;
+          parseCandidate(event.candidate.candidate);
+          state.webrtc = {
+            publicIp: [...publicIps],
+            localIp: [...localIps],
+            verdict: '分析中…',
+            status: 'probing',
+            leak: false
+          };
+          paintWebrtc();
+        });
+
+        pc.addEventListener('icegatheringstatechange', () => {
+          if (pc.iceGatheringState === 'complete') finish();
+        });
+
+        try {
+          const channel = pc.createDataChannel('nbai_probe');
+          channel.onopen = () => { /* 仅用于触发候选收集 */ };
+
+          pc.createOffer()
+            .then((offer) => pc.setLocalDescription(offer))
+            .catch(() => finish(true));
+        } catch {
+          finish(true);
+        }
+
+        // ICE 收集完成事件在部分浏览器不可靠，3.5s 兜底结束
+        rtcTimer = setTimeout(() => finish(false), 3500);
+      });
+    }
+
+    /* ============================================================
+     * 10. 全量检测编排
+     * ==========================================================*/
+    async function runAll() {
+      const scope = new AbortController();
+      const previousRun = runScope;
+      runScope = scope;
+      if (previousRun) previousRun.abort();
+      if (rtcTimer) clearTimeout(rtcTimer);
+
+      state.running = true;
+      state.v4 = '';
+      state.v6 = '';
+      IP_CHANNELS.forEach((ch) => { delete state.ip[ch.id]; });
+      state.ping = { cn: {}, global: {} };
+      state.trace = { colo: '-', http: '-', warp: '-' };
+      state.traceReady = false;
+
+      renderIpSkeletons();
+      renderSiteGrids();
+      renderEnv();
+      paintDualStack();
+      paintTrace();
+      paintAverages();
+      paintWebrtc();
+      setSummary('loading', '正在并发探测国内外分流链路…', '国内直连通道优先响应，不会被海外节点超时阻塞');
+      setRunBusy(true);
+
+      const jobs = [
+        runDualStack(scope.signal),
+        checkWebRTC(),
+        ...IP_CHANNELS.map((ch) => runChannel(ch.id, scope.signal)),
+        ...CN_SITES.map((s) => runSite('cn', s.id, scope.signal)),
+        ...GLOBAL_SITES.map((s) => runSite('global', s.id, scope.signal))
+      ];
+
+      await Promise.allSettled(jobs);
+
+      // 已被更新的一轮检测取代，交给新的一轮收尾
+      if (runScope !== scope) return;
+
+      state.running = false;
+      setRunBusy(false);
+      paintDualStack();
+      paintAverages();
+      evaluateSummary();
+    }
+
+    function setRunBusy(busy) {
+      const btn = $('[data-ref="runBtn"]');
+      const text = $('[data-ref="runText"]');
+      if (!btn || !text) return;
+      btn.classList.toggle('is-spinning', busy);
+      btn.setAttribute('aria-busy', String(busy));
+      setText(text, busy ? '检测中…' : '重新检测');
+      $('#ipGrid').setAttribute('aria-busy', String(busy));
+    }
+
+    /* ============================================================
+     * 11. 报告
+     * ==========================================================*/
+    function snapshot() {
+      return {
+        version: VERSION,
+        time: new Date().toLocaleString('zh-CN'),
+        summary: { ...state.summary },
+        dualStack: { v4: state.v4 || null, v6: state.v6 || null },
+        channels: IP_CHANNELS.map((ch) => {
+          const r = state.ip[ch.id];
+          const ok = r && !r.error && !r.loading;
+          return {
+            id: ch.id,
+            name: ch.name,
+            status: !r ? '未检测' : r.loading ? '检测中' : r.error ? '超时' : '成功',
+            ip: ok ? r.ip : null,
+            location: ok ? r.location : null,
+            isp: ok ? r.isp : null,
+            ms: ok ? r.ms : null,
+            source: ok ? r.source : null,
+            isCN: ok ? r.isCN : null
+          };
+        }),
+        latency: {
+          cn: CN_SITES.map((s) => ({ name: s.name, domain: s.domain, ms: state.ping.cn[s.id] ?? null })),
+          global: GLOBAL_SITES.map((s) => ({ name: s.name, domain: s.domain, ms: state.ping.global[s.id] ?? null }))
+        },
+        webrtc: {
+          publicIp: state.webrtc.publicIp.length ? state.webrtc.publicIp.join(', ') : null,
+          localIp: state.webrtc.localIp.length ? state.webrtc.localIp.join(', ') : null,
+          verdict: state.webrtc.verdict
+        },
+        anycast: { ...state.trace }
+      };
+    }
+
+    const latencyText = (ms) => (typeof ms === 'number' ? (ms > 0 ? `${ms}ms` : '超时') : '未测');
+
+    function reportText(snap) {
+      const lines = [];
+      lines.push(`📊 NBAI 网络分流诊断报告 ${VERSION} (${snap.time})`);
+      lines.push(`综合结论：${snap.summary.title}`);
+      lines.push(`补充说明：${snap.summary.desc}`);
+      lines.push(`IPv4 出口：${snap.dualStack.v4 || '无'} | IPv6 出口：${snap.dualStack.v6 || '无'}`);
+      lines.push('');
+      lines.push('🌐 多源出口状态：');
+      snap.channels.forEach((c) => {
+        lines.push(c.ip
+          ? `• ${c.name}：${c.ip} (${c.location} | ${c.isp} | ${c.ms}ms)`
+          : `• ${c.name}：${c.status}`);
+      });
+      lines.push('');
+      lines.push('⚡ 站点连通明细：');
+      lines.push(`• 国内：${snap.latency.cn.map((s) => `${s.name} ${latencyText(s.ms)}`).join(' · ')}`);
+      lines.push(`• 海外：${snap.latency.global.map((s) => `${s.name} ${latencyText(s.ms)}`).join(' · ')}`);
+      lines.push(`• 均值：国内 ${document.getElementById('cnAvgBadge').textContent} / 海外 ${document.getElementById('globalAvgBadge').textContent}`);
+      lines.push('');
+      lines.push('🛡️ WebRTC 与 Anycast：');
+      lines.push(`• WebRTC 公网：${snap.webrtc.publicIp || '未暴露'}（${snap.webrtc.verdict}）`);
+      lines.push(`• WebRTC 内网：${snap.webrtc.localIp || '已隐藏'}`);
+      lines.push(`• Anycast 节点：${snap.anycast.colo} · ${snap.anycast.http} · WARP ${snap.anycast.warp}`);
+      lines.push('');
+      lines.push(`项目地址：${REPO_URL}`);
+      lines.push(`在线版：${SITE_URL} · NBAI X: https://x.com/NBAI_dev`);
+      lines.push(`Generated by NBAI ${VERSION}`);
+      return lines.join('\n');
+    }
+
+    function reportMarkdown(snap) {
+      const lines = [];
+      lines.push(`### 📊 NBAI 网络分流诊断报告 ${VERSION}`);
+      lines.push('');
+      lines.push(`- **检测时间**：${snap.time}`);
+      lines.push(`- **综合结论**：${snap.summary.title}`);
+      lines.push(`- **IPv4 / IPv6**：\`${snap.dualStack.v4 || '无'}\` / \`${snap.dualStack.v6 || '无'}\``);
+      lines.push('');
+      lines.push('| 通道 | 状态 | 出口 IP | 归属地 / 运营商 | 延迟 |');
+      lines.push('| :--- | :--- | :--- | :--- | :--- |');
+      snap.channels.forEach((c) => {
+        lines.push(`| ${c.name} | ${c.status} | ${c.ip ? '`' + c.ip + '`' : '-'} | ${c.ip ? `${c.location} ${c.isp}` : '-'} | ${c.ms ? c.ms + 'ms' : '-'} |`);
+      });
+      lines.push('');
+      lines.push('| 站点 | 区域 | 延迟 |');
+      lines.push('| :--- | :--- | :--- |');
+      const rows = [
+        ...snap.latency.cn.map((s) => [s.name, '国内', s.ms]),
+        ...snap.latency.global.map((s) => [s.name, '海外', s.ms])
+      ];
+      rows.forEach(([name, area, ms]) => {
+        lines.push(`| ${name} | ${area} | ${latencyText(ms)} |`);
+      });
+      lines.push('');
+      lines.push(`> WebRTC：${snap.webrtc.verdict} · Anycast：${snap.anycast.colo} · HTTP/TLS：${snap.anycast.http}`);
+      lines.push('>');
+      lines.push(`> 项目地址：[${REPO_URL}](${REPO_URL})`);
+      return lines.join('\n');
+    }
+
+    function reportAi(snap) {
+      return [
+        `请帮我分析以下 NBAI ${VERSION} 网络分流诊断数据，检查国内直连与海外代理规则是否合理：`,
+        '',
+        '```json',
+        JSON.stringify(snap, null, 2),
+        '```'
+      ].join('\n');
+    }
+
+    function renderReport() {
+      const snap = snapshot();
+      let body;
+      if (state.reportFormat === 'md') body = reportMarkdown(snap);
+      else if (state.reportFormat === 'ai') body = reportAi(snap);
+      else body = reportText(snap);
+
+      const masked = $('#maskCheck').checked;
+      $('#reportOutput').value = masked ? maskIpText(body) : body;
+    }
+
+    function syncFormatButtons() {
+      document.querySelectorAll('[data-action="report-format"]').forEach((btn) => {
+        btn.setAttribute('aria-pressed', String(btn.dataset.format === state.reportFormat));
+      });
+    }
+
+    /* ============================================================
+     * 12. 剪贴板 / Toast / 主题 / 隐私
+     * ==========================================================*/
+    let toastTimer = null;
+    function toast(message) {
+      const el = $('#toast');
+      el.textContent = message;
+      el.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+    }
+
+    async function copyText(text) {
+      if (!text) return false;
+      try {
+        if (navigator.clipboard && isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      } catch { /* 降级 */ }
+
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        ta.remove();
+        return ok;
+      } catch {
+        return false;
+      }
+    }
+
+    function applyPrivacy() {
+      document.querySelector('[data-action="toggle-privacy"]').setAttribute('aria-pressed', String(state.privacy));
+      setText($('[data-ref="privacyText"]'), state.privacy ? '显示 IP' : '隐藏 IP');
+      paintAllIpCards();
+      paintSummary();
+      paintDualStack();
+      paintWebrtc();
+      renderReport();
+    }
+
+    function toggleTheme() {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      store.set('theme', next);
+    }
+
+    /* ============================================================
+     * 13. 自定义网址测速
+     * ==========================================================*/
+    let customScope = null;
+
+    async function runCustomPing() {
+      const input = $('#customUrlInput');
+      const out = $('#customPingResult');
+      const btn = $('[data-ref="customBtn"]');
+      const raw = input.value.trim();
+
+      if (!raw) {
+        input.focus();
+        return;
+      }
+
+      let url;
+      try {
+        url = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : 'https://' + raw);
+      } catch {
+        setText(out, '❌ 网址格式不正确');
+        return;
+      }
+
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        setText(out, '❌ 仅支持 http / https');
+        return;
+      }
+
+      if (customScope) customScope.abort();
+      customScope = new AbortController();
+      const signal = customScope.signal;
+
+      btn.disabled = true;
+      setText(out, '正在测速…');
+
+      const site = {
+        url: url.toString(),
+        img: new URL('/favicon.ico', url.origin).toString()
+      };
+
+      const ms = await probeLatency(site, 4500, signal);
+
+      if (signal.aborted) return;
+      btn.disabled = false;
+      setText(out, ms > 0 ? `✅ 响应耗时：${ms} ms` : '❌ 连接超时或不可达');
+    }
+
+    /* ============================================================
+     * 14. 事件绑定（事件委托，替代 inline onclick）
+     * ==========================================================*/
+    /** 单卡重测时挂到当前整轮检测上，整轮重启可直接取消；整轮已结束时独立执行 */
+    const activeSignal = () => (runScope && !runScope.signal.aborted ? runScope.signal : null);
+
+    const ACTIONS = {
+      'toggle-privacy': () => {
+        state.privacy = !state.privacy;
+        store.set('privacy', state.privacy);
+        applyPrivacy();
+      },
+      'toggle-theme': toggleTheme,
+      'run-all': () => { runAll(); },
+      'open-report': () => {
+        renderReport();
+        syncFormatButtons();
+        const dlg = $('#reportModal');
+        if (typeof dlg.showModal === 'function') dlg.showModal();
+        else dlg.setAttribute('open', '');
+      },
+      'close-report': () => {
+        const dlg = $('#reportModal');
+        if (typeof dlg.close === 'function') dlg.close();
+        else dlg.removeAttribute('open');
+      },
+      'report-format': (btn) => {
+        state.reportFormat = btn.dataset.format;
+        store.set('reportFormat', state.reportFormat);
+        syncFormatButtons();
+        renderReport();
+      },
+      'copy-report': async () => {
+        const ok = await copyText($('#reportOutput').value);
+        toast(ok ? '报告已复制到剪贴板' : '复制失败，请手动选择文本');
+      },
+      'copy-ip': async (btn) => {
+        const r = state.ip[btn.dataset.id];
+        if (!r || !r.ip) return;
+        const ok = await copyText(fmtIp(r.ip));
+        toast(ok ? `已复制 ${fmtIp(r.ip)}` : '复制失败');
+      },
+      'retest-ip': (btn) => { runChannel(btn.dataset.id, activeSignal()); },
+      'ping-site': (btn) => { runSite(btn.dataset.group, btn.dataset.id, activeSignal()); },
+      'custom-ping': runCustomPing
+    };
+
+    document.addEventListener('click', (event) => {
+      const trigger = event.target.closest('[data-action]');
+      if (!trigger) return;
+      const handler = ACTIONS[trigger.dataset.action];
+      if (!handler) return;
+      event.preventDefault();
+      handler(trigger);
+    });
+
+    $('#maskCheck').addEventListener('change', renderReport);
+
+    $('#customUrlInput').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        runCustomPing();
+      }
+    });
+
+    // 点击遮罩关闭：仅当坐标落在弹窗盒子之外（原生 dialog 的 ::backdrop 点击 target 也是 dialog）
+    $('#reportModal').addEventListener('click', (event) => {
+      const dialog = event.currentTarget;
+      if (event.target !== dialog) return;
+      const rect = dialog.getBoundingClientRect();
+      const outside = event.clientX < rect.left || event.clientX > rect.right ||
+                      event.clientY < rect.top || event.clientY > rect.bottom;
+      if (outside) ACTIONS['close-report']();
+    });
+
+    /* ============================================================
+     * 15. 初始化
+     * ==========================================================*/
+    function init() {
+      const savedPrivacy = store.get('privacy', false);
+      state.privacy = savedPrivacy === true;
+
+      const savedFormat = store.get('reportFormat', 'text');
+      state.reportFormat = ['text', 'md', 'ai'].includes(savedFormat) ? savedFormat : 'text';
+
+      applyPrivacy();
+      syncFormatButtons();
+      renderEnv();
+      paintTrace();
+      paintAverages();
+      paintWebrtc();
+      paintDualStack();
+
+      if (navigator.onLine === false) {
+        setSummary('danger', '⚠️ 当前设备处于离线状态', '请检查网络连接后点击右上角「重新检测」');
+        setRunBusy(false);
+        IP_CHANNELS.forEach((ch) => {
+          state.ip[ch.id] = { error: true, reason: '离线' };
+          paintIpCard(ch.id);
+        });
+        return;
+      }
+
+      runAll();
+    }
+
+    init();
+  })();
   </script>
 </body>
 </html>
