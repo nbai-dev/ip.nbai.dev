@@ -1,2609 +1,1666 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="dark">
+<html lang="zh-CN" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NBAI · IP 与网络分流诊断工具 - NBAI Network Diagnostics</title>
-    <style>
-        /* ==========================================================================
-           1. 纯内联 CSS 变量与主题系统 (100% 零外部依赖，中国大陆秒开)
-           ========================================================================== */
-        :root {
-            --bg-body: #f8fafc;
-            --bg-card: #ffffff;
-            --bg-subtle: #f1f5f9;
-            --bg-header: rgba(255, 255, 255, 0.86);
-            --text-main: #0f172a;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --border-subtle: #f1f5f9;
-            --brand-primary: #4f46e5;
-            --brand-hover: #4338ca;
-            --brand-soft: rgba(79, 70, 229, 0.1);
-            --emerald: #10b981;
-            --emerald-soft: rgba(16, 185, 129, 0.12);
-            --amber: #f59e0b;
-            --amber-soft: rgba(245, 158, 11, 0.12);
-            --rose: #f43f5e;
-            --rose-soft: rgba(244, 63, 94, 0.12);
-            --sky: #0ea5e9;
-            --sky-soft: rgba(14, 165, 233, 0.12);
-            --purple: #8b5cf6;
-            --purple-soft: rgba(139, 92, 246, 0.12);
-            --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
-            --shadow-md: 0 10px 25px -5px rgba(15, 23, 42, 0.07), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
-            --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
-            --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-        }
-
-        html.dark {
-            --bg-body: #090d16;
-            --bg-card: #111827;
-            --bg-subtle: #1e293b;
-            --bg-header: rgba(17, 24, 39, 0.85);
-            --text-main: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            --border-color: #1f2937;
-            --border-subtle: #1e293b;
-            --brand-primary: #6366f1;
-            --brand-hover: #818cf8;
-            --brand-soft: rgba(99, 102, 241, 0.15);
-            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.35);
-            --shadow-md: 0 12px 30px -5px rgba(0, 0, 0, 0.55);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: var(--font-sans);
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            line-height: 1.5;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            transition: background-color 0.2s ease, color 0.2s ease;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        a {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        button {
-            font-family: inherit;
-            cursor: pointer;
-            border: none;
-            background: none;
-        }
-
-        .container {
-            max-width: 1280px;
-            width: 100%;
-            margin: 0 auto;
-            padding: 0 16px;
-        }
-
-        /* 顶部导航栏 */
-        .navbar {
-            position: sticky;
-            top: 0;
-            z-index: 40;
-            background: var(--bg-header);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .navbar-inner {
-            min-height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 8px 0;
-            flex-wrap: wrap;
-        }
-
-        .brand-wrap {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .brand-logo {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ffffff;
-            font-weight: 800;
-            font-size: 15px;
-            letter-spacing: -0.5px;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-            flex-shrink: 0;
-        }
-
-        .brand-title-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .brand-title {
-            font-size: 16px;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-        }
-
-        .brand-badge {
-            font-size: 11px;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 999px;
-            background: var(--brand-soft);
-            color: var(--brand-primary);
-            border: 1px solid rgba(99, 102, 241, 0.28);
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: transform 0.15s ease, background-color 0.15s ease;
-        }
-
-        .brand-badge:hover {
-            transform: translateY(-1px);
-            background: rgba(99, 102, 241, 0.24);
-        }
-
-        .brand-sub {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .nav-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        /* 通用按钮样式 */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            padding: 7px 12px;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: 600;
-            border: 1px solid var(--border-color);
-            background: var(--bg-card);
-            color: var(--text-secondary);
-            transition: all 0.15s ease;
-            white-space: nowrap;
-        }
-
-        .btn:hover {
-            background: var(--bg-subtle);
-            color: var(--text-main);
-            border-color: var(--text-muted);
-        }
-
-        .btn:active {
-            transform: scale(0.97);
-        }
-
-        .btn-primary {
-            background: var(--brand-primary);
-            color: #ffffff;
-            border-color: transparent;
-            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
-        }
-
-        .btn-primary:hover {
-            background: var(--brand-hover);
-            color: #ffffff;
-            border-color: transparent;
-        }
-
-        .btn-x {
-            background: #0f172a;
-            color: #ffffff;
-            border-color: #334155;
-        }
-
-        html.dark .btn-x {
-            background: #ffffff;
-            color: #090d16;
-            border-color: #e2e8f0;
-        }
-
-        .btn-x:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-
-        .btn-icon-only {
-            width: 34px;
-            height: 34px;
-            padding: 0;
-        }
-
-        /* 主布局与分区 */
-        main {
-            flex: 1;
-            padding: 20px 0 36px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 18px;
-            box-shadow: var(--shadow-sm);
-            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-        }
-
-        .card-hover:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        /* 顶部智能诊断横幅 + 双栈状态栏 */
-        .summary-banner {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .summary-top {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 16px;
-            align-items: center;
-        }
-
-        @media (min-width: 900px) {
-            .summary-top {
-                grid-template-columns: 1.35fr 1fr;
-            }
-        }
-
-        .summary-main {
-            display: flex;
-            align-items: flex-start;
-            gap: 14px;
-        }
-
-        .summary-icon-box {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            background: var(--emerald-soft);
-            color: var(--emerald);
-            border: 1px solid rgba(16, 185, 129, 0.25);
-        }
-
-        .summary-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-
-        .stat-box {
-            background: var(--bg-subtle);
-            border-radius: 12px;
-            padding: 10px 12px;
-            border: 1px solid var(--border-subtle);
-        }
-
-        .stat-label {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        .stat-val {
-            font-family: var(--font-mono);
-            font-size: 16px;
-            font-weight: 700;
-            margin-top: 2px;
-            color: var(--text-main);
-        }
-
-        /* IPv4 / IPv6 双栈实时探针条 */
-        .dual-stack-bar {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-            padding-top: 14px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        @media (min-width: 768px) {
-            .dual-stack-bar {
-                grid-template-columns: 1fr 1fr auto;
-                align-items: center;
-            }
-        }
-
-        .stack-pill {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            background: var(--bg-subtle);
-            padding: 8px 12px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-            font-size: 12px;
-        }
-
-        .stack-tag {
-            font-family: var(--font-mono);
-            font-weight: 700;
-            font-size: 11px;
-            padding: 2px 7px;
-            border-radius: 6px;
-        }
-
-        /* 章节标题栏 */
-        .section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
-        }
-
-        .section-title-wrap {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .section-indicator {
-            width: 5px;
-            height: 20px;
-            border-radius: 999px;
-            background: var(--brand-primary);
-        }
-
-        .section-title {
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        .section-sub {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 400;
-        }
-
-        /* 6 路 IP 检测卡片网格 */
-        .ip-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 14px;
-        }
-
-        @media (min-width: 640px) {
-            .ip-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .ip-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        .ip-card {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            gap: 12px;
-            position: relative;
-        }
-
-        .ip-card-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-        }
-
-        .ip-source-name {
-            font-size: 14px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            flex-shrink: 0;
-        }
-
-        .dot-loading {
-            background: var(--amber);
-            animation: pulse 1.2s infinite ease-in-out;
-        }
-
-        .dot-ok {
-            background: var(--emerald);
-            box-shadow: 0 0 0 3px var(--emerald-soft);
-        }
-
-        .dot-err {
-            background: var(--rose);
-        }
-
-        .badge {
-            font-size: 11px;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 6px;
-            white-space: nowrap;
-        }
-
-        .ip-box {
-            background: var(--bg-subtle);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 10px 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-        }
-
-        .ip-text {
-            font-family: var(--font-mono);
-            font-size: 15px;
-            font-weight: 700;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .ip-meta {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            font-size: 12px;
-        }
-
-        .ip-meta-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 7px;
-            color: var(--text-secondary);
-        }
-
-        .ip-card-footer {
-            padding-top: 10px;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        /* 网站 HTTP 延迟网格 */
-        .latency-group-label {
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--text-secondary);
-            margin: 10px 0 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .latency-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        @media (min-width: 640px) {
-            .latency-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .latency-grid {
-                grid-template-columns: repeat(8, 1fr);
-            }
-        }
-
-        .lat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 11px;
-            cursor: pointer;
-            user-select: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            gap: 8px;
-            transition: all 0.15s ease;
-        }
-
-        .lat-card:hover {
-            border-color: var(--brand-primary);
-            transform: translateY(-2px);
-        }
-
-        .lat-name {
-            font-size: 13px;
-            font-weight: 700;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .lat-cat {
-            font-size: 10px;
-            color: var(--text-muted);
-        }
-
-        .lat-bottom {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding-top: 6px;
-            border-top: 1px solid var(--border-subtle);
-            font-size: 11px;
-        }
-
-        .lat-pill {
-            font-family: var(--font-mono);
-            font-weight: 700;
-            font-size: 11px;
-            padding: 2px 6px;
-            border-radius: 6px;
-        }
-
-        /* 双栏底部：WebRTC/DNS 与 浏览器环境 */
-        .bottom-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 18px;
-        }
-
-        @media (min-width: 1024px) {
-            .bottom-grid {
-                grid-template-columns: 7fr 5fr;
-            }
-        }
-
-        .sub-grid-2 {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 12px;
-        }
-
-        @media (min-width: 640px) {
-            .sub-grid-2 {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        .info-box {
-            background: var(--bg-subtle);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 12px;
-        }
-
-        .kv-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 9px 0;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 12px;
-        }
-
-        .kv-row:last-child {
-            border-bottom: none;
-        }
-
-        /* 隐私打码效果 */
-        .ip-blur {
-            filter: blur(6px);
-            user-select: none;
-            transition: filter 0.2s ease;
-        }
-
-        .ip-blur:hover {
-            filter: blur(1.5px);
-        }
-
-        /* 模态框系统 */
-        .modal-backdrop {
-            position: fixed;
-            inset: 0;
-            z-index: 60;
-            background: rgba(9, 13, 22, 0.72);
-            backdrop-filter: blur(4px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-        }
-
-        .modal-backdrop.active {
-            display: flex;
-        }
-
-        .modal-panel {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 18px;
-            max-width: 680px;
-            width: 100%;
-            max-height: 90vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: var(--shadow-md);
-            overflow: hidden;
-        }
-
-        .modal-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .modal-body {
-            padding: 16px 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .modal-footer {
-            padding: 14px 20px;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-            background: var(--bg-subtle);
-        }
-
-        .tab-bar {
-            display: flex;
-            gap: 6px;
-            background: var(--bg-subtle);
-            padding: 4px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 7px 10px;
-            border-radius: 7px;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            transition: all 0.15s;
-        }
-
-        .tab-btn.active {
-            background: var(--bg-card);
-            color: var(--brand-primary);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .report-textarea {
-            width: 100%;
-            height: 270px;
-            background: var(--bg-subtle);
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 12px;
-            font-family: var(--font-mono);
-            font-size: 12px;
-            line-height: 1.55;
-            resize: vertical;
-            outline: none;
-        }
-
-        .input-field {
-            width: 100%;
-            padding: 9px 12px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-            background: var(--bg-subtle);
-            color: var(--text-main);
-            font-size: 13px;
-            outline: none;
-        }
-
-        .input-field:focus {
-            border-color: var(--brand-primary);
-        }
-
-        /* Toast 浮动通知 */
-        .toast-wrap {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 80;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            pointer-events: none;
-        }
-
-        .toast-item {
-            pointer-events: auto;
-            background: #1e293b;
-            color: #f8fafc;
-            border: 1px solid #334155;
-            padding: 10px 14px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            box-shadow: var(--shadow-md);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.25s ease;
-        }
-
-        footer {
-            border-top: 1px solid var(--border-color);
-            background: var(--bg-card);
-            padding: 18px 0;
-            margin-top: auto;
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .footer-inner {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.45; transform: scale(0.85); }
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .spin {
-            animation: spin 0.9s linear infinite;
-        }
-
-        svg.icon {
-            width: 15px;
-            height: 15px;
-            stroke: currentColor;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            fill: none;
-            flex-shrink: 0;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="no-referrer" />
+  <title>NBAI · IP 与网络分流诊断工具</title>
+  <style>
+    :root {
+      --bg-main: #0b0f17;
+      --bg-card: #131b2e;
+      --bg-card-hover: #19233c;
+      --bg-subtle: #1b253d;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-highlight: rgba(56, 189, 248, 0.35);
+      --text-main: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --primary: #38bdf8;
+      --primary-bg: rgba(56, 189, 248, 0.12);
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.12);
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.12);
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.12);
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.35);
+      --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    html[data-theme="light"] {
+      --bg-main: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f8fafc;
+      --bg-subtle: #e2e8f0;
+      --border-color: rgba(15, 23, 42, 0.09);
+      --border-highlight: rgba(2, 132, 199, 0.35);
+      --text-main: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --primary: #0284c7;
+      --primary-bg: rgba(2, 132, 199, 0.1);
+      --success: #059669;
+      --success-bg: rgba(5, 150, 105, 0.1);
+      --warning: #d97706;
+      --warning-bg: rgba(217, 119, 6, 0.1);
+      --danger: #dc2626;
+      --danger-bg: rgba(220, 38, 38, 0.1);
+      --shadow: 0 6px 20px -4px rgba(15, 23, 42, 0.07);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.5;
+      min-height: 100vh;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .container {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 0 18px 48px;
+    }
+
+    /* 顶部导航栏 */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: color-mix(in srgb, var(--bg-main) 85%, transparent);
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+
+    .navbar-inner {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #38bdf8, #6366f1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: -0.5px;
+      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+    }
+
+    .brand-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .version-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--primary-bg);
+      color: var(--primary);
+      border: 1px solid var(--border-highlight);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      user-select: none;
+    }
+
+    .btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-highlight);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: transparent;
+      font-weight: 600;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.92;
+      background: var(--primary);
+      border-color: transparent;
+    }
+
+    .btn-icon {
+      width: 34px;
+      height: 34px;
+      padding: 0;
+    }
+
+    .btn svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+    }
+
+    /* 顶部智能分流诊断横幅 */
+    .summary-banner {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .summary-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-bg);
+      flex-shrink: 0;
+    }
+
+    .status-dot.ok {
+      background: var(--success);
+      box-shadow: 0 0 0 4px var(--success-bg);
+    }
+
+    .status-dot.warn {
+      background: var(--warning);
+      box-shadow: 0 0 0 4px var(--warning-bg);
+    }
+
+    .summary-title {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .summary-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .dualstack-pills {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .stack-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      border-radius: var(--radius-md);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      font-size: 12px;
+      font-family: var(--font-mono);
+    }
+
+    .stack-tag {
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
+    .stack-tag.v4 {
+      background: var(--primary-bg);
+      color: var(--primary);
+    }
+
+    .stack-tag.v6 {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+
+    /* 分区标题 */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 22px 0 12px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .section-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* 6 路 IP 卡片网格 */
+    .ip-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 1024px) {
+      .ip-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .ip-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .ip-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .ip-card:hover {
+      border-color: var(--border-highlight);
+    }
+
+    .ip-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .ip-source-name {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ip-source-desc {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 5px;
+      white-space: nowrap;
+    }
+
+    .badge-cn {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+
+    .badge-global {
+      background: var(--primary-bg);
+      color: var(--primary);
+    }
+
+    .ip-main-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 8px 0 10px;
+      padding: 9px 11px;
+      background: var(--bg-subtle);
+      border-radius: var(--radius-md);
+    }
+
+    .ip-addr {
+      font-family: var(--font-mono);
+      font-size: 15.5px;
+      font-weight: 700;
+      word-break: break-all;
+      color: var(--text-main);
+    }
+
+    .privacy-blur .ip-addr,
+    .privacy-blur .mask-target {
+      filter: blur(6px);
+      user-select: none;
+    }
+
+    .copy-mini {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      display: inline-flex;
+    }
+
+    .copy-mini:hover {
+      color: var(--primary);
+      background: var(--primary-bg);
+    }
+
+    .ip-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+    }
+
+    .ip-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ip-card-foot {
+      margin-top: 12px;
+      padding-top: 9px;
+      border-top: 1px dashed var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .retest-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      border-radius: 5px;
+      padding: 2px 7px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .retest-btn:hover {
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    /* HTTP 延迟测速 */
+    .latency-columns {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .latency-columns {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .site-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 9px;
+    }
+
+    @media (max-width: 520px) {
+      .site-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .site-item {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: border-color 0.15s ease;
+    }
+
+    .site-item:hover {
+      border-color: var(--border-highlight);
+    }
+
+    .site-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .site-domain {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .ping-badge {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .ping-fast {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+
+    .ping-mid {
+      background: var(--warning-bg);
+      color: var(--warning);
+    }
+
+    .ping-slow, .ping-fail {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+
+    .ping-wait {
+      background: var(--primary-bg);
+      color: var(--primary);
+    }
+
+    /* 自定义域名测速栏 */
+    .custom-ping-bar {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .input-box {
+      flex: 1;
+      min-width: 200px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px 12px;
+      color: var(--text-main);
+      font-size: 13px;
+      outline: none;
+    }
+
+    .input-box:focus {
+      border-color: var(--primary);
+    }
+
+    /* WebRTC & DNS & 环境信息 */
+    .diag-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 960px) {
+      .diag-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .kv-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 12.5px;
+    }
+
+    .kv-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 7px 10px;
+      background: var(--bg-subtle);
+      border-radius: var(--radius-sm);
+    }
+
+    .kv-key {
+      color: var(--text-secondary);
+    }
+
+    .kv-val {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      text-align: right;
+      word-break: break-all;
+    }
+
+    /* 弹窗样式 */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      max-width: 680px;
+      width: 100%;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .modal-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .tab-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .report-textarea {
+      width: 100%;
+      height: 260px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 12px;
+      resize: vertical;
+      outline: none;
+    }
+
+    /* 页脚 */
+    .footer {
+      margin-top: 36px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .footer a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      color: var(--primary);
+    }
+  </style>
 </head>
 <body>
 
-    <!-- 顶部导航栏 (NBAI 品牌专属) -->
-    <header class="navbar">
-        <div class="container navbar-inner">
-            <div class="brand-wrap">
-                <div class="brand-logo">NBAI</div>
-                <div>
-                    <div class="brand-title-row">
-                        <h1 class="brand-title">NBAI · IP 与网络分流诊断工具</h1>
-                        <a href="https://x.com/NBAI_dev" target="_blank" rel="noopener noreferrer" class="brand-badge" title="访问 NBAI 官方 X (Twitter)">
-                            <svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                            <span>@NBAI_dev</span>
-                        </a>
-                    </div>
-                    <p class="brand-sub">国内/国际 6 路多源出口探测 · 双栈连通性 · AI 平台延迟 · WebRTC & DNS 泄露诊断</p>
-                </div>
-            </div>
-
-            <div class="nav-actions">
-                <!-- 官方 X 快捷链接 -->
-                <a href="https://x.com/NBAI_dev" target="_blank" rel="noopener noreferrer" class="btn btn-x" title="关注 NBAI 官方 X 账号">
-                    <svg style="width:13px;height:13px;fill:currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                    <span>@NBAI_dev</span>
-                </a>
-
-                <!-- 30秒自动刷新 -->
-                <button id="btn-auto-refresh" onclick="toggleAutoRefresh()" class="btn" title="每 30 秒自动轮询刷新">
-                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-                    <span id="text-auto-refresh">自动刷新</span>
-                </button>
-
-                <!-- 隐私模式开关 -->
-                <button id="btn-privacy" onclick="togglePrivacyMode()" class="btn" title="一键模糊所有 IP 地址，方便安全截图发群">
-                    <svg class="icon" id="svg-privacy" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <span id="text-privacy">隐藏 IP</span>
-                </button>
-
-                <!-- 生成诊断报告弹窗 -->
-                <button onclick="openReportModal()" class="btn" title="生成中文排版摘要、导出长图或复制 AI 诊断指令">
-                    <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                    <span>生成诊断摘要</span>
-                </button>
-
-                <!-- 一键重新检测 -->
-                <button onclick="runAllChecks()" class="btn btn-primary">
-                    <svg class="icon" id="icon-recheck-all" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
-                    <span>全面重测</span>
-                </button>
-
-                <!-- 主题切换 -->
-                <button onclick="toggleTheme()" class="btn btn-icon-only" title="切换深色 / 浅色模式">
-                    <svg class="icon" id="icon-theme" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-                </button>
-            </div>
+  <!-- 顶部导航栏 -->
+  <header class="navbar">
+    <div class="navbar-inner">
+      <div class="brand">
+        <div class="brand-logo">NB</div>
+        <div class="brand-title-wrap">
+          <span class="brand-title">NBAI · IP 与网络分流诊断</span>
+          <span class="version-badge">v2.5.0</span>
         </div>
-    </header>
+      </div>
 
-    <main class="container">
+      <div class="nav-actions">
+        <!-- 隐私打码开关 -->
+        <button class="btn" id="btnPrivacy" onclick="togglePrivacy()" title="隐藏部分 IP 方便截图">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <span id="privacyText">隐藏 IP</span>
+        </button>
 
-        <!-- 顶部智能分流状态总览 + IPv4/IPv6 双栈实时探针 -->
-        <section class="card summary-banner">
-            <div class="summary-top">
-                <div class="summary-main">
-                    <div id="summary-icon" class="summary-icon-box">
-                        <svg style="width:24px;height:24px" class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    </div>
-                    <div>
-                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                            <span style="font-size:11px;font-weight:700;letter-spacing:0.05em;color:var(--text-muted);text-transform:uppercase">NBAI 智能分流判定</span>
-                            <span id="summary-badge" class="badge" style="background:var(--emerald-soft);color:var(--emerald)">正在并发检测...</span>
-                        </div>
-                        <h2 id="summary-title" style="font-size:16px;font-weight:700;margin-top:4px">正在对比国内直连与国际分流出口...</h2>
-                        <p id="summary-desc" style="font-size:12px;color:var(--text-muted);margin-top:3px">通过 6 路多源 IP 容灾探针与 16 个国内外/AI 站点延迟评估您的网络规则状态</p>
-                    </div>
-                </div>
+        <!-- 生成诊断摘要 -->
+        <button class="btn" onclick="openReportModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <span>诊断摘要</span>
+        </button>
 
-                <div class="summary-stats">
-                    <div class="stat-box">
-                        <div class="stat-label">国内均值延迟</div>
-                        <div id="stat-cn-avg" class="stat-val" style="color:var(--emerald)">-- ms</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">国际 & AI 均值</div>
-                        <div id="stat-intl-avg" class="stat-val" style="color:var(--sky)">-- ms</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">WebRTC 隐私</div>
-                        <div id="stat-webrtc" class="stat-val" style="font-size:13px;margin-top:5px">检测中...</div>
-                    </div>
-                </div>
-            </div>
+        <!-- 重新检测 -->
+        <button class="btn btn-primary" onclick="runAllChecks()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"/>
+            <polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          <span>重新检测</span>
+        </button>
 
-            <!-- 新增：IPv4 / IPv6 双栈协议连接状态条 -->
-            <div class="dual-stack-bar">
-                <div class="stack-pill">
-                    <div style="display:flex;align-items:center;gap:8px;min-width:0">
-                        <span id="v4-badge" class="stack-tag" style="background:var(--sky-soft);color:var(--sky)">IPv4 栈</span>
-                        <span id="v4-addr" class="ip-sensitive" style="font-family:var(--font-mono);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">正在探测 IPv4 出口...</span>
-                    </div>
-                    <span id="v4-status" style="font-size:11px;color:var(--text-muted);flex-shrink:0">检测中</span>
-                </div>
+        <!-- 主题切换 -->
+        <button class="btn btn-icon" onclick="toggleTheme()" title="切换深色/浅色模式">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+          </svg>
+        </button>
 
-                <div class="stack-pill">
-                    <div style="display:flex;align-items:center;gap:8px;min-width:0">
-                        <span id="v6-badge" class="stack-tag" style="background:var(--purple-soft);color:var(--purple)">IPv6 栈</span>
-                        <span id="v6-addr" class="ip-sensitive" style="font-family:var(--font-mono);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">正在探测 IPv6 出口...</span>
-                    </div>
-                    <span id="v6-status" style="font-size:11px;color:var(--text-muted);flex-shrink:0">检测中</span>
-                </div>
+        <!-- 极简 X 图标按钮 -->
+        <a class="btn btn-icon" href="https://x.com/NBAI_dev" target="_blank" rel="noopener noreferrer" title="NBAI X">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </header>
 
-                <button onclick="runDualStackProbe()" class="btn" title="单独重新探测 IPv4 / IPv6 双栈连接能力">
-                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                    <span>刷新双栈</span>
-                </button>
-            </div>
-        </section>
-
-        <!-- 模块 1：6 通道多源分流 IP 出口检测 (全通道 4 级容灾 + 单卡重测) -->
-        <section>
-            <div class="section-header">
-                <div class="section-title-wrap">
-                    <div class="section-indicator"></div>
-                    <div>
-                        <span class="section-title">多源分流 IP 出口矩阵</span>
-                        <span class="section-sub">（每通道内置 4 级 CORS/JSONP 容灾回退，点击卡片右上角可单独重测）</span>
-                    </div>
-                </div>
-                <div style="display:flex;align-items:center;gap:8px">
-                    <button onclick="runIpChecks()" class="btn">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-                        <span>重测全部 IP 通道</span>
-                    </button>
-                </div>
-            </div>
-
-            <div id="ip-cards-grid" class="ip-grid">
-                <!-- 由 JS 渲染 6 个通道卡片 -->
-            </div>
-        </section>
-
-        <!-- 模块 2：境内外网站 & 主流 AI 平台 HTTP 实时延迟测速 -->
-        <section>
-            <div class="section-header">
-                <div class="section-title-wrap">
-                    <div class="section-indicator" style="background:var(--emerald)"></div>
-                    <div>
-                        <span class="section-title">网站连通性 & AI 平台 HTTP 实时延迟</span>
-                        <span class="section-sub">（点击任意站点卡片可单独重测，支持添加自定义域名）</span>
-                    </div>
-                </div>
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                    <button onclick="openCustomSiteModal()" class="btn">
-                        <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        <span>自定义测速域名</span>
-                    </button>
-                    <button onclick="runLatencyChecks()" class="btn">
-                        <svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                        <span>重新测速全部站点</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="latency-group-label">
-                <span>🇨🇳 国内主流服务直连测速 (8 节点)</span>
-            </div>
-            <div id="latency-grid-cn" class="latency-grid"></div>
-
-            <div class="latency-group-label" style="margin-top:16px">
-                <span>🌍 国际主流站点 & AI 平台分流测速 (Google / X / ChatGPT / Claude / Gemini)</span>
-            </div>
-            <div id="latency-grid-intl" class="latency-grid"></div>
-        </section>
-
-        <!-- 模块 3：WebRTC 泄露检测 + DNS 边缘节点 + 浏览器指纹 -->
-        <section class="bottom-grid">
-            <!-- 左栏：WebRTC + DNS -->
-            <div style="display:flex;flex-direction:column;gap:18px">
-                <!-- WebRTC 检测卡 -->
-                <div class="card">
-                    <div class="section-header" style="margin-bottom:10px">
-                        <div class="section-title-wrap">
-                            <div class="section-indicator" style="background:var(--purple)"></div>
-                            <div>
-                                <div class="section-title" style="font-size:15px">WebRTC 真实 IP 泄露检测 (国内 + 国际双栈 STUN)</div>
-                                <div class="section-sub">并发探测腾讯/小米/B站与 Google/Cloudflare STUN 节点</div>
-                            </div>
-                        </div>
-                        <button onclick="runWebRTCCheck()" class="btn">重测 WebRTC</button>
-                    </div>
-
-                    <div id="webrtc-banner" class="info-box" style="margin-bottom:12px;display:flex;align-items:flex-start;gap:10px">
-                        <span class="status-dot dot-loading" style="margin-top:5px" id="webrtc-dot"></span>
-                        <div style="font-size:12px">
-                            <div id="webrtc-title" style="font-weight:700">正在收集 ICE 候选地址 (srflx / host)...</div>
-                            <div id="webrtc-desc" style="color:var(--text-muted);margin-top:2px">若开启代理后此处仍暴露本地宽带公网 IP，则代表存在 WebRTC UDP 泄露。</div>
-                        </div>
-                    </div>
-
-                    <div class="sub-grid-2">
-                        <div class="info-box">
-                            <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-muted)">
-                                <span>STUN 公网反射地址 (srflx)</span>
-                                <span id="webrtc-pub-tag" class="badge" style="background:var(--bg-card)">探测中</span>
-                            </div>
-                            <div id="webrtc-pub-list" style="font-family:var(--font-mono);font-size:13px;font-weight:700;margin-top:8px;word-break:break-all">--</div>
-                        </div>
-                        <div class="info-box">
-                            <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-muted)">
-                                <span>局域网 / 虚拟网卡候选 (host / mDNS)</span>
-                                <span id="webrtc-loc-tag" class="badge" style="background:var(--bg-card)">探测中</span>
-                            </div>
-                            <div id="webrtc-loc-list" style="font-family:var(--font-mono);font-size:13px;font-weight:700;margin-top:8px;word-break:break-all">--</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- DNS & Anycast 边缘节点检测卡 -->
-                <div class="card">
-                    <div class="section-header" style="margin-bottom:10px">
-                        <div class="section-title-wrap">
-                            <div class="section-indicator" style="background:var(--sky)"></div>
-                            <div>
-                                <div class="section-title" style="font-size:15px">DNS 递归出口 & Cloudflare Anycast 命中机房</div>
-                                <div class="section-sub">检测是否存在 DNS 污染/泄露，以及当前命中的 CDN 物理数据中心</div>
-                            </div>
-                        </div>
-                        <button onclick="runDnsCheck()" class="btn">重测 DNS</button>
-                    </div>
-
-                    <div class="sub-grid-2">
-                        <div class="info-box">
-                            <div style="font-size:11px;color:var(--text-muted)">上游 DNS 递归解析器出口 (EDNS)</div>
-                            <div id="dns-ip" class="ip-sensitive" style="font-family:var(--font-mono);font-size:14px;font-weight:700;margin-top:6px">正在探测...</div>
-                            <div id="dns-geo" style="font-size:12px;color:var(--text-secondary);margin-top:4px">请求随机特征子域名中...</div>
-                        </div>
-                        <div class="info-box">
-                            <div style="font-size:11px;color:var(--text-muted)">Cloudflare Anycast 接入点 / 协议栈</div>
-                            <div id="cf-colo" style="font-family:var(--font-mono);font-size:14px;font-weight:700;margin-top:6px">正在分析...</div>
-                            <div id="cf-proto" style="font-size:12px;color:var(--text-secondary);margin-top:4px">TLS / HTTP 版本识别中...</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 右栏：客户端环境与硬件指纹 -->
-            <div class="card" style="display:flex;flex-direction:column;justify-content:space-between">
-                <div>
-                    <div class="section-header" style="margin-bottom:8px">
-                        <div class="section-title-wrap">
-                            <div class="section-indicator" style="background:var(--amber)"></div>
-                            <div>
-                                <div class="section-title" style="font-size:15px">客户端系统环境与指纹特征</div>
-                                <div class="section-sub">检查系统时区、语言与代理出口国家是否一致</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="env-list"></div>
-                </div>
-
-                <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-color)">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-                        <span style="font-size:11px;font-weight:700;color:var(--text-muted)">USER-AGENT 标识</span>
-                        <button onclick="copyText(navigator.userAgent, 'User-Agent 已复制')" style="font-size:11px;color:var(--brand-primary);font-weight:600">复制 UA</button>
-                    </div>
-                    <div id="ua-display" class="info-box" style="font-family:var(--font-mono);font-size:11px;word-break:break-all;color:var(--text-secondary)"></div>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- 页脚：NBAI 版权所有 -->
-    <footer>
-        <div class="container footer-inner">
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                <strong style="color:var(--text-main)">© 2026 NBAI All Rights Reserved.</strong>
-                <span>·</span>
-                <span>NBAI Network Diagnostics Engine</span>
-                <span>·</span>
-                <a href="https://x.com/NBAI_dev" target="_blank" rel="noopener noreferrer" style="color:var(--brand-primary);font-weight:600;display:inline-flex;align-items:center;gap:4px">
-                    <svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                    <span>Follow @NBAI_dev on X</span>
-                </a>
-            </div>
-            <div id="last-check-time">上次检测: --</div>
+  <main class="container" id="appRoot">
+    <!-- 智能分流诊断横幅 -->
+    <section class="summary-banner">
+      <div class="summary-left">
+        <div class="status-dot" id="summaryDot"></div>
+        <div>
+          <div class="summary-title" id="summaryTitle">正在并发探测国内外分流链路...</div>
+          <div class="summary-desc" id="summaryDesc">国内直连通道优先响应，不会受海外节点超时阻塞</div>
         </div>
+      </div>
+      <div class="dualstack-pills">
+        <div class="stack-pill">
+          <span class="stack-tag v4">IPv4</span>
+          <span id="v4Status" class="mask-target">检测中...</span>
+        </div>
+        <div class="stack-pill">
+          <span class="stack-tag v6">IPv6</span>
+          <span id="v6Status" class="mask-target">检测中...</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 多源 IP 出口分流矩阵 -->
+    <div class="section-header">
+      <div class="section-title">
+        <span>🌐 多源分流出口 IP 检测 (6 路容灾矩阵)</span>
+      </div>
+      <div class="section-sub">支持点击单张卡片底部「重测」独立刷新</div>
+    </div>
+    <section class="ip-grid" id="ipGrid"></section>
+
+    <!-- 国内外 HTTP / CDN 延迟对比 -->
+    <div class="section-header">
+      <div class="section-title">
+        <span>⚡ 国内外主流服务实时延迟测速</span>
+      </div>
+      <div class="section-sub">采用无痕 Image + Fetch 双擎竞速，绕过国内 CDN 防盗链，点击任意站点可重测</div>
+    </div>
+    <section class="latency-columns">
+      <div class="panel-card">
+        <div class="panel-head">
+          <div class="panel-title">🇨🇳 国内主流服务 (直连测速)</div>
+          <span class="badge badge-cn" id="cnAvgBadge">计算中...</span>
+        </div>
+        <div class="site-grid" id="cnSiteGrid"></div>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-head">
+          <div class="panel-title">🌍 国际与 AI 平台 (代理分流测速)</div>
+          <span class="badge badge-global" id="globalAvgBadge">计算中...</span>
+        </div>
+        <div class="site-grid" id="globalSiteGrid"></div>
+      </div>
+    </section>
+
+    <!-- 自定义域名测速 -->
+    <div class="custom-ping-bar">
+      <input type="text" id="customUrlInput" class="input-box" placeholder="输入自定义网址测速，例如 https://www.qq.com 或 https://openai.com" />
+      <button class="btn" onclick="runCustomPing()">立即测速</button>
+      <span id="customPingResult" style="align-self:center;font-size:13px;font-family:var(--font-mono);"></span>
+    </div>
+
+    <!-- WebRTC、DNS 与终端环境信息 -->
+    <div class="section-header">
+      <div class="section-title">
+        <span>🛡️ 安全泄露与网络底层环境</span>
+      </div>
+    </div>
+    <section class="diag-grid">
+      <div class="panel-card">
+        <div class="panel-head">
+          <div class="panel-title">🔒 WebRTC 真实 IP 泄露检测</div>
+          <span class="badge badge-cn" id="webrtcBadge">探测中</span>
+        </div>
+        <div class="kv-list">
+          <div class="kv-row">
+            <span class="kv-key">公网反射地址 (srflx)</span>
+            <span class="kv-val mask-target" id="rtcPublicIp">正在通过腾讯/小米 STUN 探测...</span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-key">局域网 / 候选地址</span>
+            <span class="kv-val mask-target" id="rtcLocalIp">检测中...</span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-key">安全评估结论</span>
+            <span class="kv-val" id="rtcVerdict">分析中...</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-head">
+          <div class="panel-title">📡 Anycast 边缘机房与协议</div>
+          <span class="badge badge-global" id="dnsBadge">探测中</span>
+        </div>
+        <div class="kv-list">
+          <div class="kv-row">
+            <span class="kv-key">命中 Anycast 边缘节点</span>
+            <span class="kv-val" id="cfColoVal">检测中...</span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-key">传输层 HTTP / TLS 协议</span>
+            <span class="kv-val" id="cfHttpVal">检测中...</span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-key">WARP / 隧道状态</span>
+            <span class="kv-val" id="cfWarpVal">检测中...</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-head">
+          <div class="panel-title">💻 终端环境与连接参数</div>
+          <span class="badge badge-cn">本地环境</span>
+        </div>
+        <div class="kv-list" id="envList"></div>
+      </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+      <div>© 2026 <strong>NBAI</strong> All Rights Reserved. · Version <span style="font-family:var(--font-mono);">v2.5.0</span></div>
+      <div>
+        <a href="https://x.com/NBAI_dev" target="_blank" rel="noopener noreferrer">NBAI Official X</a>
+      </div>
     </footer>
+  </main>
 
-    <!-- 模态框 1：NBAI 可视化诊断报告中心 (文本 / Markdown / AI 排障 / 高清长图 / 分享到 X) -->
-    <div id="report-modal" class="modal-backdrop" onclick="if(event.target===this) closeReportModal()">
-        <div class="modal-panel">
-            <div class="modal-header">
-                <div style="display:flex;align-items:center;gap:8px">
-                    <span class="brand-logo" style="width:28px;height:28px;font-size:11px;border-radius:8px">NBAI</span>
-                    <h3 style="font-size:15px;font-weight:700">NBAI 网络分流诊断报告中心</h3>
-                </div>
-                <button onclick="closeReportModal()" class="btn btn-icon-only">✕</button>
-            </div>
-
-            <div class="modal-body">
-                <!-- 格式切换栏 -->
-                <div class="tab-bar">
-                    <button id="tab-text" class="tab-btn active" onclick="switchReportFormat('text')">💬 简洁文本 (发群/求助)</button>
-                    <button id="tab-md" class="tab-btn" onclick="switchReportFormat('md')">📝 Markdown 表格</button>
-                    <button id="tab-ai" class="tab-btn" onclick="switchReportFormat('ai')">🤖 AI 诊断指令 + JSON</button>
-                </div>
-
-                <!-- 隐私脱敏开关 -->
-                <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-subtle);padding:8px 12px;border-radius:10px;border:1px solid var(--border-color);font-size:12px">
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600">
-                        <input type="checkbox" id="chk-mask-ip" checked onchange="refreshReportContent()">
-                        <span>🔒 自动将 IP 后两段打码脱敏 (例如 114.247.*.*，保护个人宽带隐私)</span>
-                    </label>
-                    <span style="font-size:11px;color:var(--text-muted)">NBAI 安全保护</span>
-                </div>
-
-                <textarea id="report-output" class="report-textarea" readonly></textarea>
-            </div>
-
-            <div class="modal-footer">
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                    <button onclick="downloadRetinaCanvasImage()" class="btn">
-                        <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                        <span>🖼️ 保存高清诊断长图 (.png)</span>
-                    </button>
-                    <button onclick="shareToX()" class="btn btn-x">
-                        <svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                        <span>分享至 X (@NBAI_dev)</span>
-                    </button>
-                </div>
-                <div style="display:flex;align-items:center;gap:8px">
-                    <button onclick="closeReportModal()" class="btn">关闭</button>
-                    <button onclick="copyReportContent()" class="btn btn-primary">📋 一键复制报告内容</button>
-                </div>
-            </div>
-        </div>
+  <!-- 诊断摘要弹窗 -->
+  <div class="modal-backdrop" id="reportModal">
+    <div class="modal-box">
+      <div class="modal-top">
+        <div style="font-weight:700;font-size:15px;">📋 网络分流诊断报告 (v2.5.0)</div>
+        <button class="btn" onclick="closeReportModal()">关闭</button>
+      </div>
+      <div class="tab-row">
+        <button class="btn" onclick="switchReportFormat('text')">💬 简洁文本 (适合发群)</button>
+        <button class="btn" onclick="switchReportFormat('md')">📝 Markdown 表格</button>
+        <button class="btn" onclick="switchReportFormat('ai')">🤖 AI 排障指令 + JSON</button>
+        <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin-left:auto;cursor:pointer;">
+          <input type="checkbox" id="maskCheck" checked onchange="renderReportText()" />
+          自动打码 IP 保护隐私
+        </label>
+      </div>
+      <textarea class="report-textarea" id="reportOutput" readonly></textarea>
+      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+        <button class="btn btn-primary" onclick="copyReportText()">一键复制报告内容</button>
+      </div>
     </div>
+  </div>
 
-    <!-- 模态框 2：添加自定义测速域名 -->
-    <div id="custom-site-modal" class="modal-backdrop" onclick="if(event.target===this) closeCustomSiteModal()">
-        <div class="modal-panel" style="max-width:440px">
-            <div class="modal-header">
-                <h3 style="font-size:15px;font-weight:700">添加自定义测速域名 / 节点</h3>
-                <button onclick="closeCustomSiteModal()" class="btn btn-icon-only">✕</button>
-            </div>
-            <div class="modal-body">
-                <div>
-                    <label style="font-size:12px;font-weight:600;display:block;margin-bottom:5px">站点名称</label>
-                    <input id="custom-site-name" type="text" class="input-field" placeholder="例如：Netflix / Steam / 自建节点">
-                </div>
-                <div>
-                    <label style="font-size:12px;font-weight:600;display:block;margin-bottom:5px">目标 URL (含 https://)</label>
-                    <input id="custom-site-url" type="url" class="input-field" placeholder="https://www.netflix.com">
-                </div>
-                <div>
-                    <label style="font-size:12px;font-weight:600;display:block;margin-bottom:5px">归属分组</label>
-                    <select id="custom-site-group" class="input-field">
-                        <option value="intl">国际 & AI 分流组</option>
-                        <option value="cn">国内直连组</option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer" style="justify-content:flex-end">
-                <button onclick="closeCustomSiteModal()" class="btn">取消</button>
-                <button onclick="addCustomSite()" class="btn btn-primary">添加并立即测速</button>
-            </div>
-        </div>
-    </div>
+  <script>
+    const COLO_MAP = {
+      SHA: '中国上海', PEK: '中国北京', CAN: '中国广州', SZX: '中国深圳', CTU: '中国成都',
+      HGH: '中国杭州', TSN: '中国天津', CKG: '中国重庆', XIY: '中国西安', WUH: '中国武汉',
+      HKG: '中国香港', TPE: '中国台北', MFM: '中国澳门', NRT: '日本东京', KIX: '日本大阪',
+      ICN: '韩国首尔', SIN: '新加坡', LAX: '美国洛杉矶', SJC: '美国圣何塞', SEA: '美国西雅图',
+      ORD: '美国芝加哥', IAD: '美国弗吉尼亚', EWR: '美国纽瓦克', FRA: '德国法兰克福',
+      AMS: '荷兰阿姆斯特丹', LHR: '英国伦敦', CDG: '法国巴黎', SYD: '澳大利亚悉尼'
+    };
 
-    <!-- 全局浮动通知容器 -->
-    <div id="toast-container" class="toast-wrap"></div>
+    const STATE = {
+      privacy: false,
+      reportFormat: 'text',
+      v4: '',
+      v6: '',
+      ipResults: {},
+      pingResults: { cn: {}, global: {} },
+      webrtc: { publicIp: '', localIp: '', verdict: '检测中' },
+      trace: { colo: '-', http: '-', warp: '-' }
+    };
 
-    <script>
-        /********************************************************************
-         * 1. 全局状态、机场三字码字典与 JSONP 线程安全队列
-         ********************************************************************/
-        const STATE = {
-            privacy: false,
-            autoRefresh: false,
-            autoTimer: null,
-            countdown: 30,
-            reportFormat: 'text',
-            dualStack: { v4: null, v6: null },
-            ipChannels: {},
-            latencies: {},
-            webrtc: { publicIps: [], localIps: [], count: 0 },
-            dns: { ip: null, geo: null },
-            cfEdge: { colo: null, http: null, tls: null }
+    const IP_CHANNELS = [
+      { id: 'cn_direct', name: '国内直连 (太平洋/腾讯)', desc: '检测本地宽带直连出口与省市运营商', tag: '国内直连', tagClass: 'badge-cn' },
+      { id: 'cn_bgp', name: '国内分流 (国内 BGP 节点)', desc: '检验国内分流规则，内置 4 级 CORS/JSONP 容灾', tag: '国内 BGP', tagClass: 'badge-cn' },
+      { id: 'cf_cn', name: 'Cloudflare 中国 / 混合', desc: '京东云合作节点与全球 Anycast 连通探测', tag: 'Anycast', tagClass: 'badge-cn' },
+      { id: 'global_ipsb', name: '国际分流 (IP.SB / 全球)', desc: '检验常用海外代理规则是否正常生效', tag: '海外分流', tagClass: 'badge-global' },
+      { id: 'global_ipinfo', name: '国际分流 (IPInfo.io)', desc: '海外主流 ASN 与数据中心归属地库', tag: '海外分流', tagClass: 'badge-global' },
+      { id: 'global_geo', name: '国际分流 (IPWhois / GeoJS)', desc: '检验全局代理或兜底规则出口 IP', tag: '海外分流', tagClass: 'badge-global' }
+    ];
+
+    const CN_SITES = [
+      { id: 'baidu', name: '百度搜索', domain: 'baidu.com', img: 'https://www.baidu.com/img/flexible/logo/pc/result.png', url: 'https://www.baidu.com/favicon.ico' },
+      { id: 'taobao', name: '淘宝网', domain: 'alicdn.com', img: 'https://img.alicdn.com/tfs/TB1_uT8a5ERMeJjSspiXXbZLFXa-143-59.png', url: 'https://www.taobao.com/favicon.ico' },
+      { id: 'wechat', name: '微信 / 腾讯', domain: 'qq.com', img: 'https://mat1.gtimg.com/www/icon/favicon2.ico', url: 'https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico' },
+      { id: 'bilibili', name: '哔哩哔哩', domain: 'bilibili.com', img: 'https://www.bilibili.com/favicon.ico', url: 'https://s1.hdslb.com/bfs/static/jinkela/long/images/favicon.ico' },
+      { id: 'jd', name: '京东商城', domain: 'jd.com', img: 'https://www.jd.com/favicon.ico', url: 'https://m.jd.com/favicon.ico' },
+      { id: 'netease', name: '网易云音乐', domain: '163.com', img: 'https://s1.music.126.net/style/favicon.ico', url: 'https://www.163.com/favicon.ico' },
+      { id: 'douyin', name: '字节 / 抖音', domain: 'toutiao.com', img: 'https://sf1-cdn-tos.toutiaostatic.com/obj/eden-cn/uhbfnupkbps/toutiao_favicon.ico', url: 'https://www.toutiao.com/favicon.ico' },
+      { id: 'zhihu', name: '知乎社区', domain: 'zhihu.com', img: 'https://static.zhihu.com/heifetz/favicon.ico', url: 'https://www.zhihu.com/favicon.ico' }
+    ];
+
+    const GLOBAL_SITES = [
+      { id: 'google', name: 'Google', domain: 'google.com', img: 'https://www.google.com/favicon.ico', url: 'https://www.google.com/generate_204' },
+      { id: 'github', name: 'GitHub', domain: 'github.com', img: 'https://github.githubassets.com/favicons/favicon.svg', url: 'https://github.com/favicon.ico' },
+      { id: 'x', name: 'X (Twitter)', domain: 'x.com', img: 'https://abs.twimg.com/favicons/twitter.3.ico', url: 'https://x.com/favicon.ico' },
+      { id: 'youtube', name: 'YouTube', domain: 'youtube.com', img: 'https://www.youtube.com/favicon.ico', url: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/default.jpg' },
+      { id: 'chatgpt', name: 'ChatGPT / OpenAI', domain: 'chatgpt.com', img: 'https://chatgpt.com/favicon.ico', url: 'https://cdn.oaistatic.com/assets/favicon-o20kmmos.svg' },
+      { id: 'claude', name: 'Claude AI', domain: 'claude.ai', img: 'https://claude.ai/favicon.ico', url: 'https://anthropic.com/favicon.ico' },
+      { id: 'gemini', name: 'Google Gemini', domain: 'gemini.google.com', img: 'https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg', url: 'https://gemini.google.com/favicon.ico' },
+      { id: 'wikipedia', name: 'Wikipedia', domain: 'wikipedia.org', img: 'https://www.wikipedia.org/static/favicon/wikipedia.ico', url: 'https://en.wikipedia.org/favicon.ico' }
+    ];
+
+    async function fetchWithTimeout(url, options = {}, timeout = 4200) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
+      try {
+        const res = await fetch(url, { ...options, referrerPolicy: 'no-referrer', signal: controller.signal });
+        clearTimeout(timer);
+        return res;
+      } catch (e) {
+        clearTimeout(timer);
+        throw e;
+      }
+    }
+
+    let pconlineLock = Promise.resolve();
+    function fetchPconlineJsonp(timeout = 3800) {
+      const run = () => new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        const timer = setTimeout(() => { cleanup(); reject(new Error('JSONP Timeout')); }, timeout);
+
+        function cleanup() {
+          clearTimeout(timer);
+          if (script.parentNode) script.parentNode.removeChild(script);
+        }
+
+        window.IPCAllback = function(data) {
+          cleanup();
+          if (data && data.ip) {
+            resolve({
+              ip: data.ip,
+              location: [data.pro, data.city, data.region].filter(Boolean).join(' ') || data.addr || '中国',
+              isp: (data.addr || '').split(' ').pop() || '国内宽带',
+              source: 'PConline JSONP',
+              isCN: true
+            });
+          } else {
+            reject(new Error('Invalid PConline Data'));
+          }
         };
 
-        const IATA_MAP = {
-            SHA: '中国上海', PVG: '中国上海', PEK: '中国北京', PKX: '中国北京', CAN: '中国广州',
-            SZX: '中国深圳', CTU: '中国成都', TFU: '中国成都', HGH: '中国杭州', CKG: '中国重庆',
-            XIY: '中国西安', WUH: '中国武汉', NKG: '中国南京', TSN: '中国天津', TAQ: '中国青岛',
-            CGO: '中国郑州', CSX: '中国长沙', XMN: '中国厦门', FOC: '中国福州', KMG: '中国昆明',
-            HKG: '中国香港', MFM: '中国澳门', TPE: '中国台北', KHH: '中国高雄',
-            NRT: '日本东京', HND: '日本东京', KIX: '日本大阪', FUK: '日本福冈', NGO: '日本名古屋',
-            SIN: '新加坡', ICN: '韩国首尔', SJC: '美国圣何塞', LAX: '美国洛杉矶', SFO: '美国旧金山',
-            SEA: '美国西雅图', ORD: '美国芝加哥', IAD: '美国华盛顿', EWR: '美国纽瓦克', DFW: '美国达拉斯',
-            FRA: '德国法兰克福', AMS: '荷兰阿姆斯特丹', LHR: '英国伦敦', CDG: '法国巴黎',
-            SYD: '澳大利亚悉尼', MEL: '澳大利亚墨尔本', YVR: '加拿大温哥华', YYZ: '加拿大多伦多',
-            BKK: '泰国曼谷', KUL: '马来西亚吉隆坡', DXB: '阿联酋迪拜'
+        script.referrerPolicy = 'no-referrer';
+        script.src = 'https://whois.pconline.com.cn/ipJson.jsp?callback=IPCAllback&_=' + Date.now();
+        script.onerror = () => { cleanup(); reject(new Error('Script Error')); };
+        document.head.appendChild(script);
+      });
+      pconlineLock = pconlineLock.then(run, run);
+      return pconlineLock;
+    }
+
+    function fetchQqVideoJsonp(timeout = 3500) {
+      return new Promise((resolve, reject) => {
+        const cbName = 'qqIpCb_' + Math.floor(Math.random() * 100000);
+        const script = document.createElement('script');
+        const timer = setTimeout(() => { cleanup(); reject(new Error('QQ JSONP Timeout')); }, timeout);
+
+        function cleanup() {
+          clearTimeout(timer);
+          delete window[cbName];
+          if (script.parentNode) script.parentNode.removeChild(script);
+        }
+
+        window[cbName] = function(data) {
+          cleanup();
+          if (data && data.ip) {
+            resolve({
+              ip: data.ip,
+              location: '中国大陆节点',
+              isp: '腾讯云边缘探测',
+              source: 'Tencent Video JSONP',
+              isCN: true
+            });
+          } else {
+            reject(new Error('No IP in QQ response'));
+          }
         };
 
-        function parseCfTrace(text) {
-            const obj = {};
-            text.trim().split('\n').forEach(line => {
-                const idx = line.indexOf('=');
-                if (idx > -1) obj[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
-            });
-            return obj;
-        }
+        script.referrerPolicy = 'no-referrer';
+        script.src = `https://vv.video.qq.com/checktime?otype=json&callback=${cbName}&_=${Date.now()}`;
+        script.onerror = () => { cleanup(); reject(new Error('QQ Script Error')); };
+        document.head.appendChild(script);
+      });
+    }
 
-        async function fetchWithTimeout(url, timeoutMs = 4800) {
-            const ctrl = new AbortController();
-            const id = setTimeout(() => ctrl.abort(), timeoutMs);
-            try {
-                const res = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
-                clearTimeout(id);
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                return res;
-            } catch (e) {
-                clearTimeout(id);
-                throw e;
-            }
-        }
+    function parseCfTrace(text, sourceLabel) {
+      const lines = {};
+      text.split('\n').forEach(line => {
+        const idx = line.indexOf('=');
+        if (idx > 0) lines[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+      });
+      if (!lines.ip) throw new Error('Invalid Trace');
+      const colo = lines.colo || '';
+      const city = COLO_MAP[colo] || colo || 'Anycast';
+      const isCN = lines.loc === 'CN' || ['SHA','PEK','CAN','SZX','CTU','HGH','TSN','CKG','XIY','WUH'].includes(colo);
+      STATE.trace = {
+        colo: colo ? `${colo} (${city})` : '-',
+        http: `${lines.http || '-'} / ${lines.tls || '-'}`,
+        warp: lines.warp || 'off'
+      };
+      updateTracePanel();
+      return {
+        ip: lines.ip,
+        location: `${lines.loc || ''} · ${city}机房`.trim(),
+        isp: `Cloudflare (${colo || 'Edge'})`,
+        source: sourceLabel,
+        isCN
+      };
+    }
 
-        // 太平洋电脑网 JSONP 互斥队列锁（避免固定全局函数名 IPCallBack 并发冲突）
-        let pconlineLock = Promise.resolve();
-        function fetchPconlineJsonp(timeoutMs = 4500) {
-            const run = () => new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                let done = false;
-                const timer = setTimeout(() => {
-                    if (done) return;
-                    done = true;
-                    cleanup();
-                    reject(new Error('PConline JSONP Timeout'));
-                }, timeoutMs);
+    async function probeChannel(channelId) {
+      const t0 = performance.now();
+      const wrap = async (fn) => {
+        const res = await fn();
+        res.ms = Math.max(1, Math.round(performance.now() - t0));
+        return res;
+      };
 
-                function cleanup() {
-                    clearTimeout(timer);
-                    if (script.parentNode) script.parentNode.removeChild(script);
-                }
-
-                window.IPCallBack = function(data) {
-                    if (done) return;
-                    done = true;
-                    cleanup();
-                    if (data && data.ip) {
-                        resolve({
-                            ip: data.ip,
-                            location: '中国 ' + [data.pro, data.city].filter(Boolean).join(' '),
-                            isp: data.addr ? data.addr.split(' ').pop() : '国内宽带',
-                            countryCode: 'CN',
-                            hitSource: 'PConline JSONP'
-                        });
-                    } else {
-                        reject(new Error('Invalid PConline payload'));
-                    }
-                };
-
-                script.onerror = () => {
-                    if (done) return;
-                    done = true;
-                    cleanup();
-                    reject(new Error('PConline Script Error'));
-                };
-                script.src = 'https://whois.pconline.com.cn/ipJson.jsp?json=true&_t=' + Date.now();
-                document.head.appendChild(script);
-            });
-
-            pconlineLock = pconlineLock.then(run, run);
-            return pconlineLock;
-        }
-
-        // 腾讯视频 checktime JSONP 备选源
-        let qqVideoLock = Promise.resolve();
-        function fetchQqVideoJsonp(timeoutMs = 4500) {
-            const run = () => new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                let done = false;
-                const timer = setTimeout(() => {
-                    if (done) return;
-                    done = true;
-                    cleanup();
-                    reject(new Error('QQ JSONP Timeout'));
-                }, timeoutMs);
-
-                function cleanup() {
-                    clearTimeout(timer);
-                    if (script.parentNode) script.parentNode.removeChild(script);
-                }
-
-                window.QZOutputJson = null;
-                script.onload = () => {
-                    if (done) return;
-                    done = true;
-                    const data = window.QZOutputJson;
-                    cleanup();
-                    if (data && data.ip) {
-                        resolve({
-                            ip: data.ip,
-                            location: '中国大陆 (腾讯边缘节点识别)',
-                            isp: '国内直连网络',
-                            countryCode: 'CN',
-                            hitSource: 'Tencent Video JSONP'
-                        });
-                    } else {
-                        reject(new Error('Empty QQ JSONP'));
-                    }
-                };
-                script.onerror = () => {
-                    if (done) return;
-                    done = true;
-                    cleanup();
-                    reject(new Error('QQ Script Error'));
-                };
-                script.src = 'https://vv.video.qq.com/checktime?otype=json&_t=' + Date.now();
-                document.head.appendChild(script);
-            });
-            qqVideoLock = qqVideoLock.then(run, run);
-            return qqVideoLock;
-        }
-
-        // UserAgentInfo 国内高速 CORS / JSONP 接口
-        async function fetchUserAgentInfoCors() {
-            const res = await fetchWithTimeout('https://ip.useragentinfo.com/json?_t=' + Date.now(), 4200);
-            const d = await res.json();
-            if (!d || !d.ip) throw new Error('Empty ip.useragentinfo');
+      const adapters = {
+        cn_direct: [
+          () => fetchPconlineJsonp(3500),
+          async () => {
+            const r = await fetchWithTimeout('https://ip.useragentinfo.com/json', {}, 3500);
+            const d = await r.json();
+            if (!d.ip) throw new Error('Empty');
             return {
-                ip: d.ip,
-                location: [d.country, d.province, d.city, d.area].filter(Boolean).join(' '),
-                isp: [d.isp, d.net].filter(Boolean).join(' ') || '国内运营商',
-                countryCode: d.short_name || 'CN',
-                hitSource: 'UserAgentInfo BGP'
+              ip: d.ip,
+              location: [d.country, d.province, d.city, d.area].filter(Boolean).join(' '),
+              isp: [d.isp, d.net].filter(Boolean).join(' ') || '国内网络',
+              source: 'UserAgentInfo',
+              isCN: d.country === '中国' || d.short_name === 'CN'
             };
-        }
-
-        function fetchUserAgentInfoJsonp(timeoutMs = 4200) {
-            return new Promise((resolve, reject) => {
-                const cbName = 'nbai_ua_cb_' + Math.random().toString(36).slice(2, 8);
-                const script = document.createElement('script');
-                const timer = setTimeout(() => {
-                    cleanup();
-                    reject(new Error('UA JSONP Timeout'));
-                }, timeoutMs);
-
-                function cleanup() {
-                    clearTimeout(timer);
-                    delete window[cbName];
-                    if (script.parentNode) script.parentNode.removeChild(script);
-                }
-
-                window[cbName] = (d) => {
-                    cleanup();
-                    if (d && d.ip) {
-                        resolve({
-                            ip: d.ip,
-                            location: [d.country, d.province, d.city].filter(Boolean).join(' '),
-                            isp: [d.isp, d.net].filter(Boolean).join(' ') || '国内 BGP',
-                            countryCode: d.short_name || 'CN',
-                            hitSource: 'UserAgentInfo JSONP'
-                        });
-                    } else {
-                        reject(new Error('Invalid UA JSONP'));
-                    }
-                };
-                script.onerror = () => {
-                    cleanup();
-                    reject(new Error('UA JSONP Error'));
-                };
-                script.src = `https://ip.useragentinfo.com/jsonp?callback=${cbName}&_t=${Date.now()}`;
-                document.head.appendChild(script);
-            });
-        }
-
-        async function fetchVoreDomesticCors() {
-            const res = await fetchWithTimeout('https://api.vore.top/api/IPdata?_t=' + Date.now(), 4500);
-            const d = await res.json();
-            if (!d || !d.ipinfo || !d.ipinfo.text) throw new Error('Invalid Vore response');
-            const ad = d.ipdata || {};
+          },
+          () => fetchQqVideoJsonp(3500)
+        ],
+        cn_bgp: [
+          async () => {
+            const r = await fetchWithTimeout('https://ip.useragentinfo.com/json', {}, 3500);
+            const d = await r.json();
+            if (!d.ip) throw new Error('Empty');
             return {
-                ip: d.ipinfo.text,
-                location: [ad.info1, ad.info2, ad.info3].filter(Boolean).join(' ') || '中国大陆',
-                isp: ad.isp || '国内宽带运营商',
-                countryCode: d.ipinfo.cnip ? 'CN' : '',
-                hitSource: 'Vore 国内节点'
+              ip: d.ip,
+              location: [d.country, d.province, d.city].filter(Boolean).join(' '),
+              isp: [d.isp, d.net].filter(Boolean).join(' ') || '国内 BGP',
+              source: 'UserAgentInfo BGP',
+              isCN: d.country === '中国' || d.short_name === 'CN'
             };
-        }
-
-        /********************************************************************
-         * 2. 6 路多源 IP 通道定义 (每路均配备 4 级容灾回退)
-         ********************************************************************/
-        const IP_CHANNELS = [
-            {
-                id: 'cn_direct',
-                name: '国内直连 (太平洋 / 腾讯主干)',
-                badge: '国内直连基准',
-                badgeStyle: 'background:var(--emerald-soft);color:var(--emerald)',
-                desc: '检测中国大陆直连出口与省市宽带归属',
-                fallbacks: [
-                    fetchPconlineJsonp,
-                    fetchUserAgentInfoCors,
-                    fetchVoreDomesticCors,
-                    fetchQqVideoJsonp
-                ]
-            },
-            {
-                id: 'cn_bgp',
-                name: '国内分流 (国内 BGP / 运营商)',
-                badge: '国内BGP检测',
-                badgeStyle: 'background:var(--sky-soft);color:var(--sky)',
-                desc: '检验国内分流规则是否正常工作，识别三大运营商',
-                fallbacks: [
-                    fetchUserAgentInfoCors,
-                    fetchVoreDomesticCors,
-                    fetchUserAgentInfoJsonp,
-                    fetchPconlineJsonp
-                ]
-            },
-            {
-                id: 'cf_cn',
-                name: 'Cloudflare 中国/全球 (Anycast)',
-                badge: 'CF 边缘节点',
-                badgeStyle: 'background:var(--amber-soft);color:var(--amber)',
-                desc: '探测 Cloudflare 中国合作节点及全球 Anycast 路由',
-                fallbacks: [
-                    async () => {
-                        const res = await fetchWithTimeout('https://www.cloudflare-cn.com/cdn-cgi/trace', 4000);
-                        const map = parseCfTrace(await res.text());
-                        if (!map.ip) throw new Error('No IP');
-                        const city = IATA_MAP[map.colo] || map.colo || '未知';
-                        return {
-                            ip: map.ip,
-                            location: `${map.loc || 'CN'} · 命中 ${city} (${map.colo})`,
-                            isp: `Cloudflare China (${map.http} / ${map.tls})`,
-                            countryCode: map.loc || 'CN',
-                            hitSource: 'cloudflare-cn.com',
-                            cfTrace: map
-                        };
-                    },
-                    async () => {
-                        const res = await fetchWithTimeout('https://www.visa.cn/cdn-cgi/trace', 4200);
-                        const map = parseCfTrace(await res.text());
-                        if (!map.ip) throw new Error('No IP');
-                        const city = IATA_MAP[map.colo] || map.colo || '未知';
-                        return {
-                            ip: map.ip,
-                            location: `${map.loc || ''} · 命中 ${city} (${map.colo})`,
-                            isp: `Cloudflare Edge (${map.http} / ${map.tls})`,
-                            countryCode: map.loc || '',
-                            hitSource: 'visa.cn Trace',
-                            cfTrace: map
-                        };
-                    },
-                    async () => {
-                        const res = await fetchWithTimeout('https://1.0.0.1/cdn-cgi/trace', 4200);
-                        const map = parseCfTrace(await res.text());
-                        const city = IATA_MAP[map.colo] || map.colo || '未知';
-                        return {
-                            ip: map.ip,
-                            location: `${map.loc || ''} · 命中 ${city} (${map.colo})`,
-                            isp: `Cloudflare 1.0.0.1 (${map.http})`,
-                            countryCode: map.loc || '',
-                            hitSource: '1.0.0.1 Trace',
-                            cfTrace: map
-                        };
-                    }
-                ]
-            },
-            {
-                id: 'intl_ipsb',
-                name: '国外分流 (IP.SB / 国际 Anycast)',
-                badge: '常用海外分流',
-                badgeStyle: 'background:var(--brand-soft);color:var(--brand-primary)',
-                desc: '检验代理工具海外常用分流规则的出口 IP 与 ASN',
-                fallbacks: [
-                    async () => {
-                        const res = await fetchWithTimeout('https://api.ip.sb/geoip', 4500);
-                        const d = await res.json();
-                        return {
-                            ip: d.ip,
-                            location: [d.country, d.region, d.city].filter(Boolean).join(' · ') || '海外节点',
-                            isp: d.asn ? `AS${d.asn} ${d.organization || d.isp || ''}` : (d.organization || 'International ISP'),
-                            countryCode: d.country_code || '',
-                            hitSource: 'api.ip.sb'
-                        };
-                    },
-                    async () => {
-                        const res = await fetchWithTimeout('https://ipwho.is/?lang=zh-CN', 4500);
-                        const d = await res.json();
-                        if (!d.success) throw new Error('ipwho.is failed');
-                        return {
-                            ip: d.ip,
-                            location: [d.country, d.region, d.city].filter(Boolean).join(' · '),
-                            isp: d.connection?.asn ? `AS${d.connection.asn} ${d.connection.org || d.connection.isp || ''}` : 'International',
-                            countryCode: d.country_code || '',
-                            hitSource: 'ipwho.is'
-                        };
-                    },
-                    async () => {
-                        const res = await fetchWithTimeout('https://freeipapi.com/api/json', 4500);
-                        const d = await res.json();
-                        return {
-                            ip: d.ipAddress,
-                            location: [d.countryName, d.regionName, d.cityName].filter(Boolean).join(' · '),
-                            isp: d.asn ? `AS${d.asn} ${d.asnOrganization || ''}` : 'Global Route',
-                            countryCode: d.countryCode || '',
-                            hitSource: 'freeipapi.com'
-                        };
-                    }
-                ]
-            },
-            {
-                id: 'intl_ipinfo',
-                name: '国际通用 (IPInfo / 全球商用库)',
-                badge: '高精准ASN库',
-                badgeStyle: 'background:var(--purple-soft);color:var(--purple)',
-                desc: '全球主流高精度机房与原生/广播 IP 属性识别',
-                fallbacks: [
-                    async () => {
-                        const res = await fetchWithTimeout('https://ipinfo.io/json', 4500);
-                        const d = await res.json();
-                        return {
-                            ip: d.ip,
-                            location: [d.country, d.region, d.city].filter(Boolean).join(' · '),
-                            isp: d.org || 'Global ASN',
-                            countryCode: d.country || '',
-                            hitSource: 'ipinfo.io'
-                        };
-                    },
-                    async () => {
-                        const res = await fetchWithTimeout('https://api.bigdatacloud.net/data/client-ip', 4500);
-                        const d = await res.json();
-                        return {
-                            ip: d.ipString,
-                            location: '全球路由节点 (' + (d.ipType || 'IPv4') + ')',
-                            isp: 'BigDataCloud Global',
-                            countryCode: '',
-                            hitSource: 'bigdatacloud.net'
-                        };
-                    },
-                    async () => {
-                        const res = await fetchWithTimeout('https://ipapi.co/json/', 4500);
-                        const d = await res.json();
-                        if (d.error) throw new Error('Rate limit');
-                        return {
-                            ip: d.ip,
-                            location: [d.country_name, d.region, d.city].filter(Boolean).join(' · '),
-                            isp: `${d.asn || ''} ${d.org || ''}`.trim(),
-                            countryCode: d.country_code || '',
-                            hitSource: 'ipapi.co'
-                        };
-                    }
-                ]
-            },
-            {
-                id: 'intl_geojs',
-                name: '国际分流 & AI 出口 (GeoJS / AWS)',
-                badge: '欧美 & AI 路由',
-                badgeStyle: 'background:var(--rose-soft);color:var(--rose)',
-                desc: '检测访问欧美云服务及 AI 接口时的公网出口',
-                fallbacks: [
-                    async () => {
-                        const res = await fetchWithTimeout('https://get.geojs.io/v1/ip/geo.json', 4500);
-                        const d = await res.json();
-                        return {
-                            ip: d.ip,
-                            location: [d.country, d.region, d.city].filter(Boolean).join(' · '),
-                            isp: d.organization_name ? `AS${d.asn || ''} ${d.organization_name}` : (d.organization || 'Global ISP'),
-                            countryCode: d.country_code || '',
-                            hitSource: 'get.geojs.io'
-                        };
-                    },
-                    async () => {
-                        const res = await fetchWithTimeout('https://www.cloudflare.com/cdn-cgi/trace', 4500);
-                        const map = parseCfTrace(await res.text());
-                        const city = IATA_MAP[map.colo] || map.colo || 'Global';
-                        return {
-                            ip: map.ip,
-                            location: `${map.loc || ''} · 命中 ${city} (${map.colo})`,
-                            isp: `Cloudflare Global (${map.http} / ${map.tls})`,
-                            countryCode: map.loc || '',
-                            hitSource: 'cloudflare.com',
-                            cfTrace: map
-                        };
-                    },
-                    async () => {
-                        const res = await fetchWithTimeout('https://api64.ipify.org?format=json', 4500);
-                        const d = await res.json();
-                        return {
-                            ip: d.ip,
-                            location: 'AWS Global Anycast Endpoint',
-                            isp: 'Ipify Dual-Stack',
-                            countryCode: '',
-                            hitSource: 'api64.ipify.org'
-                        };
-                    }
-                ]
-            }
-        ];
-
-        /********************************************************************
-         * 3. 国内外网站 & AI 平台延迟目标定义 (8 国内 + 8 国际/AI)
-         ********************************************************************/
-        const DEFAULT_LATENCY_SITES = [
-            // 国内组 (8个)
-            { id: 'baidu', group: 'cn', name: '百度搜索', cat: '国内引擎', url: 'https://www.baidu.com/favicon.ico' },
-            { id: 'taobao', group: 'cn', name: '淘宝网', cat: '阿里电商', url: 'https://www.taobao.com/favicon.ico' },
-            { id: 'wechat', group: 'cn', name: '微信公众平台', cat: '腾讯生态', url: 'https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico' },
-            { id: 'bilibili', group: 'cn', name: '哔哩哔哩', cat: '国内弹幕网', url: 'https://www.bilibili.com/favicon.ico' },
-            { id: 'jd', group: 'cn', name: '京东商城', cat: '国内电商', url: 'https://www.jd.com/favicon.ico' },
-            { id: 'netease', group: 'cn', name: '网易云音乐', cat: '国内流媒体', url: 'https://music.163.com/favicon.ico' },
-            { id: 'douyin', group: 'cn', name: '抖音官网', cat: '字节跳动', url: 'https://www.douyin.com/favicon.ico' },
-            { id: 'zhihu', group: 'cn', name: '知乎社区', cat: '国内问答', url: 'https://static.zhihu.com/heifetz/favicon.ico' },
-
-            // 国际 & AI 组 (8个)
-            { id: 'google', group: 'intl', name: 'Google', cat: '国际核心', url: 'https://www.google.com/generate_204' },
-            { id: 'github', group: 'intl', name: 'GitHub', cat: '开发者平台', url: 'https://github.com/favicon.ico' },
-            { id: 'x_twitter', group: 'intl', name: 'X (Twitter)', cat: '社交网络', url: 'https://abs.twimg.com/favicons/twitter.3.ico' },
-            { id: 'youtube', group: 'intl', name: 'YouTube', cat: '4K 流媒体', url: 'https://www.youtube.com/favicon.ico' },
-            { id: 'chatgpt', group: 'intl', name: 'ChatGPT', cat: 'OpenAI', url: 'https://chatgpt.com/favicon.ico' },
-            { id: 'claude', group: 'intl', name: 'Claude AI', cat: 'Anthropic', url: 'https://claude.ai/favicon.ico' },
-            { id: 'gemini', group: 'intl', name: 'Google Gemini', cat: 'Google AI', url: 'https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg' },
-            { id: 'wikipedia', group: 'intl', name: 'Wikipedia', cat: '维基百科', url: 'https://www.wikipedia.org/static/favicon/wikipedia.ico' }
-        ];
-
-        function getLatencySites() {
-            try {
-                const custom = JSON.parse(localStorage.getItem('nbai_custom_sites') || '[]');
-                return [...DEFAULT_LATENCY_SITES, ...custom];
-            } catch (_) {
-                return [...DEFAULT_LATENCY_SITES];
-            }
-        }
-
-        /********************************************************************
-         * 4. IPv4 / IPv6 双栈独立探测模块
-         ********************************************************************/
-        async function runDualStackProbe() {
-            const v4AddrEl = document.getElementById('v4-addr');
-            const v4StatEl = document.getElementById('v4-status');
-            const v6AddrEl = document.getElementById('v6-addr');
-            const v6StatEl = document.getElementById('v6-status');
-
-            v4AddrEl.textContent = '探测中...';
-            v4StatEl.textContent = '请求中';
-            v6AddrEl.textContent = '探测中...';
-            v6StatEl.textContent = '请求中';
-
-            // 探测纯 IPv4
-            (async () => {
-                const v4Endpoints = [
-                    'https://4.ipw.cn',
-                    'https://v4.ident.me',
-                    'https://api4.ipify.org'
-                ];
-                for (const url of v4Endpoints) {
-                    try {
-                        const res = await fetchWithTimeout(url, 3800);
-                        const txt = (await res.text()).trim();
-                        if (/^(\d{1,3}\.){3}\d{1,3}$/.test(txt)) {
-                            STATE.dualStack.v4 = txt;
-                            v4AddrEl.textContent = txt;
-                            v4StatEl.innerHTML = '<span style="color:var(--emerald);font-weight:700">● 已就绪</span>';
-                            return;
-                        }
-                    } catch (_) {}
-                }
-                STATE.dualStack.v4 = null;
-                v4AddrEl.textContent = '未检测到纯 IPv4 出口';
-                v4StatEl.innerHTML = '<span style="color:var(--rose)">不可用</span>';
-            })();
-
-            // 探测纯 IPv6
-            (async () => {
-                const v6Endpoints = [
-                    'https://6.ipw.cn',
-                    'https://v6.ident.me',
-                    'https://api6.ipify.org'
-                ];
-                for (const url of v6Endpoints) {
-                    try {
-                        const res = await fetchWithTimeout(url, 3800);
-                        const txt = (await res.text()).trim();
-                        if (txt.includes(':')) {
-                            STATE.dualStack.v6 = txt;
-                            v6AddrEl.textContent = txt;
-                            v6StatEl.innerHTML = '<span style="color:var(--emerald);font-weight:700">● 原生支持</span>';
-                            return;
-                        }
-                    } catch (_) {}
-                }
-                STATE.dualStack.v6 = null;
-                v6AddrEl.textContent = '当前网络不支持或未开启 IPv6';
-                v6StatEl.innerHTML = '<span style="color:var(--text-muted)">仅 IPv4</span>';
-            })();
-        }
-
-        /********************************************************************
-         * 5. 渲染与执行 6 通道多源 IP 检测
-         ********************************************************************/
-        function countryToFlag(code) {
-            if (!code || code.length !== 2) return '🌐';
-            const upper = code.toUpperCase();
-            return String.fromCodePoint(...[...upper].map(c => 127397 + c.charCodeAt(0)));
-        }
-
-        function renderIpCards() {
-            const grid = document.getElementById('ip-cards-grid');
-            grid.innerHTML = IP_CHANNELS.map(ch => `
-                <div class="card card-hover ip-card" id="card-${ch.id}">
-                    <div>
-                        <div class="ip-card-top">
-                            <div class="ip-source-name">
-                                <span id="dot-${ch.id}" class="status-dot dot-loading"></span>
-                                <span>${ch.name}</span>
-                            </div>
-                            <div style="display:flex;align-items:center;gap:6px">
-                                <span class="badge" style="${ch.badgeStyle}">${ch.badge}</span>
-                                <button onclick="probeSingleChannel('${ch.id}')" class="btn btn-icon-only" style="width:26px;height:26px;border-radius:7px" title="单独重测此通道">
-                                    <svg id="spin-${ch.id}" class="icon" style="width:12px;height:12px" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-                                </button>
-                            </div>
-                        </div>
-                        <p style="font-size:11px;color:var(--text-muted);margin-top:4px">${ch.desc}</p>
-
-                        <div class="ip-box" style="margin-top:10px">
-                            <div style="display:flex;align-items:center;gap:8px;min-width:0">
-                                <span id="flag-${ch.id}" style="font-size:18px;flex-shrink:0">⏳</span>
-                                <span id="ip-${ch.id}" class="ip-text ip-sensitive ${STATE.privacy ? 'ip-blur' : ''}">正在探测...</span>
-                            </div>
-                            <button onclick="copyChannelIp('${ch.id}')" class="btn btn-icon-only" style="width:28px;height:28px;flex-shrink:0" title="复制此出口 IP">
-                                <svg class="icon" style="width:13px;height:13px" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                            </button>
-                        </div>
-
-                        <div class="ip-meta" style="margin-top:10px">
-                            <div class="ip-meta-row">
-                                <span>📍</span>
-                                <span id="loc-${ch.id}" style="font-weight:600;color:var(--text-main)">正在解析地理位置...</span>
-                            </div>
-                            <div class="ip-meta-row">
-                                <span>🏢</span>
-                                <span id="isp-${ch.id}" style="font-family:var(--font-mono);font-size:11px">正在读取自治域 / 运营商...</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="ip-card-footer">
-                        <span id="hit-${ch.id}">命中源: 探测中</span>
-                        <span id="rtt-${ch.id}" style="font-family:var(--font-mono)">耗时: -- ms</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        async function probeSingleChannel(channelId) {
-            const ch = IP_CHANNELS.find(c => c.id === channelId);
-            if (!ch) return;
-
-            const dotEl = document.getElementById(`dot-${ch.id}`);
-            const spinEl = document.getElementById(`spin-${ch.id}`);
-            const flagEl = document.getElementById(`flag-${ch.id}`);
-            const ipEl = document.getElementById(`ip-${ch.id}`);
-            const locEl = document.getElementById(`loc-${ch.id}`);
-            const ispEl = document.getElementById(`isp-${ch.id}`);
-            const hitEl = document.getElementById(`hit-${ch.id}`);
-            const rttEl = document.getElementById(`rtt-${ch.id}`);
-
-            dotEl.className = 'status-dot dot-loading';
-            if (spinEl) spinEl.classList.add('spin');
-            ipEl.textContent = '并发容灾探测中...';
-
-            const start = performance.now();
-            let lastErr = null;
-
-            for (let i = 0; i < ch.fallbacks.length; i++) {
-                try {
-                    const res = await ch.fallbacks[i]();
-                    if (res && res.ip) {
-                        const rtt = Math.max(1, Math.round(performance.now() - start));
-                        STATE.ipChannels[ch.id] = { ...res, rtt, status: 'ok' };
-
-                        dotEl.className = 'status-dot dot-ok';
-                        if (spinEl) spinEl.classList.remove('spin');
-                        flagEl.textContent = countryToFlag(res.countryCode);
-                        ipEl.textContent = res.ip;
-                        ipEl.className = `ip-text ip-sensitive ${STATE.privacy ? 'ip-blur' : ''}`;
-                        locEl.textContent = res.location || '未知位置';
-                        ispEl.textContent = res.isp || '未知运营商';
-                        hitEl.textContent = `命中源: ${res.hitSource || ('备用源 #' + (i + 1))}`;
-                        rttEl.innerHTML = `响应: <strong style="color:${rtt < 350 ? 'var(--emerald)' : (rtt < 900 ? 'var(--amber)' : 'var(--rose)')}">${rtt} ms</strong>`;
-
-                        if (res.cfTrace) {
-                            updateCfEdgeInfo(res.cfTrace);
-                        }
-                        evaluateSmartSummary();
-                        return;
-                    }
-                } catch (err) {
-                    lastErr = err;
-                }
-            }
-
-            // 全部 4 级回退均失败
-            STATE.ipChannels[ch.id] = { status: 'error', error: lastErr ? lastErr.message : 'Timeout' };
-            dotEl.className = 'status-dot dot-err';
-            if (spinEl) spinEl.classList.remove('spin');
-            flagEl.textContent = '⚠️';
-            ipEl.textContent = '连接超时或未开启代理';
-            locEl.textContent = '当前网络环境无法访问该通道所有备用源';
-            ispEl.textContent = '诊断信息: ' + (lastErr ? lastErr.message : 'All fallbacks failed');
-            hitEl.textContent = '状态: 不可达';
-            rttEl.innerHTML = '<span style="color:var(--rose)">Timeout</span>';
-            evaluateSmartSummary();
-        }
-
-        async function runIpChecks() {
-            await Promise.allSettled(IP_CHANNELS.map(ch => probeSingleChannel(ch.id)));
-        }
-
-        function copyChannelIp(id) {
-            const item = STATE.ipChannels[id];
-            if (item && item.ip) {
-                copyText(item.ip, `已复制 IP: ${item.ip}`);
-            } else {
-                showToast('该通道尚未获取到有效 IP');
-            }
-        }
-
-        /********************************************************************
-         * 6. 国内外网站与 AI 平台 HTTP 延迟测速模块
-         ********************************************************************/
-        function renderLatencyGrids() {
-            const sites = getLatencySites();
-            const cnSites = sites.filter(s => s.group === 'cn');
-            const intlSites = sites.filter(s => s.group !== 'cn');
-
-            const buildHtml = (arr) => arr.map(s => `
-                <div class="lat-card" onclick="probeSingleSite('${s.id}')" title="点击单独重测 ${s.name}">
-                    <div>
-                        <div class="lat-name">${s.name}</div>
-                        <div class="lat-cat">${s.cat}</div>
-                    </div>
-                    <div class="lat-bottom">
-                        <span id="lat-txt-${s.id}" style="color:var(--text-muted)">测速中</span>
-                        <span id="lat-ms-${s.id}" class="lat-pill" style="background:var(--bg-subtle);color:var(--text-muted)">-- ms</span>
-                    </div>
-                </div>
-            `).join('');
-
-            document.getElementById('latency-grid-cn').innerHTML = buildHtml(cnSites);
-            document.getElementById('latency-grid-intl').innerHTML = buildHtml(intlSites);
-        }
-
-        async function pingSiteOnce(url, timeoutMs = 4500) {
-            const ctrl = new AbortController();
-            const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-            const sep = url.includes('?') ? '&' : '?';
-            const target = `${url}${sep}_nbai=${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-            const t0 = performance.now();
-            try {
-                await fetch(target, {
-                    method: 'GET',
-                    mode: 'no-cors',
-                    cache: 'no-store',
-                    credentials: 'omit',
-                    signal: ctrl.signal
-                });
-                clearTimeout(timer);
-                return Math.max(1, Math.round(performance.now() - t0));
-            } catch (e) {
-                clearTimeout(timer);
-                throw e;
-            }
-        }
-
-        async function probeSingleSite(siteId) {
-            const site = getLatencySites().find(s => s.id === siteId);
-            if (!site) return;
-
-            const txtEl = document.getElementById(`lat-txt-${site.id}`);
-            const msEl = document.getElementById(`lat-ms-${site.id}`);
-            if (txtEl) txtEl.textContent = '连接中';
-            if (msEl) {
-                msEl.textContent = '...';
-                msEl.style.background = 'var(--bg-subtle)';
-                msEl.style.color = 'var(--text-muted)';
-            }
-
-            try {
-                const r1 = await pingSiteOnce(site.url, 4200);
-                let rtt = r1;
-                if (r1 < 1000) {
-                    try {
-                        const r2 = await pingSiteOnce(site.url, 2800);
-                        rtt = Math.round(r1 * 0.35 + r2 * 0.65);
-                    } catch (_) {}
-                }
-                STATE.latencies[site.id] = { status: 'ok', rtt, group: site.group, name: site.name };
-
-                if (rtt < 180) {
-                    txtEl.textContent = '极佳';
-                    msEl.style.background = 'var(--emerald-soft)';
-                    msEl.style.color = 'var(--emerald)';
-                } else if (rtt < 500) {
-                    txtEl.textContent = '良好';
-                    msEl.style.background = 'var(--amber-soft)';
-                    msEl.style.color = 'var(--amber)';
-                } else {
-                    txtEl.textContent = '偏慢';
-                    msEl.style.background = 'var(--rose-soft)';
-                    msEl.style.color = 'var(--rose)';
-                }
-                msEl.textContent = `${rtt} ms`;
-            } catch (_) {
-                STATE.latencies[site.id] = { status: 'error', rtt: null, group: site.group, name: site.name };
-                if (txtEl) txtEl.textContent = '超时';
-                if (msEl) {
-                    msEl.style.background = 'var(--rose-soft)';
-                    msEl.style.color = 'var(--rose)';
-                    msEl.textContent = '超时';
-                }
-            } finally {
-                evaluateSmartSummary();
-            }
-        }
-
-        async function runLatencyChecks() {
-            const sites = getLatencySites();
-            await Promise.allSettled(sites.map(s => probeSingleSite(s.id)));
-        }
-
-        /********************************************************************
-         * 7. WebRTC 双栈 STUN 泄露探测模块
-         ********************************************************************/
-        async function runWebRTCCheck() {
-            const dotEl = document.getElementById('webrtc-dot');
-            const titleEl = document.getElementById('webrtc-title');
-            const descEl = document.getElementById('webrtc-desc');
-            const pubListEl = document.getElementById('webrtc-pub-list');
-            const locListEl = document.getElementById('webrtc-loc-list');
-            const pubTagEl = document.getElementById('webrtc-pub-tag');
-            const locTagEl = document.getElementById('webrtc-loc-tag');
-            const statEl = document.getElementById('stat-webrtc');
-
-            dotEl.className = 'status-dot dot-loading';
-            pubListEl.textContent = '正在探测...';
-            locListEl.textContent = '正在探测...';
-
-            const PeerConn = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
-            if (!PeerConn) {
-                dotEl.className = 'status-dot dot-ok';
-                titleEl.textContent = 'WebRTC 已被浏览器彻底禁用 (安全)';
-                pubListEl.textContent = '无泄露 (接口已禁用)';
-                locListEl.textContent = '已隐藏';
-                statEl.textContent = '安全 (已禁用)';
-                statEl.style.color = 'var(--emerald)';
-                return;
-            }
-
-            const pubSet = new Set();
-            const locSet = new Set();
-            let count = 0;
-
-            const isPrivate = (ip) => /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|127\.|169\.254\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.|fc00:|fe80:|::1)/i.test(ip);
-
-            try {
-                const pc = new PeerConn({
-                    iceServers: [
-                        { urls: 'stun:stun.qq.com:3478' },
-                        { urls: 'stun:stun.miwifi.com:3478' },
-                        { urls: 'stun:stun.chat.bilibili.com:3478' },
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun.cloudflare.com:3478' }
-                    ]
-                });
-                pc.createDataChannel('nbai_webrtc_probe');
-
-                pc.onicecandidate = (e) => {
-                    if (!e || !e.candidate || !e.candidate.candidate) return;
-                    count++;
-                    const c = e.candidate.candidate;
-                    const mdns = c.match(/([a-zA-Z0-9-]+\.local)/);
-                    if (mdns) locSet.add(mdns[1] + ' (mDNS)');
-
-                    const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|([a-fA-F0-9]{1,4}:){2,7}[a-fA-F0-9]{1,4})/g;
-                    const ips = c.match(ipRegex) || [];
-                    ips.forEach(ip => {
-                        if (ip === '0.0.0.0' || ip.startsWith('0:')) return;
-                        if (isPrivate(ip)) locSet.add(ip);
-                        else pubSet.add(ip);
-                    });
-                };
-
-                const offer = await pc.createOffer();
-                await pc.setLocalDescription(offer);
-                await new Promise(r => setTimeout(r, 2400));
-                pc.close();
-            } catch (_) {}
-
-            const pubArr = Array.from(pubSet);
-            const locArr = Array.from(locSet);
-            STATE.webrtc = { publicIps: pubArr, localIps: locArr, count };
-
-            if (pubArr.length === 0) {
-                dotEl.className = 'status-dot dot-ok';
-                titleEl.textContent = 'WebRTC 隐私保护良好 (未暴露公网 UDP 地址)';
-                descEl.textContent = `已扫描 ${count} 条 ICE 候选记录，未发现公网真实 IP 泄露。`;
-                pubTagEl.textContent = '安全';
-                pubTagEl.style.background = 'var(--emerald-soft)';
-                pubTagEl.style.color = 'var(--emerald)';
-                pubListEl.innerHTML = '<span style="color:var(--emerald);font-size:12px">未检测到公网反射 IP</span>';
-                statEl.textContent = '无泄露 (安全)';
-                statEl.style.color = 'var(--emerald)';
-            } else {
-                dotEl.className = 'status-dot dot-loading';
-                titleEl.textContent = `WebRTC 探测到 ${pubArr.length} 个公网 UDP 地址`;
-                descEl.textContent = '请核对下方 STUN 公网地址是否为您预期内的直连/代理 IP。';
-                pubTagEl.textContent = `${pubArr.length} 个公网IP`;
-                pubTagEl.style.background = 'var(--amber-soft)';
-                pubTagEl.style.color = 'var(--amber)';
-                pubListEl.innerHTML = pubArr.map(ip => `<div class="ip-sensitive ${STATE.privacy ? 'ip-blur' : ''}">${ip}</div>`).join('');
-                statEl.textContent = pubArr[0];
-                statEl.className = `stat-val ip-sensitive ${STATE.privacy ? 'ip-blur' : ''}`;
-                statEl.style.color = 'var(--amber)';
-                statEl.style.fontSize = '13px';
-            }
-
-            if (locArr.length > 0) {
-                locTagEl.textContent = `${locArr.length} 条记录`;
-                locListEl.innerHTML = locArr.map(ip => `<div class="ip-sensitive ${STATE.privacy ? 'ip-blur' : ''}">${ip}</div>`).join('');
-            } else {
-                locTagEl.textContent = '已隐藏';
-                locListEl.innerHTML = '<span style="color:var(--text-muted);font-size:12px">内网网卡地址已被浏览器隐藏</span>';
-            }
-        }
-
-        /********************************************************************
-         * 8. DNS 出口与 Cloudflare 边缘节点信息
-         ********************************************************************/
-        async function runDnsCheck() {
-            const ipEl = document.getElementById('dns-ip');
-            const geoEl = document.getElementById('dns-geo');
-            ipEl.textContent = '正在探测 DNS...';
-            geoEl.textContent = '发起随机子域名解析...';
-
-            const rand = Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-            try {
-                const res = await fetchWithTimeout(`https://${rand}.edns.ip-api.com/json`, 4800);
-                const d = await res.json();
-                if (d && d.dns && d.dns.ip) {
-                    STATE.dns = { ip: d.dns.ip, geo: d.dns.geo || '未知 ISP' };
-                    ipEl.textContent = d.dns.ip;
-                    geoEl.textContent = `DNS 归属: ${d.dns.geo || '未知运营商'}`;
-                    return;
-                }
-            } catch (_) {}
-
-            // 备选回退：展示基于分流通道推断的加密 DNS 状态
-            STATE.dns = { ip: '安全 DNS (DoH / Fake-IP 接管)', geo: '未暴露传统明文 53 端口递归出口' };
-            ipEl.textContent = 'DoH / 代理内核接管 (安全)';
-            geoEl.textContent = '上游明文 EDNS 已被加密或由代理 TUN 接管';
-        }
-
-        function updateCfEdgeInfo(traceMap) {
-            if (!traceMap) return;
-            STATE.cfEdge = traceMap;
-            const city = IATA_MAP[traceMap.colo] || traceMap.colo || '未知';
-            document.getElementById('cf-colo').textContent = `${city} (${traceMap.colo || 'Edge'})`;
-            document.getElementById('cf-proto').textContent = `协议: ${traceMap.http || 'h2'} · 加密: ${traceMap.tls || 'TLSv1.3'} · WARP: ${traceMap.warp || 'off'}`;
-        }
-
-        /********************************************************************
-         * 9. 智能分流诊断总结逻辑
-         ********************************************************************/
-        function evaluateSmartSummary() {
-            const cnList = Object.values(STATE.latencies).filter(x => x.group === 'cn' && x.status === 'ok');
-            const intlList = Object.values(STATE.latencies).filter(x => x.group === 'intl' && x.status === 'ok');
-
-            const cnAvgEl = document.getElementById('stat-cn-avg');
-            const intlAvgEl = document.getElementById('stat-intl-avg');
-
-            if (cnList.length > 0) {
-                const avg = Math.round(cnList.reduce((a, b) => a + b.rtt, 0) / cnList.length);
-                cnAvgEl.textContent = `${avg} ms`;
-            }
-            if (intlList.length > 0) {
-                const avg = Math.round(intlList.reduce((a, b) => a + b.rtt, 0) / intlList.length);
-                intlAvgEl.textContent = `${avg} ms`;
-            }
-
-            const cnIp = STATE.ipChannels['cn_direct']?.ip || STATE.ipChannels['cn_bgp']?.ip;
-            const intlIp = STATE.ipChannels['intl_ipsb']?.ip || STATE.ipChannels['intl_ipinfo']?.ip || STATE.ipChannels['intl_geojs']?.ip;
-
-            const badgeEl = document.getElementById('summary-badge');
-            const titleEl = document.getElementById('summary-title');
-            const descEl = document.getElementById('summary-desc');
-
-            if (cnIp && intlIp) {
-                if (cnIp !== intlIp && intlList.length >= 2) {
-                    badgeEl.textContent = '✅ 智能规则分流生效';
-                    badgeEl.style.background = 'var(--emerald-soft)';
-                    badgeEl.style.color = 'var(--emerald)';
-                    titleEl.textContent = '国内外智能分流运行正常（国内直连 / 国际与 AI 走代理节点）';
-                    descEl.textContent = `国内通道返回直连 IP (${maskIpString(cnIp, STATE.privacy)})，国际通道返回海外代理 IP (${maskIpString(intlIp, STATE.privacy)})，主流 AI 与海外服务畅通。`;
-                } else if (cnIp === intlIp && intlList.length >= 3) {
-                    badgeEl.textContent = '🚀 全局代理 / 单一海外出口';
-                    badgeEl.style.background = 'var(--brand-soft)';
-                    badgeEl.style.color = 'var(--brand-primary)';
-                    titleEl.textContent = '当前处于全局代理模式或海外原生网络环境';
-                    descEl.textContent = '国内与国际探测接口返回了相同的出口 IP，且国际与 AI 站点均可正常连接。';
-                } else {
-                    badgeEl.textContent = '🌐 纯国内直连模式';
-                    badgeEl.style.background = 'var(--amber-soft)';
-                    badgeEl.style.color = 'var(--amber)';
-                    titleEl.textContent = '当前为纯国内直连网络，国际站点与海外 AI 平台受限';
-                    descEl.textContent = '国内网站访问极速，但 Google、ChatGPT、X 等国际节点连接超时或未开启代理分流。';
-                }
-            }
-        }
-
-        /********************************************************************
-         * 10. 客户端系统环境渲染
-         ********************************************************************/
-        function renderEnvInfo() {
-            const ua = navigator.userAgent;
-            let browser = '现代浏览器';
-            if (/Edg\/([\d.]+)/.test(ua)) browser = 'Microsoft Edge ' + RegExp.$1.split('.')[0];
-            else if (/Chrome\/([\d.]+)/.test(ua)) browser = 'Google Chrome ' + RegExp.$1.split('.')[0];
-            else if (/Firefox\/([\d.]+)/.test(ua)) browser = 'Mozilla Firefox ' + RegExp.$1.split('.')[0];
-            else if (/Version\/([\d.]+).*Safari/.test(ua)) browser = 'Apple Safari ' + RegExp.$1;
-
-            let os = 'Desktop OS';
-            if (/Windows NT 10/.test(ua)) os = 'Windows 10 / 11';
-            else if (/Mac OS X ([\d_]+)/.test(ua)) os = 'macOS ' + RegExp.$1.replace(/_/g, '.');
-            else if (/Android ([\d.]+)/.test(ua)) os = 'Android ' + RegExp.$1;
-            else if (/iPhone|iPad/.test(ua)) os = 'iOS / iPadOS';
-            else if (/Linux/.test(ua)) os = 'Linux';
-
-            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-            const offset = -(new Date().getTimezoneOffset() / 60);
-            const conn = navigator.connection || {};
-
-            const rows = [
-                { k: '浏览器内核', v: browser },
-                { k: '操作系统', v: os },
-                { k: '系统时区 (Timezone)', v: `${tz} (UTC${offset >= 0 ? '+' + offset : offset})` },
-                { k: '系统首选语言', v: `${navigator.language} (${(navigator.languages || []).slice(0, 2).join(', ')})` },
-                { k: '屏幕分辨率 / 像素比', v: `${screen.width}×${screen.height} (@${window.devicePixelRatio || 1}x)` },
-                { k: '硬件线程 / 内存估算', v: `${navigator.hardwareConcurrency || '?'} 核 ${navigator.deviceMemory ? '/ ~' + navigator.deviceMemory + 'GB' : ''}` },
-                { k: '下行带宽估算', v: conn.downlink ? `${conn.downlink} Mbps (${conn.effectiveType || '4g'})` : '系统未公开接口' }
-            ];
-
-            document.getElementById('env-list').innerHTML = rows.map(r => `
-                <div class="kv-row">
-                    <span style="color:var(--text-muted)">${r.k}</span>
-                    <span style="font-family:var(--font-mono);font-weight:600;text-align:right">${r.v}</span>
-                </div>
-            `).join('');
-
-            document.getElementById('ua-display').textContent = ua;
-        }
-
-        /********************************************************************
-         * 11. NBAI 诊断报告生成中心 (Text / Markdown / AI JSON / Retina PNG / X 分享)
-         ********************************************************************/
-        function maskIpString(ip, shouldMask) {
-            if (!ip || !shouldMask) return ip || '未知';
-            if (ip.includes('.')) {
-                const p = ip.split('.');
-                if (p.length === 4) return `${p[0]}.${p[1]}.*.*`;
-            }
-            if (ip.includes(':')) {
-                const p = ip.split(':');
-                return p.slice(0, 3).join(':') + ':*:*';
-            }
-            return ip;
-        }
-
-        function buildReportText(format, mask) {
-            const now = new Date().toLocaleString('zh-CN', { hour12: false });
-            const summaryTitle = document.getElementById('summary-title').textContent;
-            const v4 = maskIpString(STATE.dualStack.v4 || '未连接', mask);
-            const v6 = maskIpString(STATE.dualStack.v6 || '不支持', mask);
-
-            if (format === 'text') {
-                const lines = [
-                    `📊 NBAI 网络分流诊断报告 (${now})`,
-                    `🔗 诊断工具: NBAI Network Diagnostics (https://x.com/NBAI_dev)`,
-                    `----------------------------------------`,
-                    `💡 综合结论: ${summaryTitle}`,
-                    `🔌 协议双栈: IPv4 [${v4}] | IPv6 [${v6}]`,
-                    ``,
-                    `🌐 6 路多源出口状态:`
-                ];
-                IP_CHANNELS.forEach(ch => {
-                    const r = STATE.ipChannels[ch.id];
-                    if (r && r.status === 'ok') {
-                        lines.push(`• ${ch.badge}: ${maskIpString(r.ip, mask)} (${r.location} | ${r.isp} | ${r.rtt}ms)`);
-                    } else {
-                        lines.push(`• ${ch.badge}: ❌ 连接超时或被阻断`);
-                    }
-                });
-
-                lines.push(``, `⚡ 网站与 AI 平台连通延迟:`);
-                lines.push(`• 国内站点平均: ${document.getElementById('stat-cn-avg').textContent}`);
-                lines.push(`• 国际 & AI 平均: ${document.getElementById('stat-intl-avg').textContent}`);
-                const aiKeys = ['google', 'github', 'x_twitter', 'chatgpt', 'claude', 'gemini'];
-                const aiSummary = aiKeys.map(k => {
-                    const item = STATE.latencies[k];
-                    return `${item?.name || k}: ${item?.status === 'ok' ? item.rtt + 'ms' : '超时'}`;
-                }).join(' | ');
-                lines.push(`• 核心节点详情: ${aiSummary}`);
-
-                lines.push(``, `🛡️ 隐私与边缘节点:`);
-                const webrtcPub = STATE.webrtc.publicIps.length > 0
-                    ? STATE.webrtc.publicIps.map(ip => maskIpString(ip, mask)).join(', ')
-                    : '安全 (未暴露公网 UDP IP)';
-                lines.push(`• WebRTC 状态: ${webrtcPub}`);
-                lines.push(`• DNS 递归出口: ${maskIpString(STATE.dns.ip || '安全 DoH', mask)} (${STATE.dns.geo || ''})`);
-                lines.push(`• Cloudflare 节点: ${document.getElementById('cf-colo').textContent}`);
-                lines.push(`----------------------------------------`);
-                lines.push(`Generated by NBAI Network Diagnostics · https://x.com/NBAI_dev`);
-                return lines.join('\n');
-            }
-
-            if (format === 'md') {
-                const md = [
-                    `### 📊 NBAI 网络分流诊断报告`,
-                    `> 检测时间：\`${now}\` | 诊断引擎：**NBAI** ([@NBAI_dev](https://x.com/NBAI_dev))`,
-                    ``,
-                    `**综合结论**：${summaryTitle}`,
-                    `- **IPv4 出口**：\`${v4}\` | **IPv6 出口**：\`${v6}\``,
-                    ``,
-                    `| 探测通道 | 出口 IP | 归属地与节点 | 运营商 / ASN | 耗时 |`,
-                    `| :--- | :--- | :--- | :--- | :--- |`
-                ];
-                IP_CHANNELS.forEach(ch => {
-                    const r = STATE.ipChannels[ch.id];
-                    if (r && r.status === 'ok') {
-                        md.push(`| ${ch.badge} | \`${maskIpString(r.ip, mask)}\` | ${r.location} | ${r.isp} | ${r.rtt} ms |`);
-                    } else {
-                        md.push(`| ${ch.badge} | \`超时/阻断\` | - | - | Timeout |`);
-                    }
-                });
-                md.push(``, `**Generated by NBAI · https://x.com/NBAI_dev**`);
-                return md.join('\n');
-            }
-
-            // AI 诊断 Prompt + 结构化 JSON
-            const payload = {
-                brand: 'NBAI Network Diagnostics (https://x.com/NBAI_dev)',
-                timestamp: now,
-                summary: summaryTitle,
-                dualStack: { ipv4: v4, ipv6: v6 },
-                ipChannels: Object.fromEntries(
-                    Object.entries(STATE.ipChannels).map(([k, v]) => [
-                        k,
-                        v.status === 'ok' ? { ...v, ip: maskIpString(v.ip, mask) } : v
-                    ])
-                ),
-                latencies: STATE.latencies,
-                webrtc: {
-                    publicIps: STATE.webrtc.publicIps.map(ip => maskIpString(ip, mask)),
-                    localIps: STATE.webrtc.localIps
-                },
-                dns: STATE.dns,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+          },
+          async () => {
+            const r = await fetchWithTimeout('https://api.vore.top/api/IPdata', {}, 3600);
+            const d = await r.json();
+            const info = d.ipinfo || {};
+            const data = d.ipdata || {};
+            if (!info.text) throw new Error('Empty Vore');
+            return {
+              ip: info.text,
+              location: [data.info1, data.info2, data.info3].filter(Boolean).join(' '),
+              isp: data.isp || '国内运营商',
+              source: 'Vore BGP',
+              isCN: info.cnip !== false
             };
-
-            return [
-                `请作为资深网络与代理分流（Clash / Sing-box / Surge）架构师，帮我分析以下由 NBAI 网络诊断工具生成的检测数据：`,
-                `1. 检查我的国内外分流规则是否正常工作（是否有国内流量误走代理或海外流量直连泄露）；`,
-                `2. 检查 ChatGPT / Claude / Gemini 等 AI 平台连通性及出口归属地是否合适；`,
-                `3. 检查是否存在 WebRTC 真实 IP 泄露、DNS 出口污染或系统时区不匹配问题，并给出具体的优化建议。`,
-                ``,
-                JSON.stringify(payload, null, 2)
-            ].join('\n');
-        }
-
-        function openReportModal() {
-            document.getElementById('report-modal').classList.add('active');
-            refreshReportContent();
-        }
-
-        function closeReportModal() {
-            document.getElementById('report-modal').classList.remove('active');
-        }
-
-        function switchReportFormat(fmt) {
-            STATE.reportFormat = fmt;
-            ['text', 'md', 'ai'].forEach(k => {
-                document.getElementById('tab-' + k).classList.toggle('active', k === fmt);
-            });
-            refreshReportContent();
-        }
-
-        function refreshReportContent() {
-            const mask = document.getElementById('chk-mask-ip').checked;
-            document.getElementById('report-output').value = buildReportText(STATE.reportFormat, mask);
-        }
-
-        function copyReportContent() {
-            const val = document.getElementById('report-output').value;
-            copyText(val, 'NBAI 诊断报告已复制到剪贴板！');
-        }
-
-        // 一键分享到 X (@NBAI_dev)
-        function shareToX() {
-            const summary = document.getElementById('summary-badge').textContent;
-            const cnAvg = document.getElementById('stat-cn-avg').textContent;
-            const intlAvg = document.getElementById('stat-intl-avg').textContent;
-            const text = `📊 我刚使用 NBAI 网络分流诊断工具完成了多源出口与 AI 节点测速：\n• 状态：${summary}\n• 国内延迟均值：${cnAvg}\n• 国际 & AI 均值：${intlAvg}\ncc @NBAI_dev`;
-            const url = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
-            window.open(url, '_blank', 'noopener,noreferrer');
-        }
-
-        // 原生 HTML5 Canvas 2x Retina 高清诊断长图生成 (带 NBAI 品牌水印)
-        function downloadRetinaCanvasImage() {
-            const mask = document.getElementById('chk-mask-ip').checked;
-            const canvas = document.createElement('canvas');
-            const scale = 2;
-            const w = 780;
-            const h = 690;
-            canvas.width = w * scale;
-            canvas.height = h * scale;
-            const ctx = canvas.getContext('2d');
-            ctx.scale(scale, scale);
-
-            // 背景渐变
-            const bgGrad = ctx.createLinearGradient(0, 0, w, h);
-            bgGrad.addColorStop(0, '#090d16');
-            bgGrad.addColorStop(1, '#111827');
-            ctx.fillStyle = bgGrad;
-            ctx.fillRect(0, 0, w, h);
-
-            // 顶部品牌头
-            ctx.fillStyle = '#4f46e5';
-            ctx.beginPath();
-            ctx.roundRect(28, 26, 46, 46, 10);
-            ctx.fill();
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 14px sans-serif';
-            ctx.fillText('NBAI', 34, 54);
-
-            ctx.fillStyle = '#f8fafc';
-            ctx.font = 'bold 20px sans-serif';
-            ctx.fillText('NBAI · IP 与网络分流诊断报告', 86, 48);
-
-            ctx.fillStyle = '#94a3b8';
-            ctx.font = '12px sans-serif';
-            ctx.fillText(`检测时间: ${new Date().toLocaleString('zh-CN', { hour12: false })}   |   Official X: https://x.com/NBAI_dev`, 86, 68);
-
-            // 综合结论框
-            ctx.fillStyle = '#1e293b';
-            ctx.beginPath();
-            ctx.roundRect(28, 88, w - 56, 64, 12);
-            ctx.fill();
-
-            ctx.fillStyle = '#10b981';
-            ctx.font = 'bold 14px sans-serif';
-            ctx.fillText(document.getElementById('summary-badge').textContent, 44, 114);
-
-            ctx.fillStyle = '#e2e8f0';
-            ctx.font = '13px sans-serif';
-            ctx.fillText(document.getElementById('summary-title').textContent.slice(0, 52), 44, 138);
-
-            // 6 路 IP 出口列表
-            let y = 176;
-            ctx.fillStyle = '#94a3b8';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.fillText('多源 IP 出口分流状态 (6 通道容灾检测)', 28, y);
-            y += 12;
-
-            IP_CHANNELS.forEach((ch) => {
-                const r = STATE.ipChannels[ch.id];
-                ctx.fillStyle = '#161f30';
-                ctx.beginPath();
-                ctx.roundRect(28, y, w - 56, 48, 10);
-                ctx.fill();
-
-                ctx.fillStyle = '#f8fafc';
-                ctx.font = 'bold 13px sans-serif';
-                ctx.fillText(ch.badge, 42, y + 20);
-
-                ctx.fillStyle = '#818cf8';
-                ctx.font = 'bold 13px monospace';
-                const ipStr = r && r.status === 'ok' ? maskIpString(r.ip, mask) : '连接超时/未达';
-                ctx.fillText(ipStr, 165, y + 20);
-
-                ctx.fillStyle = '#cbd5e1';
-                ctx.font = '12px sans-serif';
-                const locStr = r && r.status === 'ok' ? `${r.location} · ${r.isp}`.slice(0, 44) : '通道未响应';
-                ctx.fillText(locStr, 345, y + 20);
-
-                ctx.fillStyle = '#94a3b8';
-                ctx.font = '11px monospace';
-                ctx.fillText(r && r.status === 'ok' ? `${r.rtt} ms (${r.hitSource})` : 'Timeout', 42, y + 39);
-
-                y += 56;
-            });
-
-            // 底部连通率与水印
-            y += 8;
-            ctx.fillStyle = '#1e293b';
-            ctx.beginPath();
-            ctx.roundRect(28, y, w - 56, 62, 12);
-            ctx.fill();
-
-            ctx.fillStyle = '#f8fafc';
-            ctx.font = 'bold 13px sans-serif';
-            const cnAvg = document.getElementById('stat-cn-avg').textContent;
-            const intlAvg = document.getElementById('stat-intl-avg').textContent;
-            const webrtcTxt = document.getElementById('stat-webrtc').textContent;
-            ctx.fillText(`⚡ 国内站点平均: ${cnAvg}     |     🌍 国际 & AI 均值: ${intlAvg}     |     🛡️ WebRTC: ${webrtcTxt}`, 44, y + 26);
-
-            ctx.fillStyle = '#94a3b8';
-            ctx.font = '12px monospace';
-            const v4 = maskIpString(STATE.dualStack.v4 || '无', mask);
-            const v6 = maskIpString(STATE.dualStack.v6 || '无', mask);
-            ctx.fillText(`IPv4: ${v4}   ·   IPv6: ${v6}   ·   CF Edge: ${document.getElementById('cf-colo').textContent}`, 44, y + 48);
-
-            // NBAI 底部版权签名
-            ctx.fillStyle = '#64748b';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.fillText('© 2026 NBAI All Rights Reserved.  ·  NBAI Network Diagnostics  ·  https://x.com/NBAI_dev', 28, h - 18);
-
-            const link = document.createElement('a');
-            link.download = `NBAI-Network-Report-${Date.now()}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            showToast('已生成并下载 NBAI 高清诊断长图 (.png)');
-        }
-
-        /********************************************************************
-         * 12. 自定义测速节点与通用辅助函数
-         ********************************************************************/
-        function openCustomSiteModal() {
-            document.getElementById('custom-site-modal').classList.add('active');
-            document.getElementById('custom-site-name').focus();
-        }
-
-        function closeCustomSiteModal() {
-            document.getElementById('custom-site-modal').classList.remove('active');
-        }
-
-        function addCustomSite() {
-            const name = document.getElementById('custom-site-name').value.trim();
-            let url = document.getElementById('custom-site-url').value.trim();
-            const group = document.getElementById('custom-site-group').value;
-
-            if (!name || !url) {
-                showToast('请填写完整的站点名称与网址');
-                return;
-            }
-            if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-
-            const custom = JSON.parse(localStorage.getItem('nbai_custom_sites') || '[]');
-            const newSite = {
-                id: 'custom_' + Date.now(),
-                name,
-                cat: '自定义节点',
-                url,
-                group
+          },
+          () => fetchPconlineJsonp(3600),
+          () => fetchQqVideoJsonp(3600)
+        ],
+        cf_cn: [
+          async () => {
+            const r = await fetchWithTimeout('https://www.cloudflare-cn.com/cdn-cgi/trace', {}, 3600);
+            return parseCfTrace(await r.text(), 'cloudflare-cn.com');
+          },
+          async () => {
+            const r = await fetchWithTimeout('https://www.visa.cn/cdn-cgi/trace', {}, 3600);
+            return parseCfTrace(await r.text(), 'visa.cn Trace');
+          },
+          async () => {
+            const r = await fetchWithTimeout('https://1.0.0.1/cdn-cgi/trace', {}, 3600);
+            return parseCfTrace(await r.text(), '1.0.0.1 Trace');
+          }
+        ],
+        global_ipsb: [
+          async () => {
+            const r = await fetchWithTimeout('https://api.ip.sb/geoip', {}, 4000);
+            const d = await r.json();
+            return {
+              ip: d.ip,
+              location: [d.country, d.region, d.city].filter(Boolean).join(' '),
+              isp: d.organization || d.isp || `AS${d.asn || ''}`,
+              source: 'IP.SB GeoIP',
+              isCN: d.country_code === 'CN'
             };
-            custom.push(newSite);
-            localStorage.setItem('nbai_custom_sites', JSON.stringify(custom));
+          },
+          async () => {
+            const r = await fetchWithTimeout('https://ipwho.is/?lang=zh-CN', {}, 4000);
+            const d = await r.json();
+            if (!d.ip) throw new Error('No IP');
+            return {
+              ip: d.ip,
+              location: [d.country, d.region, d.city].filter(Boolean).join(' '),
+              isp: (d.connection && (d.connection.isp || d.connection.org)) || 'Global ISP',
+              source: 'ipwho.is',
+              isCN: d.country_code === 'CN'
+            };
+          }
+        ],
+        global_ipinfo: [
+          async () => {
+            const r = await fetchWithTimeout('https://ipinfo.io/json', {}, 4000);
+            const d = await r.json();
+            return {
+              ip: d.ip,
+              location: [d.country, d.region, d.city].filter(Boolean).join(' '),
+              isp: d.org || 'IPInfo ASN',
+              source: 'ipinfo.io',
+              isCN: d.country === 'CN'
+            };
+          },
+          async () => {
+            const r = await fetchWithTimeout('https://freeipapi.com/api/json', {}, 4000);
+            const d = await r.json();
+            return {
+              ip: d.ipAddress,
+              location: [d.countryName, d.regionName, d.cityName].filter(Boolean).join(' '),
+              isp: d.asnOrganization || 'Global Network',
+              source: 'FreeIPAPI',
+              isCN: d.countryCode === 'CN'
+            };
+          }
+        ],
+        global_geo: [
+          async () => {
+            const r = await fetchWithTimeout('https://get.geojs.io/v1/ip/geo.json', {}, 4000);
+            const d = await r.json();
+            return {
+              ip: d.ip,
+              location: [d.country, d.region, d.city].filter(Boolean).join(' '),
+              isp: d.organization_name || d.organization || 'GeoJS ASN',
+              source: 'GeoJS.io',
+              isCN: d.country_code === 'CN'
+            };
+          },
+          async () => {
+            const r = await fetchWithTimeout('https://api.ipify.org?format=json', {}, 4000);
+            const d = await r.json();
+            return {
+              ip: d.ip,
+              location: '国际出口节点',
+              isp: 'Ipify Global',
+              source: 'ipify.org',
+              isCN: false
+            };
+          }
+        ]
+      };
 
-            document.getElementById('custom-site-name').value = '';
-            document.getElementById('custom-site-url').value = '';
-            closeCustomSiteModal();
-            renderLatencyGrids();
-            runLatencyChecks();
-            showToast(`已添加自定义测速节点: ${name}`);
+      const list = adapters[channelId] || [];
+      let lastErr = null;
+      for (const fn of list) {
+        try {
+          return await wrap(fn);
+        } catch (e) {
+          lastErr = e;
         }
+      }
+      throw lastErr || new Error('连接超时');
+    }
 
-        function togglePrivacyMode() {
-            STATE.privacy = !STATE.privacy;
-            document.querySelectorAll('.ip-sensitive').forEach(el => {
-                el.classList.toggle('ip-blur', STATE.privacy);
-            });
-            document.getElementById('text-privacy').textContent = STATE.privacy ? '显示 IP' : '隐藏 IP';
-            showToast(STATE.privacy ? '已开启 IP 隐私模糊保护（安心截图）' : '已恢复显示完整 IP');
+    function renderIpSkeletons() {
+      const grid = document.getElementById('ipGrid');
+      grid.innerHTML = IP_CHANNELS.map(ch => `
+        <div class="ip-card" id="card_${ch.id}">
+          <div>
+            <div class="ip-card-head">
+              <div>
+                <div class="ip-source-name">${ch.name}</div>
+                <div class="ip-source-desc">${ch.desc}</div>
+              </div>
+              <span class="badge ${ch.tagClass}">${ch.tag}</span>
+            </div>
+            <div class="ip-main-row">
+              <span class="ip-addr" id="ip_${ch.id}">正在探测...</span>
+              <button class="copy-mini" onclick="copyIp('${ch.id}')" title="复制 IP">📋</button>
+            </div>
+            <div class="ip-meta">
+              <div class="ip-meta-row">📍 <span id="loc_${ch.id}">正在获取归属地...</span></div>
+              <div class="ip-meta-row">🏢 <span id="isp_${ch.id}">正在识别运营商...</span></div>
+            </div>
+          </div>
+          <div class="ip-card-foot">
+            <span id="src_${ch.id}">探测中...</span>
+            <button class="retest-btn" onclick="runSingleIpChannel('${ch.id}')">重测</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function runSingleIpChannel(channelId) {
+      document.getElementById(`ip_${channelId}`).textContent = '正在探测...';
+      document.getElementById(`src_${channelId}`).textContent = '重测中...';
+      try {
+        const res = await probeChannel(channelId);
+        STATE.ipResults[channelId] = res;
+        document.getElementById(`ip_${channelId}`).textContent = res.ip;
+        document.getElementById(`loc_${channelId}`).textContent = res.location || '未知位置';
+        document.getElementById(`isp_${channelId}`).textContent = res.isp || '未知运营商';
+        document.getElementById(`src_${channelId}`).textContent = `${res.source} · ${res.ms}ms`;
+      } catch (e) {
+        STATE.ipResults[channelId] = { error: true };
+        document.getElementById(`ip_${channelId}`).textContent = '连接超时 / 未连通';
+        document.getElementById(`loc_${channelId}`).textContent = '当前网络环境无法访问该节点';
+        document.getElementById(`isp_${channelId}`).textContent = '可能是纯直连或规则拦截';
+        document.getElementById(`src_${channelId}`).textContent = '超时';
+      }
+      evaluateRoutingSummary();
+    }
+
+    function evaluateRoutingSummary() {
+      const dot = document.getElementById('summaryDot');
+      const title = document.getElementById('summaryTitle');
+      const desc = document.getElementById('summaryDesc');
+
+      const cn = STATE.ipResults.cn_direct || STATE.ipResults.cn_bgp;
+      const gl = STATE.ipResults.global_ipsb || STATE.ipResults.global_ipinfo || STATE.ipResults.global_geo;
+
+      if (cn && !cn.error && gl && !gl.error) {
+        if (cn.ip !== gl.ip && cn.isCN && !gl.isCN) {
+          dot.className = 'status-dot ok';
+          title.textContent = '✅ 智能分流运行正常（国内直连 + 海外代理分流）';
+          desc.textContent = `国内出口 ${cn.ip} (${cn.location})，海外出口 ${gl.ip} (${gl.location})`;
+        } else if (cn.ip === gl.ip && cn.isCN) {
+          dot.className = 'status-dot warn';
+          title.textContent = '🌐 当前处于「纯国内直连」模式';
+          desc.textContent = `国内外探测通道均返回国内 IP (${cn.ip})，未检测到海外代理分流`;
+        } else {
+          dot.className = 'status-dot warn';
+          title.textContent = '🚀 当前处于「全局代理 / TUN」模式';
+          desc.textContent = `国内与国际通道均走代理出口 (${gl.ip})，建议检查国内直连规则`;
         }
+      } else if (cn && !cn.error && (!gl || gl.error)) {
+        dot.className = 'status-dot warn';
+        title.textContent = '🇨🇳 国内直连正常 · 海外节点未开启代理或无法连接';
+        desc.textContent = `国内出口 ${cn.ip} (${cn.location}) 响应正常`;
+      }
+    }
 
-        function toggleAutoRefresh() {
-            STATE.autoRefresh = !STATE.autoRefresh;
-            const txtEl = document.getElementById('text-auto-refresh');
-            if (STATE.autoRefresh) {
-                STATE.countdown = 30;
-                txtEl.textContent = `30s`;
-                STATE.autoTimer = setInterval(() => {
-                    STATE.countdown--;
-                    txtEl.textContent = `${STATE.countdown}s`;
-                    if (STATE.countdown <= 0) {
-                        STATE.countdown = 30;
-                        runAllChecks();
-                    }
-                }, 1000);
-                showToast('已开启每 30 秒自动轮询检测');
-            } else {
-                clearInterval(STATE.autoTimer);
-                txtEl.textContent = '自动刷新';
-                showToast('已关闭自动刷新');
+    async function checkDualStack() {
+      const v4El = document.getElementById('v4Status');
+      const v6El = document.getElementById('v6Status');
+      v4El.textContent = '探测中...';
+      v6El.textContent = '探测中...';
+
+      (async () => {
+        const urls = ['https://4.ipw.cn', 'https://v4.ident.me', 'https://api4.ipify.org'];
+        for (const u of urls) {
+          try {
+            const r = await fetchWithTimeout(u, {}, 3200);
+            const t = (await r.text()).trim();
+            if (/^\d+\.\d+\.\d+\.\d+$/.test(t)) {
+              STATE.v4 = t;
+              v4El.textContent = t;
+              return;
             }
+          } catch {}
         }
+        v4El.textContent = '不支持 / 超时';
+      })();
 
-        function toggleTheme() {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('nbai_theme', isDark ? 'dark' : 'light');
-        }
-
-        function copyText(text, msg = '已复制到剪贴板') {
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            ta.style.position = 'fixed';
-            ta.style.opacity = '0';
-            document.body.appendChild(ta);
-            ta.select();
-            try {
-                document.execCommand('copy');
-                showToast(msg);
-            } catch (_) {
-                showToast('复制失败，请手动复制');
+      (async () => {
+        const urls = ['https://6.ipw.cn', 'https://v6.ident.me', 'https://api6.ipify.org'];
+        for (const u of urls) {
+          try {
+            const r = await fetchWithTimeout(u, {}, 3200);
+            const t = (await r.text()).trim();
+            if (t.includes(':')) {
+              STATE.v6 = t;
+              v6El.textContent = t;
+              return;
             }
-            document.body.removeChild(ta);
+          } catch {}
         }
+        v6El.textContent = '未开启 IPv6';
+      })();
+    }
 
-        function showToast(msg) {
-            const wrap = document.getElementById('toast-container');
-            const item = document.createElement('div');
-            item.className = 'toast-item';
-            item.innerHTML = `<span style="color:#818cf8">●</span><span>${msg}</span>`;
-            wrap.appendChild(item);
-            setTimeout(() => {
-                item.style.opacity = '0';
-                item.style.transform = 'translateY(6px)';
-                setTimeout(() => item.remove(), 260);
-            }, 2500);
-        }
+    function probeSiteLatency(site, timeout = 3600) {
+      return new Promise((resolve) => {
+        const t0 = performance.now();
+        let settled = false;
+        const finish = (ok) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          const ms = Math.max(1, Math.round(performance.now() - t0));
+          resolve(ok ? ms : -1);
+        };
 
-        async function runAllChecks() {
-            const icon = document.getElementById('icon-recheck-all');
-            if (icon) icon.classList.add('spin');
-            document.getElementById('last-check-time').textContent = '上次检测: ' + new Date().toLocaleTimeString('zh-CN', { hour12: false });
+        const timer = setTimeout(() => finish(false), timeout);
 
-            renderEnvInfo();
-            runDualStackProbe();
-            await Promise.allSettled([
-                runIpChecks(),
-                runLatencyChecks(),
-                runWebRTCCheck(),
-                runDnsCheck()
-            ]);
+        const img = new Image();
+        img.referrerPolicy = 'no-referrer';
+        img.onload = () => finish(true);
+        img.onerror = () => {};
+        img.src = site.img + (site.img.includes('?') ? '&' : '?') + '_t=' + Date.now() + Math.random();
 
-            if (icon) icon.classList.remove('spin');
-        }
+        fetch(site.url + (site.url.includes('?') ? '&' : '?') + '_t=' + Date.now(), {
+          mode: 'no-cors',
+          cache: 'no-store',
+          referrerPolicy: 'no-referrer'
+        }).then(() => finish(true)).catch(() => {});
+      });
+    }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('nbai_theme');
-            if (savedTheme === 'light') {
-                document.documentElement.classList.remove('dark');
-            }
-            renderIpCards();
-            renderLatencyGrids();
-            runAllChecks();
+    function renderLatencyGrids() {
+      const renderGroup = (list, groupKey, containerId) => {
+        document.getElementById(containerId).innerHTML = list.map(s => `
+          <div class="site-item" onclick="pingSingleSite('${groupKey}', '${s.id}')">
+            <div>
+              <div class="site-name">${s.name}</div>
+              <div class="site-domain">${s.domain}</div>
+            </div>
+            <span class="ping-badge ping-wait" id="ping_${groupKey}_${s.id}">测速中</span>
+          </div>
+        `).join('');
+      };
+      renderGroup(CN_SITES, 'cn', 'cnSiteGrid');
+      renderGroup(GLOBAL_SITES, 'global', 'globalSiteGrid');
+    }
+
+    async function pingSingleSite(groupKey, siteId) {
+      const list = groupKey === 'cn' ? CN_SITES : GLOBAL_SITES;
+      const site = list.find(x => x.id === siteId);
+      if (!site) return;
+
+      const badge = document.getElementById(`ping_${groupKey}_${site.id}`);
+      badge.className = 'ping-badge ping-wait';
+      badge.textContent = '测速中';
+
+      const ms = await probeSiteLatency(site, 3600);
+      STATE.pingResults[groupKey][site.id] = ms;
+
+      if (ms > 0) {
+        badge.textContent = `${ms} ms`;
+        badge.className = 'ping-badge ' + (ms < 120 ? 'ping-fast' : ms < 350 ? 'ping-mid' : 'ping-slow');
+      } else {
+        badge.textContent = '超时';
+        badge.className = 'ping-badge ping-fail';
+      }
+      updateGroupAverage(groupKey);
+    }
+
+    function updateGroupAverage(groupKey) {
+      const vals = Object.values(STATE.pingResults[groupKey]).filter(v => v > 0);
+      const total = (groupKey === 'cn' ? CN_SITES : GLOBAL_SITES).length;
+      const badge = document.getElementById(groupKey === 'cn' ? 'cnAvgBadge' : 'globalAvgBadge');
+      if (vals.length === 0) {
+        badge.textContent = `连通 0/${total}`;
+      } else {
+        const avg = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+        badge.textContent = `均值 ${avg} ms (${vals.length}/${total})`;
+      }
+    }
+
+    async function runCustomPing() {
+      let url = document.getElementById('customUrlInput').value.trim();
+      const out = document.getElementById('customPingResult');
+      if (!url) return;
+      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+      out.textContent = '正在测速...';
+      const ms = await probeSiteLatency({ img: url + '/favicon.ico', url }, 4000);
+      out.textContent = ms > 0 ? `✅ 响应耗时: ${ms} ms` : '❌ 连接超时或不可达';
+    }
+
+    function checkWebRTC() {
+      const pubEl = document.getElementById('rtcPublicIp');
+      const locEl = document.getElementById('rtcLocalIp');
+      const verEl = document.getElementById('rtcVerdict');
+      const badge = document.getElementById('webrtcBadge');
+
+      const RTCPeer = window.RTCPeerConnection || window.webkitRTCPeerConnection;
+      if (!RTCPeer) {
+        pubEl.textContent = '当前浏览器已禁用 WebRTC';
+        locEl.textContent = '无';
+        verEl.textContent = '✅ WebRTC 已禁用，无泄露风险';
+        badge.textContent = '已禁用';
+        return;
+      }
+
+      const publicIps = new Set();
+      const localIps = new Set();
+
+      try {
+        const pc = new RTCPeer({
+          iceServers: [
+            { urls: 'stun:stun.qq.com:3478' },
+            { urls: 'stun:stun.miwifi.com:3478' },
+            { urls: 'stun:stun.cloudflare.com:3478' }
+          ]
         });
-    </script>
+
+        pc.createDataChannel('nbai_probe');
+        pc.onicecandidate = (e) => {
+          if (!e.candidate || !e.candidate.candidate) return;
+          const cand = e.candidate.candidate;
+          const ipMatch = cand.match(/([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){3,7})/i);
+          const mDnsMatch = cand.match(/[a-f0-9-]+\.local/i);
+          if (mDnsMatch) localIps.add(mDnsMatch[0]);
+          if (ipMatch) {
+            const ip = ipMatch[1];
+            if (/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|127\.|fe80:)/i.test(ip)) {
+              localIps.add(ip);
+            } else {
+              publicIps.add(ip);
+            }
+          }
+          renderRtcStatus();
+        };
+
+        pc.createOffer().then(o => pc.setLocalDescription(o)).catch(() => {});
+        setTimeout(() => {
+          try { pc.close(); } catch {}
+          renderRtcStatus(true);
+        }, 3000);
+      } catch {
+        pubEl.textContent = '受限或已拦截';
+      }
+
+      function renderRtcStatus(done = false) {
+        const pubs = Array.from(publicIps);
+        const locs = Array.from(localIps);
+        pubEl.textContent = pubs.length ? pubs.join(', ') : (done ? '未发现公网 STUN 反射 IP' : '探测中...');
+        locEl.textContent = locs.length ? locs.join(', ') : (done ? '已隐藏 (mDNS 保护生效)' : '探测中...');
+        STATE.webrtc.publicIp = pubEl.textContent;
+        STATE.webrtc.localIp = locEl.textContent;
+
+        if (pubs.length === 0 && done) {
+          verEl.textContent = '✅ 安全（未暴露公网 UDP IP）';
+          badge.textContent = '安全';
+        } else if (pubs.length > 0) {
+          verEl.textContent = `ℹ️ 检测到 UDP 出口 (${pubs[0]})`;
+          badge.textContent = '正常';
+        }
+        STATE.webrtc.verdict = verEl.textContent;
+      }
+    }
+
+    function updateTracePanel() {
+      document.getElementById('cfColoVal').textContent = STATE.trace.colo;
+      document.getElementById('cfHttpVal').textContent = STATE.trace.http;
+      document.getElementById('cfWarpVal').textContent = STATE.trace.warp;
+      document.getElementById('dnsBadge').textContent = '已就绪';
+    }
+
+    function renderEnvInfo() {
+      const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection || {};
+      const rows = [
+        ['浏览器语言 / 时区', `${navigator.language} · ${Intl.DateTimeFormat().resolvedOptions().timeZone || '-'}`],
+        ['屏幕分辨率与像素比', `${window.screen.width}×${window.screen.height} (@${window.devicePixelRatio || 1}x)`],
+        ['CPU 核心 / 内存估算', `${navigator.hardwareConcurrency || '-'} 核 / ${navigator.deviceMemory ? navigator.deviceMemory + ' GB' : '-'}`],
+        ['网络类型 / 预估带宽', `${conn.effectiveType || '宽带/Wi-Fi'} ${conn.downlink ? '(' + conn.downlink + ' Mbps)' : ''}`]
+      ];
+      document.getElementById('envList').innerHTML = rows.map(([k, v]) => `
+        <div class="kv-row">
+          <span class="kv-key">${k}</span>
+          <span class="kv-val">${v}</span>
+        </div>
+      `).join('');
+    }
+
+    function togglePrivacy() {
+      STATE.privacy = !STATE.privacy;
+      document.getElementById('appRoot').classList.toggle('privacy-blur', STATE.privacy);
+      document.getElementById('privacyText').textContent = STATE.privacy ? '显示 IP' : '隐藏 IP';
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+    }
+
+    function copyIp(channelId) {
+      const ip = (STATE.ipResults[channelId] && STATE.ipResults[channelId].ip) || '';
+      if (!ip) return;
+      navigator.clipboard.writeText(ip);
+    }
+
+    function maskIpString(str) {
+      if (!str || !document.getElementById('maskCheck').checked) return str;
+      return str
+        .replace(/(\d{1,3}\.\d{1,3})\.\d{1,3}\.\d{1,3}/g, '$1.*.*')
+        .replace(/([a-f0-9]{1,4}:[a-f0-9]{1,4}):[a-f0-9:]+/gi, '$1:*:*');
+    }
+
+    function openReportModal() {
+      document.getElementById('reportModal').classList.add('open');
+      renderReportText();
+    }
+
+    function closeReportModal() {
+      document.getElementById('reportModal').classList.remove('open');
+    }
+
+    function switchReportFormat(fmt) {
+      STATE.reportFormat = fmt;
+      renderReportText();
+    }
+
+    function renderReportText() {
+      const timeStr = new Date().toLocaleString('zh-CN');
+      const summary = document.getElementById('summaryTitle').textContent;
+      const lines = [];
+
+      if (STATE.reportFormat === 'text') {
+        lines.push(`📊 NBAI 网络分流诊断报告 v2.5.0 (${timeStr})`);
+        lines.push(`综合结论：${summary}`);
+        lines.push(`IPv4 出口：${maskIpString(STATE.v4 || '无')} | IPv6 出口：${maskIpString(STATE.v6 || '无')}`);
+        lines.push(`\n🌐 多源出口状态：`);
+        IP_CHANNELS.forEach(ch => {
+          const r = STATE.ipResults[ch.id];
+          if (r && !r.error) {
+            lines.push(`• ${ch.name}：${maskIpString(r.ip)} (${r.location} | ${r.isp} | ${r.ms}ms)`);
+          } else {
+            lines.push(`• ${ch.name}：连接超时`);
+          }
+        });
+        lines.push(`\n⚡ 站点连通均值：`);
+        lines.push(`• 国内主流服务：${document.getElementById('cnAvgBadge').textContent}`);
+        lines.push(`• 国际与 AI 平台：${document.getElementById('globalAvgBadge').textContent}`);
+        lines.push(`\n🛡️ WebRTC 与 Anycast：`);
+        lines.push(`• WebRTC 公网：${maskIpString(STATE.webrtc.publicIp)} (${STATE.webrtc.verdict})`);
+        lines.push(`• Anycast 节点：${STATE.trace.colo}`);
+        lines.push(`\nGenerated by NBAI v2.5.0 · https://x.com/NBAI_dev`);
+      } else if (STATE.reportFormat === 'md') {
+        lines.push(`### 📊 NBAI 网络分流诊断报告 v2.5.0`);
+        lines.push(`- **检测时间**：${timeStr}`);
+        lines.push(`- **综合结论**：${summary}\n`);
+        lines.push(`| 通道名称 | 出口 IP | 归属地与运营商 | 延迟 |`);
+        lines.push(`| :--- | :--- | :--- | :--- |`);
+        IP_CHANNELS.forEach(ch => {
+          const r = STATE.ipResults[ch.id];
+          if (r && !r.error) {
+            lines.push(`| ${ch.name} | \`${maskIpString(r.ip)}\` | ${r.location} ${r.isp} | ${r.ms}ms |`);
+          } else {
+            lines.push(`| ${ch.name} | 超时 | - | - |`);
+          }
+        });
+      } else {
+        lines.push(`请帮我分析以下 NBAI v2.5.0 网络分流诊断数据，检查我的国内直连与海外代理规则是否合理：\n`);
+        lines.push(maskIpString(JSON.stringify({
+          version: 'v2.5.0',
+          summary,
+          dualStack: { v4: STATE.v4, v6: STATE.v6 },
+          ipChannels: STATE.ipResults,
+          pingMs: STATE.pingResults,
+          webrtc: STATE.webrtc,
+          anycast: STATE.trace
+        }, null, 2)));
+      }
+
+      document.getElementById('reportOutput').value = lines.join('\n');
+    }
+
+    function copyReportText() {
+      const el = document.getElementById('reportOutput');
+      el.select();
+      navigator.clipboard.writeText(el.value);
+    }
+
+    function runAllChecks() {
+      renderIpSkeletons();
+      renderLatencyGrids();
+      renderEnvInfo();
+
+      requestAnimationFrame(() => {
+        checkDualStack();
+        IP_CHANNELS.forEach(ch => runSingleIpChannel(ch.id));
+        CN_SITES.forEach(s => pingSingleSite('cn', s.id));
+        GLOBAL_SITES.forEach(s => pingSingleSite('global', s.id));
+        checkWebRTC();
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', runAllChecks);
+  </script>
 </body>
 </html>
