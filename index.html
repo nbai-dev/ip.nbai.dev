@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="no-referrer" />
   <meta name="color-scheme" content="dark light" />
+  <meta name="description" content="NBAI · 在浏览器本地完成 IP 出口、国内外分流、站点延迟与 WebRTC 泄露检测，无需登录、不上传数据。" />
+  <meta name="theme-color" content="#060a12" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#eef2f9" media="(prefers-color-scheme: light)" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="NBAI · IP 与网络分流诊断" />
+  <meta property="og:description" content="6 路 IP 出口竞速、16 站点延迟、WebRTC 泄露与 Anycast 边缘节点检测，全部在浏览器本地完成。" />
+  <meta property="og:url" content="https://ip.nbai.dev" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-size='13' font-weight='700' fill='%23fff' text-anchor='middle'%3ENB%3C/text%3E%3C/svg%3E" />
   <title>NBAI · IP 与网络分流诊断工具</title>
   <script>
     /* 首屏前应用主题，避免浅色模式用户看到深色闪烁 */
@@ -552,7 +560,6 @@
     .badge-anycast { background: var(--primary-soft); color: var(--primary); border-color: rgba(56, 189, 248, 0.22); }
     .badge-global { background: var(--violet-soft); color: var(--violet); border-color: rgba(167, 139, 250, 0.22); }
     .badge-warn { background: var(--warning-soft); color: var(--warning); border-color: rgba(251, 191, 36, 0.24); }
-    .badge-danger { background: var(--danger-soft); color: var(--danger); border-color: rgba(251, 113, 133, 0.24); }
     .badge-muted { background: var(--bg-subtle); color: var(--text-3); border-color: var(--border); }
 
     .ip-main-row {
@@ -1194,7 +1201,7 @@
         <div class="brand-text">
           <div class="brand-title-wrap">
             <h1 class="brand-title">NBAI · IP 与网络分流诊断</h1>
-            <span class="version-badge" data-ref="version">v2.7.0</span>
+            <span class="version-badge" data-ref="version">v2.8.0</span>
           </div>
           <span class="brand-sub">ip.nbai.dev · 浏览器本地检测</span>
         </div>
@@ -1301,7 +1308,7 @@
         <div class="section-eyebrow">02 / 实时延迟</div>
         <h2 class="section-title">国内外服务连通性</h2>
       </div>
-      <p class="section-hint">Image + Fetch 双擎竞速，绕过 CDN 防盗链；条形越长延迟越高，点击任意站点可重测</p>
+      <p class="section-hint">图片 + Fetch 双通道，目标无响应时自动补位；条形越长延迟越高，点击任意站点可重测</p>
     </header>
     <section class="latency-columns">
       <div class="panel">
@@ -1411,7 +1418,7 @@
       <div class="footer-brand">
         <span class="brand-logo" aria-hidden="true">NB</span>
         <div>
-          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.7.0</span></div>
+          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.8.0</span></div>
           <div class="footer-note">© 2026 NBAI · 检测在浏览器本地完成，无需登录</div>
         </div>
       </div>
@@ -1431,7 +1438,7 @@
   <!-- 诊断摘要弹窗 -->
   <dialog class="report-modal" id="reportModal" aria-labelledby="reportTitle">
     <div class="modal-top">
-      <div class="modal-title" id="reportTitle">📋 网络分流诊断报告 <span class="version-badge">v2.7.0</span></div>
+      <div class="modal-title" id="reportTitle">📋 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.8.0</span></div>
       <button type="button" class="btn" data-action="close-report">关闭</button>
     </div>
     <div class="tab-row" aria-label="报告格式">
@@ -1464,7 +1471,7 @@
     /* ============================================================
      * 0. 常量与数据
      * ==========================================================*/
-    const VERSION = 'v2.7.0';
+    const VERSION = 'v2.8.0';
     const REPO_URL = 'https://github.com/nbai-dev/ip.nbai.dev';
     const SITE_URL = 'https://ip.nbai.dev';
     const STORE_PREFIX = 'nbai:';
@@ -1487,27 +1494,53 @@
       { id: 'global_geo',    region: 'global', icon: '🛰️', name: '国际分流 (GeoJS 全球节点)',      desc: '检验全局代理或兜底规则出口 IP',      tag: '海外分流', tagClass: 'badge-global' }
     ];
 
+    /** 通道分组从 IP_CHANNELS 派生，评估逻辑里不再手写一份 id 列表 */
+    const CN_CHANNEL_IDS = IP_CHANNELS.filter((c) => c.region !== 'global').map((c) => c.id);
+    const GLOBAL_CHANNEL_IDS = IP_CHANNELS.filter((c) => c.region === 'global').map((c) => c.id);
+
     const CN_SITES = [
-      { id: 'baidu',    name: '百度搜索',     domain: 'baidu.com',    img: 'https://www.baidu.com/img/flexible/logo/pc/result.png', url: 'https://www.baidu.com/favicon.ico' },
-      { id: 'taobao',   name: '淘宝网',       domain: 'alicdn.com',   img: 'https://img.alicdn.com/tfs/TB1_uT8a5ERMeJjSspiXXbZLFXa-143-59.png', url: 'https://www.taobao.com/favicon.ico' },
-      { id: 'wechat',   name: '微信 / 腾讯',  domain: 'qq.com',       img: 'https://mat1.gtimg.com/www/icon/favicon2.ico', url: 'https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico' },
-      { id: 'bilibili', name: '哔哩哔哩',     domain: 'bilibili.com', img: 'https://www.bilibili.com/favicon.ico', url: 'https://s1.hdslb.com/bfs/static/jinkela/long/images/favicon.ico' },
-      { id: 'jd',       name: '京东商城',     domain: 'jd.com',       img: 'https://www.jd.com/favicon.ico', url: 'https://m.jd.com/favicon.ico' },
-      { id: 'netease',  name: '网易云音乐',   domain: '163.com',      img: 'https://s1.music.126.net/style/favicon.ico', url: 'https://www.163.com/favicon.ico' },
-      { id: 'douyin',   name: '字节 / 抖音',  domain: 'toutiao.com',  img: 'https://sf1-cdn-tos.toutiaostatic.com/obj/eden-cn/uhbfnupkbps/toutiao_favicon.ico', url: 'https://www.toutiao.com/favicon.ico' },
-      { id: 'zhihu',    name: '知乎社区',     domain: 'zhihu.com',    img: 'https://static.zhihu.com/heifetz/favicon.ico', url: 'https://www.zhihu.com/favicon.ico' }
+      { id: 'baidu',    name: '百度搜索',    domain: 'baidu.com',    root: 'https://www.baidu.com/',
+        probes: ['https://www.baidu.com/favicon.ico', 'https://m.baidu.com/favicon.ico', 'https://www.baidu.com/img/flexible/logo/pc/result.png'] },
+      { id: 'taobao',   name: '淘宝网',      domain: 'alicdn.com',   root: 'https://www.taobao.com/',
+        probes: ['https://www.taobao.com/favicon.ico', 'https://img.alicdn.com/tfs/TB1_uT8a5ERMeJjSspiXXbZLFXa-143-59.png'] },
+      { id: 'wechat',   name: '微信 / 腾讯', domain: 'qq.com',       root: 'https://www.qq.com/',
+        probes: ['https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico', 'https://www.qq.com/favicon.ico', 'https://mat1.gtimg.com/www/icon/favicon2.ico'] },
+      { id: 'bilibili', name: '哔哩哔哩',    domain: 'bilibili.com', root: 'https://www.bilibili.com/',
+        probes: ['https://www.bilibili.com/favicon.ico', 'https://s1.hdslb.com/bfs/static/jinkela/long/images/favicon.ico', 'https://i0.hdslb.com/bfs/static/jinkela/long/images/favicon.ico'] },
+      { id: 'jd',       name: '京东商城',    domain: 'jd.com',       root: 'https://www.jd.com/',
+        probes: ['https://www.jd.com/favicon.ico', 'https://m.jd.com/favicon.ico'] },
+      { id: 'netease',  name: '网易云音乐',  domain: '163.com',      root: 'https://music.163.com/',
+        probes: ['https://s1.music.126.net/style/favicon.ico', 'https://music.163.com/favicon.ico'] },
+      { id: 'douyin',   name: '字节 / 抖音', domain: 'toutiao.com',  root: 'https://www.toutiao.com/',
+        probes: ['https://www.toutiao.com/favicon.ico', 'https://sf1-cdn-tos.toutiaostatic.com/obj/eden-cn/uhbfnupkbps/toutiao_favicon.ico'] },
+      { id: 'zhihu',    name: '知乎社区',    domain: 'zhihu.com',    root: 'https://www.zhihu.com/',
+        probes: ['https://static.zhihu.com/heifetz/favicon.ico', 'https://zhihu.com/favicon.ico', 'https://www.zhihu.com/favicon.ico'] }
     ];
 
     const GLOBAL_SITES = [
-      { id: 'google',    name: 'Google',         domain: 'google.com',     img: 'https://www.google.com/favicon.ico', url: 'https://www.google.com/generate_204' },
-      { id: 'github',    name: 'GitHub',         domain: 'github.com',     img: 'https://github.githubassets.com/favicons/favicon.svg', url: 'https://github.com/favicon.ico' },
-      { id: 'x',         name: 'X (Twitter)',    domain: 'x.com',          img: 'https://abs.twimg.com/favicons/twitter.3.ico', url: 'https://x.com/favicon.ico' },
-      { id: 'youtube',   name: 'YouTube',        domain: 'youtube.com',    img: 'https://www.youtube.com/favicon.ico', url: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/default.jpg' },
-      { id: 'chatgpt',   name: 'ChatGPT / OpenAI', domain: 'chatgpt.com',  img: 'https://chatgpt.com/favicon.ico', url: 'https://cdn.oaistatic.com/assets/favicon-o20kmmos.svg' },
-      { id: 'claude',    name: 'Claude AI',      domain: 'claude.ai',      img: 'https://claude.ai/favicon.ico', url: 'https://anthropic.com/favicon.ico' },
-      { id: 'gemini',    name: 'Google Gemini',  domain: 'gemini.google.com', img: 'https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg', url: 'https://gemini.google.com/favicon.ico' },
-      { id: 'wikipedia', name: 'Wikipedia',      domain: 'wikipedia.org',  img: 'https://www.wikipedia.org/static/favicon/wikipedia.ico', url: 'https://en.wikipedia.org/favicon.ico' }
+      { id: 'google',    name: 'Google',          domain: 'google.com',  root: 'https://www.google.com/',
+        probes: ['https://www.google.com/favicon.ico', 'https://www.gstatic.com/images/branding/product/ico/googleg_lodp.ico'] },
+      { id: 'github',    name: 'GitHub',          domain: 'github.com',  root: 'https://github.com/',
+        probes: ['https://github.com/favicon.ico', 'https://github.githubassets.com/favicons/favicon.svg'] },
+      { id: 'x',         name: 'X (Twitter)',     domain: 'x.com',       root: 'https://x.com/',
+        probes: ['https://abs.twimg.com/favicons/twitter.3.ico', 'https://x.com/favicon.ico', 'https://abs.twimg.com/favicons/twitter.2.ico'] },
+      { id: 'youtube',   name: 'YouTube',         domain: 'youtube.com', root: 'https://www.youtube.com/',
+        probes: ['https://www.youtube.com/favicon.ico', 'https://i.ytimg.com/vi/dQw4w9WgXcQ/default.jpg'] },
+      { id: 'chatgpt',   name: 'ChatGPT / OpenAI', domain: 'chatgpt.com', root: 'https://chatgpt.com/',
+        probes: ['https://chatgpt.com/favicon.ico', 'https://cdn.oaistatic.com/assets/favicon-o20kmmos.svg'] },
+      { id: 'claude',    name: 'Claude AI',       domain: 'claude.ai',   root: 'https://claude.ai/',
+        probes: ['https://claude.ai/favicon.ico', 'https://www.anthropic.com/favicon.ico', 'https://anthropic.com/favicon.ico'] },
+      { id: 'gemini',    name: 'Google Gemini',   domain: 'gemini.google.com', root: 'https://gemini.google.com/',
+        probes: ['https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg', 'https://gemini.google.com/favicon.ico'] },
+      { id: 'wikipedia', name: 'Wikipedia',       domain: 'wikipedia.org', root: 'https://en.wikipedia.org/',
+        probes: ['https://en.wikipedia.org/favicon.ico', 'https://en.m.wikipedia.org/favicon.ico', 'https://www.wikipedia.org/static/favicon/wikipedia.ico'] }
     ];
+
+    /**
+     * 站点根路径（root 已内联到上面每个站点）：favicon 常被防盗链 / 404 / CORP / 代理规则拦掉，
+     * 但站点本身可能是通的（百度、知乎、X 尤其常见），用它做最后一道可达性兜底。
+     */
+    const SITE_TIMEOUT = 6200;   // 站点测速单站总预算（跨境线路 + 代理节点留余量）
 
     const ICONS = {
       copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'
@@ -1521,8 +1554,25 @@
     const isValidIPv4 = (s) =>
       /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/.test(s || '');
 
-    const isValidIPv6 = (s) =>
-      typeof s === 'string' && s.includes(':') && s.length >= 3 && /^[0-9a-f:.]+$/i.test(s);
+    /**
+     * 严格 IPv6 校验：
+     * 旧实现只要求「含冒号 + 长度 ≥3 + 十六进制字符」，`1:2`、`ab:c` 这类脏数据也会被当成 IP，
+     * 一旦接口返回非预期文本就会把假 IP 渲染到卡片上。这里改为按 RFC 4291 校验分组数与压缩写法。
+     */
+    const isValidIPv6 = (s) => {
+      if (typeof s !== 'string') return false;
+      const v = s.trim();
+      if (!v.includes(':') || !/^[0-9a-f:.]+$/i.test(v)) return false;
+
+      const halves = v.split('::');
+      if (halves.length > 2) return false;
+
+      const groups = halves.flatMap((half) => (half === '' ? [] : half.split(':')));
+      if (!groups.every((g) => /^[0-9a-f]{1,4}$/i.test(g))) return false;
+
+      // 完整写法必须 8 组；含 :: 的压缩写法必须少于 8 组（否则 :: 没有代表任何 0 组）
+      return halves.length === 2 ? groups.length < 8 : groups.length === 8;
+    };
 
     const isIP = (s) => isValidIPv4(s) || isValidIPv6(s);
 
@@ -1572,7 +1622,8 @@
       v6: '',
       ip: {},                                  // channelId -> { loading } | { error, reason } | result
       ping: { cn: {}, global: {} },            // group -> siteId -> ms(-1 失败)
-      webrtc: { publicIp: [], localIp: [], verdict: '检测中…', status: 'probing', leak: false },
+      pingReason: { cn: {}, global: {} },      // group -> siteId -> 失败原因数组
+      webrtc: { publicIp: [], localIp: [], verdict: '检测中…', status: 'probing', leak: false, failed: false },
       trace: { colo: '-', http: '-', warp: '-' },
       traceReady: false,
       summary: {
@@ -1595,7 +1646,11 @@
     const siteScopes = new Map();      // "group:siteId" -> AbortController
     let runScope = null;               // 整轮检测的 AbortController
 
-    /** 并发闸门：避免 Chrome 每域 6 连接上限导致探测互相排队 */
+    /**
+     * 并发闸门：限制同时在飞的探测数，避免低端设备/移动网络被 60+ 请求打爆。
+     * 注意 Chrome 的「每域 6 连接」是按 host 计算的，16 个站点分属 16 个域，
+     * 所以这里的 8 只是整机并发保护，不是撞连接上限（旧版注释写错了原因）。
+     */
     function createLimiter(max) {
       let active = 0;
       const queue = [];
@@ -1615,7 +1670,7 @@
       });
     }
 
-    const siteLimit = createLimiter(6);   // 站点测速
+    const siteLimit = createLimiter(8);   // 站点测速整机并发上限
 
     /* ============================================================
      * 3. 网络层
@@ -1657,7 +1712,6 @@
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         if (type === 'json') return await res.json();
-        if (type === 'response') return res;
         return await res.text();
       } finally {
         handle.dispose();
@@ -1743,19 +1797,6 @@
       });
     }
 
-    async function voreApi({ signal }) {
-      const d = await request('https://api.vore.top/api/IPdata', { type: 'json', timeout: 4000, signal });
-      const info = (d && d.ipinfo) || {};
-      const data = (d && d.ipdata) || {};
-      return normalize({
-        ip: info.text || info.ip || (d && d.ip),
-        location: [data.info1, data.info2, data.info3].filter(Boolean).join(' '),
-        isp: data.isp,
-        source: 'Vore API',
-        isCN: info.cnip !== false
-      });
-    }
-
     /* ---------- 3.2 Cloudflare Trace ---------- */
 
     async function cfTrace(host, { signal }) {
@@ -1825,7 +1866,8 @@
     }
 
     async function freeIpApi({ signal }) {
-      const d = await request('https://freeipapi.com/api/json', { type: 'json', timeout: 4500, signal });
+      // 旧域名 freeipapi.com/api/json 已 307 到 v1，直连目标地址可省一次往返
+      const d = await request('https://free.freeipapi.com/api/v1/json', { type: 'json', timeout: 4500, signal });
       return normalize({
         ip: d && d.ipAddress,
         location: [d && d.countryName, d && d.regionName, d && d.cityName].filter(Boolean).join(' '),
@@ -1863,12 +1905,10 @@
     const CHANNEL_SOURCES = {
       cn_direct: [
         { label: 'PConline', run: pconline },
-        { label: 'ipip.net', run: ipipNet },
-        { label: 'Vore', run: voreApi }
+        { label: 'ipip.net', run: ipipNet }
       ],
       cn_bgp: [
         { label: 'ipip.net', run: ipipNet },
-        { label: 'Vore', run: voreApi },
         { label: 'PConline', run: pconline }
       ],
       cf_cn: [
@@ -1969,11 +2009,17 @@
         }
 
         startNext();
-        hedgeTimer = setInterval(() => {
-          if (settled) return;
-          if (pending === 0 && next >= sources.length) return;
-          startNext();
-        }, hedgeDelay);
+        if (sources.length > 1) {
+          hedgeTimer = setInterval(() => {
+            if (settled) return;
+            if (next >= sources.length) {   // 所有源都已起跑，补位定时器可以退休了
+              clearInterval(hedgeTimer);
+              hedgeTimer = null;
+              return;
+            }
+            startNext();
+          }, hedgeDelay);
+        }
       });
     }
 
@@ -2128,6 +2174,8 @@
       const bar = document.getElementById(`bar_${group}_${site.id}`);
       const ms = state.ping[group][site.id];
 
+      badge.removeAttribute('title');
+
       if (ms === undefined) {
         badge.className = 'ping-badge ping-wait';
         setText(badge, '测速中');
@@ -2149,6 +2197,16 @@
       badge.className = 'ping-badge ping-fail';
       setText(badge, '超时');
       if (bar) { bar.className = 'fail'; bar.style.width = '100%'; }
+
+      const hosts = [...new Set((site.probes || []).map((p) => {
+        try { return new URL(p).host; } catch { return p; }
+      }))];
+      const detail = state.pingReason[group] && state.pingReason[group][site.id];
+      const head = hosts.length
+        ? `已尝试 ${hosts.length} 个探测地址均无响应：${hosts.join('、')}`
+        : '探测地址均无响应';
+      const body = detail && detail.length ? '\n\n失败原因：\n· ' + detail.join('\n· ') : '';
+      badge.title = head + body + '\n\n常见原因：代理规则未放行 / DNS 解析异常 / 浏览器扩展拦截 / 该站对海外 IP 拒绝服务';
     }
 
     function paintAverage(group) {
@@ -2203,7 +2261,9 @@
 
       setText(pubEl, w.publicIp.length ? join(w.publicIp) : '未发现公网 STUN 反射 IP');
       setText(locEl, w.localIp.length ? join(w.localIp) : '已隐藏 (mDNS 保护生效)');
-      setText(verEl, w.verdict);
+      // verdict 里也带 IP（"UDP 出口 x.x.x.x 与 HTTP 出口不一致"），隐私模式下同样要打码，
+      // 否则截图安全、文字仍泄露（旧版只给 publicIp / localIp 打了码）
+      setText(verEl, state.privacy ? maskIpText(w.verdict) : w.verdict);
 
       if (w.leak) {
         setText(badge, '需注意');
@@ -2257,11 +2317,9 @@
         return;
       }
 
-      const cnChannels = ['cn_direct', 'cn_bgp', 'cf_cn'];
-      const globalChannels = ['global_ipsb', 'global_ipinfo', 'global_geo'];
       const pick = (ids) => ids.map((id) => state.ip[id]).filter((r) => r && !r.error && !r.loading);
-      const cn = pick(cnChannels);
-      const gl = pick(globalChannels);
+      const cn = pick(CN_CHANNEL_IDS);
+      const gl = pick(GLOBAL_CHANNEL_IDS);
 
       if (!cn.length && !gl.length) {
         setSummary('danger', '❌ 所有探测通道均失败',
@@ -2272,7 +2330,7 @@
       if (!gl.length) {
         const sample = cn[0];
         setSummary('warn', '🇨🇳 国内直连正常 · 海外节点未开启代理或无法连接',
-          `国内出口 ${sample.ip} (${sample.location}) 响应正常，海外通道 ${globalChannels.length} 路全部超时`);
+          `国内出口 ${sample.ip} (${sample.location}) 响应正常，海外通道 ${GLOBAL_CHANNEL_IDS.length} 路全部超时`);
         return;
       }
 
@@ -2288,7 +2346,7 @@
       const allDomestic = gl.every((r) => r.isCN === true);
       const cnIpList = [...cnIps].slice(0, 2).join(' / ');
       const glIpList = [...new Set(gl.map((r) => r.ip))].slice(0, 2).join(' / ');
-      const counts = `国内 ${cn.length}/3 · 海外 ${gl.length}/3`;
+      const counts = `国内 ${cn.length}/${CN_CHANNEL_IDS.length} · 海外 ${gl.length}/${GLOBAL_CHANNEL_IDS.length}`;
 
       if (shared.length === 0 && foreign.length > 0) {
         setSummary('ok', '✅ 智能分流运行正常（国内直连 + 海外代理分流）',
@@ -2359,26 +2417,58 @@
       }
 
       paintIpCard(channelId);
+      evaluateWebrtc();   // 国内直连出口到位后，WebRTC 的 UDP/HTTP 一致性才能判定
       evaluateSummary();
     }
 
     /* ============================================================
      * 7. 双栈探测
      * ==========================================================*/
-    async function detectFamily(family, signal) {
+    /**
+     * 双栈探测：三路并行竞速，首个合法结果胜出后立即取消其余请求。
+     * 旧实现串行回退（3 × 3.5s），没有 IPv6 的用户最坏要等 10.5s 才显示「未开启 IPv6」；
+     * 并行后最坏 3.5s，且探测点已剔除实测不可达的 4.ipw.cn / 6.ipw.cn。
+     */
+    async function detectFamily(family, parentSignal) {
       const urls = family === 4
-        ? ['https://4.ipw.cn', 'https://v4.ident.me', 'https://api4.ipify.org']
-        : ['https://6.ipw.cn', 'https://v6.ident.me', 'https://api6.ipify.org'];
+        ? ['https://v4.ident.me', 'https://api4.ipify.org', 'https://ipv4.icanhazip.com']
+        : ['https://v6.ident.me', 'https://api6.ipify.org', 'https://ipv6.icanhazip.com'];
       const validate = family === 4 ? isValidIPv4 : isValidIPv6;
 
-      for (const url of urls) {
-        if (signal && signal.aborted) return '';
-        try {
-          const text = (await request(url, { timeout: 3500, signal })).trim();
-          if (validate(text)) return text;
-        } catch { /* 尝试下一个 */ }
+      if (parentSignal && parentSignal.aborted) return '';
+
+      const ctrl = new AbortController();
+      const relay = () => ctrl.abort();
+      if (parentSignal) parentSignal.addEventListener('abort', relay, { once: true });
+
+      try {
+        return await new Promise((resolve) => {
+          let remaining = urls.length;
+          let settled = false;
+
+          const finish = (value) => {
+            if (settled) return;
+            settled = true;
+            resolve(value);
+            ctrl.abort();   // 其余探测点立即取消，避免白占连接
+          };
+
+          urls.forEach((url) => {
+            request(url, { timeout: 3500, signal: ctrl.signal })
+              .then((text) => {
+                const value = String(text).trim();
+                if (validate(value)) finish(value);
+              })
+              .catch(() => { /* 该探测点失败，等其余结果 */ })
+              .finally(() => {
+                remaining -= 1;
+                if (remaining === 0) finish('');
+              });
+          });
+        });
+      } finally {
+        if (parentSignal) parentSignal.removeEventListener('abort', relay);
       }
-      return '';
     }
 
     async function runDualStack(signal) {
@@ -2387,6 +2477,7 @@
       state.v4 = v4;
       state.v6 = v6;
       paintDualStack();
+      evaluateWebrtc();   // v4 到位后重算 WebRTC 出口一致性
     }
 
     /* ============================================================
@@ -2403,57 +2494,132 @@
       }
     }
 
+    const hostOf = (rawUrl) => {
+      try { return new URL(rawUrl, location.href).host; } catch { return String(rawUrl); }
+    };
+
+    const originOf = (rawUrl) => {
+      try { return new URL(rawUrl, location.href).origin + '/'; } catch { return ''; }
+    };
+
     /**
-     * 双擎竞速：Image 适合图片/CDN，fetch(no-cors) 适合 4xx 也算连通的场景。
-     * 任一成功即记录耗时；abort 时清理挂起的 Image 请求。
+     * 多目标对冲探测：
+     * 1) 每个探测地址都生成「图片」任务，首个地址额外并跑 fetch(no-cors)；
+     * 2) 最后补一条「站点根路径 fetch」兜底 —— 百度/知乎/X 这类站点 favicon 常被
+     *    防盗链、404、CORP 或代理规则拦掉，但站点本身是通的，不能因此判成超时；
+     * 3) 任务按 gap 阶梯起跑（默认 600ms），任一成功立即记录耗时并取消其余请求；
+     * 4) 全部失败时回传每个地址的具体失败原因，供 UI 展示，避免只显示一个「超时」。
+     * 返回 { ms, reasons }，ms = -1 表示确实不可达。
      */
     function probeLatency(site, timeout, signal) {
       return new Promise((resolve) => {
-        const t0 = performance.now();
-        let settled = false;
-        let timer = null;
-        let img = null;
+        const targets = (site.probes || [])
+          .filter(Boolean)
+          .map((t) => (typeof t === 'string' ? { url: t, image: true, fetch: false } : { image: true, fetch: false, ...t }));
+        if (!targets.length) return resolve({ ms: -1, reasons: ['未配置探测地址'] });
 
-        const finish = (ok) => {
+        const tasks = [];
+        targets.forEach((t, i) => {
+          if (t.image !== false) tasks.push({ kind: 'image', url: t.url });
+          if (t.fetch || i === 0) tasks.push({ kind: 'fetch', url: t.url });
+        });
+        const root = site.root || originOf(targets[0].url);
+        if (root && !tasks.some((t) => t.kind === 'fetch' && t.url === root)) {
+          tasks.push({ kind: 'fetch', url: root, root: true });
+        }
+
+        const startedAt = performance.now();
+        let settled = false;
+        const images = [];
+        const timers = [];
+        const fetchControllers = [];
+        const reasons = [];
+        let completed = 0;
+
+        const note = (task, why) => {
+          if (reasons.length >= 8) return;
+          const label = `${task.kind === 'image' ? '图片' : 'Fetch'} ${hostOf(task.url)}${task.root ? ' 根路径' : ''}`;
+          const line = `${label}：${why}`;
+          if (!reasons.includes(line)) reasons.push(line);
+        };
+
+        const finish = (ok, task) => {
           if (settled) return;
+          const elapsed = task ? performance.now() - task.t0 : performance.now() - startedAt;
           settled = true;
-          if (timer) clearTimeout(timer);
+          timers.forEach((id) => clearTimeout(id));
           if (signal) signal.removeEventListener('abort', onAbort);
-          if (img) {
+          fetchControllers.forEach((ctrl) => { try { ctrl.abort(); } catch { /* ignore */ } });
+          // 无论成功与否都要中断在飞的图片请求，否则失败的探测会在后台继续占连接
+          images.forEach((img) => {
             img.onload = null;
             img.onerror = null;
-            if (!ok) img.src = 'data:,';
-          }
-          resolve(ok ? Math.max(1, Math.round(performance.now() - t0)) : -1);
+            img.src = 'data:,';
+          });
+          // 阶梯起跑的探测要以「该任务自己的起跑时刻」计时，否则第 3 路会被前两路的等待时间污染
+          resolve({ ms: ok ? Math.max(1, Math.round(elapsed)) : -1, reasons });
         };
 
         const onAbort = () => finish(false);
-
-        timer = setTimeout(() => finish(false), timeout);
+        const fail = (task, why) => {
+          if (settled || task.done) return;
+          task.done = true;
+          note(task, why);
+          completed += 1;
+          if (completed === tasks.length) finish(false);
+        };
         if (signal) {
           if (signal.aborted) return finish(false);
           signal.addEventListener('abort', onAbort, { once: true });
         }
 
-        if (site.img) {
-          img = new Image();
+        const runImage = (task) => {
+          if (settled) return;
+          const img = new Image();
           img.referrerPolicy = 'no-referrer';
-          img.onload = () => finish(true);
-          img.onerror = () => { /* 交给 fetch 兜底与超时 */ };
-          img.src = withCacheBust(site.img);
-        }
+          img.onload = () => finish(true, task);
+          img.onerror = () => fail(task, '无响应或返回的不是图片（防盗链 / 404 / 被拦截）');
+          task.t0 = performance.now();
+          img.src = withCacheBust(task.url);
+          images.push(img);
+        };
 
-        fetch(withCacheBust(site.url), {
-          mode: 'no-cors',
-          cache: 'no-store',
-          credentials: 'omit',
-          referrerPolicy: 'no-referrer',
-          signal
-        })
-          .then((res) => {
-            if (res.type === 'opaque' || res.ok) finish(true);
+        const runFetch = (task) => {
+          if (settled) return;
+          const controller = new AbortController();
+          fetchControllers.push(controller);
+          // 父 signal 统一由 onAbort -> finish 转发，避免每个 Fetch 遗留监听器。
+          task.t0 = performance.now();
+          fetch(withCacheBust(task.url), {
+            mode: 'no-cors',
+            cache: 'no-store',
+            credentials: 'omit',
+            referrerPolicy: 'no-referrer',
+            signal: controller.signal
           })
-          .catch(() => { /* 超时或失败，等待另一路 */ });
+            .then((res) => {
+              if (settled) return;
+              if (res.type === 'opaque' || res.ok) finish(true, task);
+              else fail(task, `HTTP ${res.status}`);
+            })
+            .catch((err) => {
+              if (settled) return;
+              const name = (err && err.name) || '';
+              fail(task, name === 'TypeError' ? '请求失败（网络 / 浏览器策略 / 代理规则）' : ((err && err.message) || '失败'));
+            });
+        };
+
+        const runTask = (task) => (task.kind === 'image' ? runImage(task) : runFetch(task));
+
+        const gap = Math.max(220, Math.min(600, Math.floor((timeout - 1500) / tasks.length)));
+        tasks.forEach((task, i) => {
+          if (i === 0) runTask(task);
+          else timers.push(setTimeout(() => runTask(task), i * gap));
+        });
+        timers.push(setTimeout(() => {
+          tasks.filter((task) => !task.done).forEach((task) => note(task, '超过探测时间预算'));
+          finish(false);
+        }, timeout));
       });
     }
 
@@ -2477,21 +2643,27 @@
       }
 
       delete state.ping[group][siteId];
+      delete state.pingReason[group][siteId];
       paintSiteBadge(group, site);
       paintAverage(group);
 
       let ms = -1;
+      let reasons = [];
       try {
-        ms = await siteLimit(() => probeLatency(site, 4200, controller.signal));
+        const res = await siteLimit(() => probeLatency(site, SITE_TIMEOUT, controller.signal));
+        ms = res.ms;
+        reasons = res.reasons || [];
       } catch {
         ms = -1;
       } finally {
         if (parentSignal) parentSignal.removeEventListener('abort', relay);
+        if (siteScopes.get(`${group}:${siteId}`) === controller) siteScopes.delete(`${group}:${siteId}`);
       }
 
-      if (!isCurrent(key, token)) return;
+      if (!isCurrent(key, token) || controller.signal.aborted) return;
 
       state.ping[group][siteId] = ms;
+      state.pingReason[group][siteId] = reasons;
       paintSiteBadge(group, site);
       paintAverage(group);
     }
@@ -2501,16 +2673,52 @@
      * ==========================================================*/
     let rtcPeer = null;
     let rtcTimer = null;
+    let rtcGen = 0;        // 每轮检测的代号，旧轮次不得回写 state
+    let rtcFinish = null;  // 旧轮次的收尾函数：新一轮启动时先结算它，避免 Promise 永久悬挂
+
+    /**
+     * WebRTC 结论依赖 HTTP 出口（v4 或国内直连通道），而两者是并行跑的。
+     * 旧实现在 ICE 收集完成那一刻就一次性算完，此时双栈探测常常还没回来，
+     * httpIp 恒为空、leak 恒为 false —— 泄露检测等于没做。
+     * 现在拆成「收集原始候选」+「按当前状态重算结论」，谁后到都能把结论刷新对。
+     */
+    function evaluateWebrtc() {
+      const w = state.webrtc;
+      if (w.status !== 'done') return;
+
+      const cnDirect = state.ip.cn_direct;
+      const httpIp = state.v4 ||
+        (cnDirect && !cnDirect.loading && !cnDirect.error ? cnDirect.ip : '') || '';
+      const pubs = w.publicIp;
+      const leak = pubs.some((ip) => isValidIPv4(ip) && httpIp && ip !== httpIp);
+
+      let verdict;
+      if (w.failed && !pubs.length) verdict = '⚠️ 探测失败（STUN 不可达或已被拦截）';
+      else if (!pubs.length) verdict = '✅ 安全（未暴露公网 UDP IP）';
+      else if (leak) verdict = `⚠️ UDP 出口 ${pubs[0]} 与 HTTP 出口 ${httpIp} 不一致`;
+      else if (httpIp) verdict = `ℹ️ 检测到 UDP 出口 (${pubs[0]})，与 HTTP 出口一致`;
+      else verdict = `ℹ️ 检测到 UDP 出口 (${pubs[0]})，HTTP 出口暂未取到`;
+
+      if (w.verdict === verdict && w.leak === leak) return;
+      w.verdict = verdict;
+      w.leak = leak;
+      paintWebrtc();
+    }
 
     function checkWebRTC() {
+      const gen = ++rtcGen;
+      const alive = () => gen === rtcGen;
+
       return new Promise((resolve) => {
         const RTCPeer = window.RTCPeerConnection || window.webkitRTCPeerConnection;
 
+        // 先结算上一轮：它的 finish 因代号过期只会 resolve，不会污染 state
+        if (rtcFinish) { const prevFinish = rtcFinish; rtcFinish = null; prevFinish(true); }
         if (rtcPeer) { try { rtcPeer.close(); } catch { /* ignore */ } rtcPeer = null; }
-        if (rtcTimer) clearTimeout(rtcTimer);
+        if (rtcTimer) { clearTimeout(rtcTimer); rtcTimer = null; }
 
         if (!RTCPeer) {
-          state.webrtc = { publicIp: [], localIp: [], verdict: '✅ WebRTC 已禁用，无泄露风险', status: 'disabled', leak: false };
+          state.webrtc = { publicIp: [], localIp: [], verdict: '✅ WebRTC 已禁用，无泄露风险', status: 'disabled', leak: false, failed: false };
           paintWebrtc();
           resolve();
           return;
@@ -2520,36 +2728,32 @@
         const localIps = new Set();
         let done = false;
 
-        state.webrtc = { publicIp: [], localIp: [], verdict: '分析中…', status: 'probing', leak: false };
+        state.webrtc = { publicIp: [], localIp: [], verdict: '分析中…', status: 'probing', leak: false, failed: false };
         paintWebrtc();
 
         const finish = (failed) => {
           if (done) return;
           done = true;
+          rtcFinish = null;
           if (rtcTimer) { clearTimeout(rtcTimer); rtcTimer = null; }
           try { pc.close(); } catch { /* ignore */ }
           if (rtcPeer === pc) rtcPeer = null;
 
-          const pubs = [...publicIps];
-          const httpIp = state.v4 || (state.ip.cn_direct && state.ip.cn_direct.ip) || '';
-          const leak = pubs.some((ip) => isValidIPv4(ip) && httpIp && ip !== httpIp);
-
-          let verdict;
-          if (failed && !pubs.length) verdict = '⚠️ 探测失败（STUN 不可达或已被拦截）';
-          else if (!pubs.length) verdict = '✅ 安全（未暴露公网 UDP IP）';
-          else if (leak) verdict = `⚠️ UDP 出口 ${pubs[0]} 与 HTTP 出口不一致`;
-          else verdict = `ℹ️ 检测到 UDP 出口 (${pubs[0]})，与 HTTP 出口一致`;
+          if (!alive()) { resolve(); return; }   // 已被新一轮取代，只收尾不写状态
 
           state.webrtc = {
-            publicIp: pubs,
+            publicIp: [...publicIps],
             localIp: [...localIps],
-            verdict,
+            verdict: '分析中…',
             status: 'done',
-            leak
+            leak: false,
+            failed: !!failed
           };
+          evaluateWebrtc();
           paintWebrtc();
           resolve();
         };
+        rtcFinish = finish;
 
         let pc;
         try {
@@ -2562,7 +2766,9 @@
           });
           rtcPeer = pc;
         } catch {
-          state.webrtc = { publicIp: [], localIp: [], verdict: '受限或已拦截', status: 'done', leak: false };
+          done = true;
+          rtcFinish = null;
+          state.webrtc = { publicIp: [], localIp: [], verdict: '受限或已拦截', status: 'done', leak: false, failed: true };
           paintWebrtc();
           resolve();
           return;
@@ -2575,6 +2781,9 @@
           const ipv4 = candidate.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g);
           const ipv6 = candidate.match(/\b[0-9a-f]{1,4}(?::[0-9a-f]{0,4}){2,7}\b/gi) || [];
           [...(ipv4 || []), ...ipv6].forEach((ip) => {
+            // host 候选里常带 `raddr 0.0.0.0 rport 0`，旧实现把 0.0.0.0 当公网 IP，
+            // 于是「UDP 出口与 HTTP 出口不一致」永远成立 —— 泄露检测天天误报
+            if (!ip || ip === '0.0.0.0' || ip === '::' || ip === '255.255.255.255') return;
             if (/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|127\.|169\.254\.)/.test(ip) || /^fe80:/i.test(ip)) {
               localIps.add(ip);
             } else if (isIP(ip)) {
@@ -2584,6 +2793,7 @@
         };
 
         pc.addEventListener('icecandidate', (event) => {
+          if (done || !alive()) return;
           if (!event.candidate || !event.candidate.candidate) return;
           parseCandidate(event.candidate.candidate);
           state.webrtc = {
@@ -2591,13 +2801,14 @@
             localIp: [...localIps],
             verdict: '分析中…',
             status: 'probing',
-            leak: false
+            leak: false,
+            failed: false
           };
           paintWebrtc();
         });
 
         pc.addEventListener('icegatheringstatechange', () => {
-          if (pc.iceGatheringState === 'complete') finish();
+          if (alive() && pc.iceGatheringState === 'complete') finish(false);
         });
 
         try {
@@ -2624,15 +2835,18 @@
       const previousRun = runScope;
       runScope = scope;
       if (previousRun) previousRun.abort();
-      if (rtcTimer) clearTimeout(rtcTimer);
+      // 旧一轮的 WebRTC 由 checkWebRTC() 内部按代号结算，这里不再直接 clearTimeout，
+      // 否则旧 Promise 永远不会 resolve，旧 runAll 的 allSettled 会一直挂着
 
       state.running = true;
       state.v4 = '';
       state.v6 = '';
       IP_CHANNELS.forEach((ch) => { delete state.ip[ch.id]; });
       state.ping = { cn: {}, global: {} };
+      state.pingReason = { cn: {}, global: {} };
       state.trace = { colo: '-', http: '-', warp: '-' };
       state.traceReady = false;
+      state.webrtc = { publicIp: [], localIp: [], verdict: '检测中…', status: 'probing', leak: false, failed: false };
 
       renderIpSkeletons();
       renderSiteGrids();
@@ -2661,6 +2875,7 @@
       setRunBusy(false);
       paintDualStack();
       paintAverages();
+      evaluateWebrtc();
       evaluateSummary();
     }
 
@@ -2705,13 +2920,22 @@
         webrtc: {
           publicIp: state.webrtc.publicIp.length ? state.webrtc.publicIp.join(', ') : null,
           localIp: state.webrtc.localIp.length ? state.webrtc.localIp.join(', ') : null,
-          verdict: state.webrtc.verdict
+          verdict: state.webrtc.verdict,
+          leak: state.webrtc.leak
         },
         anycast: { ...state.trace }
       };
     }
 
     const latencyText = (ms) => (typeof ms === 'number' ? (ms > 0 ? `${ms}ms` : '超时') : '未测');
+
+    /** 均值从快照数据算，不再回读 DOM 里的 badge 文案（旧实现会把「计算中…」写进报告） */
+    const avgText = (list) => {
+      const ok = list.filter((s) => typeof s.ms === 'number' && s.ms > 0);
+      if (!ok.length) return `无可用样本 (0/${list.length})`;
+      const avg = Math.round(ok.reduce((sum, s) => sum + s.ms, 0) / ok.length);
+      return `${avg}ms (${ok.length}/${list.length})`;
+    };
 
     function reportText(snap) {
       const lines = [];
@@ -2730,7 +2954,7 @@
       lines.push('⚡ 站点连通明细：');
       lines.push(`• 国内：${snap.latency.cn.map((s) => `${s.name} ${latencyText(s.ms)}`).join(' · ')}`);
       lines.push(`• 海外：${snap.latency.global.map((s) => `${s.name} ${latencyText(s.ms)}`).join(' · ')}`);
-      lines.push(`• 均值：国内 ${document.getElementById('cnAvgBadge').textContent} / 海外 ${document.getElementById('globalAvgBadge').textContent}`);
+      lines.push(`• 均值：国内 ${avgText(snap.latency.cn)} / 海外 ${avgText(snap.latency.global)}`);
       lines.push('');
       lines.push('🛡️ WebRTC 与 Anycast：');
       lines.push(`• WebRTC 公网：${snap.webrtc.publicIp || '未暴露'}（${snap.webrtc.verdict}）`);
@@ -2767,6 +2991,7 @@
         lines.push(`| ${name} | ${area} | ${latencyText(ms)} |`);
       });
       lines.push('');
+      lines.push(`> 均值：国内 ${avgText(snap.latency.cn)} · 海外 ${avgText(snap.latency.global)}`);
       lines.push(`> WebRTC：${snap.webrtc.verdict} · Anycast：${snap.anycast.colo} · HTTP/TLS：${snap.anycast.http}`);
       lines.push('>');
       lines.push(`> 项目地址：[${REPO_URL}](${REPO_URL})`);
@@ -2890,15 +3115,22 @@
       setText(out, '正在测速…');
 
       const site = {
-        url: url.toString(),
-        img: new URL('/favicon.ico', url.origin).toString()
+        root: url.origin + '/',
+        probes: [
+          new URL('/favicon.ico', url.origin).toString(),
+          { url: url.origin + '/', image: false, fetch: true }
+        ]
       };
 
-      const ms = await probeLatency(site, 4500, signal);
+      const res = await probeLatency(site, SITE_TIMEOUT, signal);
 
+      // 旧实现被新一轮点击取消后直接 return，按钮会永久停在 disabled 状态
+      if (customScope && customScope.signal === signal) btn.disabled = false;
       if (signal.aborted) return;
-      btn.disabled = false;
-      setText(out, ms > 0 ? `✅ 响应耗时：${ms} ms` : '❌ 连接超时或不可达');
+
+      setText(out, res.ms > 0 ? `✅ 响应耗时：${res.ms} ms` : '❌ 连接超时或不可达');
+      if (res.ms > 0 || !res.reasons.length) out.removeAttribute('title');
+      else out.title = '失败原因：\n· ' + res.reasons.join('\n· ');
     }
 
     /* ============================================================
@@ -2914,7 +3146,7 @@
         applyPrivacy();
       },
       'toggle-theme': toggleTheme,
-      'run-all': () => { runAll(); },
+      'run-all': startRun,
       'open-report': () => {
         renderReport();
         syncFormatButtons();
@@ -2986,6 +3218,9 @@
       const savedFormat = store.get('reportFormat', 'text');
       state.reportFormat = ['text', 'md', 'ai'].includes(savedFormat) ? savedFormat : 'text';
 
+      // 版本号只有一个来源：VERSION 常量（页面上三处 badge 都标了 data-ref="version"）
+      document.querySelectorAll('[data-ref="version"]').forEach((el) => setText(el, VERSION));
+
       applyPrivacy();
       syncFormatButtons();
       renderEnv();
@@ -2995,6 +3230,7 @@
       paintDualStack();
 
       if (navigator.onLine === false) {
+        renderIpSkeletons();   // 离线时也要有骨架，否则卡片区是一片空白
         setSummary('danger', '⚠️ 当前设备处于离线状态', '请检查网络连接后点击右上角「重新检测」');
         setRunBusy(false);
         IP_CHANNELS.forEach((ch) => {
@@ -3004,7 +3240,16 @@
         return;
       }
 
-      runAll();
+      startRun();
+    }
+
+    /** 统一入口：任何一轮检测异常都不该让按钮永远转圈 */
+    function startRun() {
+      runAll().catch((err) => {
+        console.error('[NBAI] 检测流程异常', err);
+        setRunBusy(false);
+        toast('检测异常中断，请重试');
+      });
     }
 
     init();
