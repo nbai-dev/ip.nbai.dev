@@ -700,6 +700,38 @@
     .legend-swatch.anycast { background: var(--primary); }
 
     /* ============ 延迟面板 ============ */
+    .routing-map { margin-bottom: 14px; }
+    .routing-lanes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+    .routing-lane { padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-subtle); min-width: 0; }
+    .routing-path { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px; font-weight: 600; }
+    .route-tag { color: var(--success); background: var(--success-soft); padding: 2px 7px; border-radius: 6px; font-size: 10.5px; }
+    .route-tag.proxy { color: var(--violet); background: var(--violet-soft); }
+    .routing-exit { font: 12px var(--font-mono); overflow-wrap: anywhere; margin-top: 10px; color: var(--text); }
+    .routing-count { color: var(--text-2); font-size: 11.5px; margin-top: 5px; }
+    .routing-note { color: var(--text-2); font-size: 11.5px; margin-top: 10px; }
+    .site-route { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; font-size: 10.5px; color: var(--text-2); }
+    .site-route-status { margin-left: auto; }
+    .site-item[data-result="ok"] .site-route-status { color: var(--success); }
+    .site-item[data-result="failed"] .site-route-status { color: var(--warning); }
+    .site-evidence { font: 10px var(--font-mono); color: var(--text-3); overflow-wrap: anywhere; }
+    .routing-map .panel-title { flex-wrap: wrap; }
+    .routing-location { font-size: 11.5px; color: var(--text-2); margin-top: 5px; overflow-wrap: anywhere; }
+    .routing-lane:first-child { border-top: 2px solid var(--success); }
+    .routing-lane:last-child { border-top: 2px solid var(--violet); }
+    .routing-explainer { margin-top: 10px; font-size: 11.5px; color: var(--text-2); }
+    .routing-explainer summary { cursor: pointer; width: fit-content; padding: 5px 0; }
+    .site-toolbar { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; margin: 16px 0 12px; }
+    .site-filters { display: flex; gap: 4px; padding: 4px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card); flex-wrap: wrap; }
+    .site-filters .btn { height: 30px; border-color: transparent; background: transparent; }
+    .site-filters .btn[aria-pressed="true"] { background: var(--primary-soft); border-color: var(--border-glow); }
+    .site-item[hidden], .site-empty[hidden], .site-technical[hidden] { display: none; }
+    .site-item[data-result="failed"] { border-color: var(--warning); }
+    .site-empty { padding: 24px 12px; text-align: center; color: var(--text-2); font-size: 12px; }
+    .site-technical { display: flex; flex-direction: column; gap: 5px; margin-top: 2px; padding-top: 8px; border-top: 1px dashed var(--border); }
+    .site-actual { font-size: 10.5px; color: var(--text-2); }
+    .site-failure { font-size: 11px; color: var(--warning); line-height: 1.5; }
+    @media (max-width: 640px) { .routing-lanes { grid-template-columns: minmax(0, 1fr); } }
+
     .latency-columns {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1312,13 +1344,43 @@
       </div>
       <p class="section-hint">图片 + Fetch 双通道，目标无响应时自动补位；条形越长延迟越高，点击任意站点可重测</p>
     </header>
+    <section class="panel routing-map" aria-labelledby="routingMapTitle">
+      <div class="panel-title" id="routingMapTitle">分流路径示意 <span class="panel-sub">预期策略 · 非逐站实测路由</span></div>
+      <div class="routing-lanes">
+        <div class="routing-lane">
+          <div class="routing-path"><span>本机</span><span aria-hidden="true">→</span><span class="route-tag">预期直连</span><span aria-hidden="true">→</span><span>国内服务</span></div>
+          <div class="routing-exit" id="routingCnExit">国内探测出口：等待检测</div>
+          <div class="routing-location" id="routingCnLocation">参考归属地：等待检测</div>
+          <div class="routing-count" id="routingCnCount">探测中</div>
+        </div>
+        <div class="routing-lane">
+          <div class="routing-path"><span>本机</span><span aria-hidden="true">→</span><span class="route-tag proxy">预期代理</span><span aria-hidden="true">→</span><span>国际 / AI 服务</span></div>
+          <div class="routing-exit" id="routingGlobalExit">海外探测出口：等待检测</div>
+          <div class="routing-location" id="routingGlobalLocation">参考归属地：等待检测</div>
+          <div class="routing-count" id="routingGlobalCount">探测中</div>
+        </div>
+      </div>
+      <p class="routing-note" id="routingObservation">正在对比出口…</p>
+      <details class="routing-explainer"><summary>为什么网站的实际 IP / 国家显示未验证？</summary>
+        <p>上方出口与归属地来自 IP 探测服务，仅供参考，不等于下方每个网站的真实出口。连通只表示探测资源有响应，不代表网站业务可用。确认实际 DIRECT / PROXY、出口 IP 和国家，需代理客户端连接记录及节点出口信息。</p>
+      </details>
+    </section>
+    <div class="site-toolbar">
+      <div class="site-filters" role="group" aria-label="筛选网站探测结果">
+        <button type="button" class="btn" data-action="filter-sites" data-filter="all" aria-pressed="true">全部 <span id="filterCountAll">16</span></button>
+        <button type="button" class="btn" data-action="filter-sites" data-filter="ok" aria-pressed="false">已连通 <span id="filterCountOk">0</span></button>
+        <button type="button" class="btn" data-action="filter-sites" data-filter="failed" aria-pressed="false">需排查 <span id="filterCountFailed">0</span></button>
+      </div>
+      <button type="button" class="btn" data-action="toggle-site-details" aria-pressed="false" aria-controls="cnSiteGrid globalSiteGrid">显示技术详情</button>
+    </div>
     <section class="latency-columns">
       <div class="panel">
         <div class="panel-head">
-          <div class="panel-title"><span class="flag">🇨🇳</span>国内主流服务<span class="panel-sub">直连</span></div>
+          <div class="panel-title"><span class="flag">🇨🇳</span>国内主流服务<span class="panel-sub">预期直连</span></div>
           <span class="avg-badge" id="cnAvgBadge">计算中…</span>
         </div>
         <div class="site-grid" id="cnSiteGrid"></div>
+        <p class="site-empty" id="cnSiteEmpty" hidden>当前筛选下暂无网站，检测中结果会自动更新。</p>
         <div class="panel-legend">
           <span><i class="legend-dot" style="background:var(--success)"></i>快 &lt; 120ms</span>
           <span><i class="legend-dot" style="background:var(--warning)"></i>中 120–350ms</span>
@@ -1328,10 +1390,11 @@
 
       <div class="panel">
         <div class="panel-head">
-          <div class="panel-title"><span class="flag">🌍</span>国际与 AI 平台<span class="panel-sub">代理分流</span></div>
+          <div class="panel-title"><span class="flag">🌍</span>国际与 AI 平台<span class="panel-sub">预期代理</span></div>
           <span class="avg-badge" id="globalAvgBadge">计算中…</span>
         </div>
         <div class="site-grid" id="globalSiteGrid"></div>
+        <p class="site-empty" id="globalSiteEmpty" hidden>当前筛选下暂无网站，检测中结果会自动更新。</p>
         <div class="panel-legend">
           <span><i class="legend-dot" style="background:var(--success)"></i>快 &lt; 120ms</span>
           <span><i class="legend-dot" style="background:var(--warning)"></i>中 120–350ms</span>
@@ -1627,6 +1690,9 @@
       v6: '',
       ip: {},                                  // channelId -> { loading } | { error, reason } | result
       ping: { cn: {}, global: {} },            // group -> siteId -> ms(-1 失败)
+      pingEvidence: { cn: {}, global: {} },    // 实际响应资源，不代表逐站真实路由
+      siteFilter: 'all',
+      siteDetails: false,
       pingReason: { cn: {}, global: {} },      // group -> siteId -> 失败原因数组
       webrtc: { publicIp: [], localIp: [], verdict: '检测中…', status: 'probing', leak: false, failed: false },
       trace: { colo: '-', http: '-', warp: '-' },
@@ -2046,6 +2112,7 @@
       if (card) card.dataset.state = state.summary.kind;
       setText($('#summaryTitle'), mask(state.summary.title));
       setText($('#summaryDesc'), mask(state.summary.desc));
+      paintRoutingMap();
     }
 
     function setSummary(kind, title, desc) {
@@ -2153,6 +2220,71 @@
       v6El.title = state.v6 && !state.privacy ? state.v6 : v6Text;
     }
 
+    function routingObservation(cnIps, globalIps) {
+      if (!cnIps.length || !globalIps.length) return '出口样本不足，暂不能比较分流情况。';
+      if (cnIps.some((ip) => globalIps.includes(ip))) return '观察：国内与海外探测存在相同出口，建议检查分流规则；相同 IP 不能单独证明全局代理。';
+      return '观察：国内与海外探测出口不同，存在分流迹象；逐站实际路径仍需客户端确认（IPv4 / IPv6 差异也可能造成出口不同）。';
+    }
+
+    function paintRoutingMap() {
+      const pick = (ids) => [...new Set(ids.map((id) => state.ip[id])
+        .filter((r) => r && !r.loading && !r.error && r.ip).map((r) => r.ip))];
+      // Anycast 可能走不同网络，不用它冒充国内直连基准。
+      const cnIps = pick(['cn_direct', 'cn_bgp']);
+      const globalIps = pick(GLOBAL_CHANNEL_IDS);
+      const label = (ips) => ips.length ? ips.map(fmtIp).join(' / ') : state.running ? '检测中…' : '未取得';
+      setText($('#routingCnExit'), `国内探测出口：${label(cnIps)}`);
+      setText($('#routingGlobalExit'), `海外探测出口：${label(globalIps)}`);
+      const locations = (ids) => {
+        const values = [...new Set(ids.map((id) => state.ip[id])
+          .filter((r) => r && !r.loading && !r.error && r.ip && r.location).map((r) => r.location))];
+        const text = values.join(' / ') || '未取得（不代表网站实际访问国家）';
+        return state.privacy ? maskIpText(text) : text;
+      };
+      setText($('#routingCnLocation'), `参考归属地：${locations(['cn_direct', 'cn_bgp'])}`);
+      setText($('#routingGlobalLocation'), `参考归属地：${locations(GLOBAL_CHANNEL_IDS)}`);
+      const count = (group, list) => {
+        const values = list.map((site) => state.ping[group][site.id]);
+        const ok = values.filter((ms) => ms > 0).length;
+        const failed = values.filter((ms) => typeof ms === 'number' && ms <= 0).length;
+        return `探测连通 ${ok}/${list.length} · 未确认 ${failed} · 待测 ${list.length - ok - failed}`;
+      };
+      setText($('#routingCnCount'), count('cn', CN_SITES));
+      setText($('#routingGlobalCount'), count('global', GLOBAL_SITES));
+      setText($('#routingObservation'), routingObservation(cnIps, globalIps));
+    }
+
+    const siteResult = (ms) => typeof ms !== 'number' || !Number.isFinite(ms) ? 'waiting' : ms > 0 ? 'ok' : 'failed';
+
+    function paintSiteFilters() {
+      const counts = { all: 0, ok: 0, failed: 0 };
+      ['cn', 'global'].forEach((group) => {
+        const cards = [...document.querySelectorAll(`#${group}SiteGrid .site-item`)];
+        let visible = 0;
+        cards.forEach((card) => {
+          const result = siteResult(state.ping[group][card.dataset.id]);
+          counts.all += 1;
+          if (result !== 'waiting') counts[result] += 1;
+          card.hidden = state.siteFilter !== 'all' && result !== state.siteFilter;
+          if (!card.hidden) visible += 1;
+          card.querySelector('.site-technical').hidden = !state.siteDetails;
+        });
+        const empty = $(`#${group}SiteEmpty`);
+        if (empty) empty.hidden = visible > 0;
+      });
+      setText($('#filterCountAll'), String(counts.all));
+      setText($('#filterCountOk'), String(counts.ok));
+      setText($('#filterCountFailed'), String(counts.failed));
+      document.querySelectorAll('[data-action="filter-sites"]').forEach((btn) => {
+        btn.setAttribute('aria-pressed', String(btn.dataset.filter === state.siteFilter));
+      });
+      const toggle = $('[data-action="toggle-site-details"]');
+      if (toggle) {
+        toggle.setAttribute('aria-pressed', String(state.siteDetails));
+        setText(toggle, state.siteDetails ? '收起技术详情' : '显示技术详情');
+      }
+    }
+
     function renderSiteGrids() {
       const build = (list, group, containerId) => {
         $('#' + containerId).innerHTML = list.map((s) => `
@@ -2166,11 +2298,19 @@
               <span class="site-domain">${escapeHtml(s.domain)}</span>
               <span class="ping-bar" aria-hidden="true"><i class="wait" id="bar_${group}_${s.id}"></i></span>
             </span>
+            <span class="site-route"><span class="route-tag ${group === 'global' ? 'proxy' : ''}">${group === 'cn' ? '预期直连' : '预期代理'}</span><span class="site-route-status" id="route_${group}_${s.id}">检测中</span></span>
+            <span class="site-failure" id="failure_${group}_${s.id}" hidden></span>
+            <span class="site-technical" ${state.siteDetails ? '' : 'hidden'}>
+              <span class="site-actual">实际出口 IP / 国家：未验证</span>
+              <span class="site-evidence" id="evidence_${group}_${s.id}">等待探测资源响应</span>
+              <span class="site-actual">点击卡片重测 · 真实路径请在客户端确认</span>
+            </span>
           </button>
         `).join('');
       };
       build(CN_SITES, 'cn', 'cnSiteGrid');
       build(GLOBAL_SITES, 'global', 'globalSiteGrid');
+      paintSiteFilters();
     }
 
     function paintSiteBadge(group, site) {
@@ -2178,17 +2318,29 @@
       if (!badge) return;
       const bar = document.getElementById(`bar_${group}_${site.id}`);
       const ms = state.ping[group][site.id];
+      const result = siteResult(ms);
+      badge.closest('.site-item').dataset.result = result;
+      badge.closest('.site-item').setAttribute('aria-busy', String(result === 'waiting'));
+      const failure = document.getElementById(`failure_${group}_${site.id}`);
+      failure.hidden = result !== 'failed';
+      setText(failure, result === 'failed' ? '资源未响应或被拦截，不等于网站不可用' : '');
+      paintSiteFilters();
+      setText(document.getElementById(`route_${group}_${site.id}`), result === 'ok' ? '● 探测连通' : result === 'failed' ? '! 未确认连通' : '检测中');
+      const evidence = state.pingEvidence && state.pingEvidence[group][site.id];
+      setText(document.getElementById(`evidence_${group}_${site.id}`), evidence
+        ? `响应资源：${evidence.host} · ${evidence.kind === 'image' ? '图片' : 'Fetch'}`
+        : '实际路径待客户端确认');
 
       badge.removeAttribute('title');
 
-      if (ms === undefined) {
+      if (result === 'waiting') {
         badge.className = 'ping-badge ping-wait';
         setText(badge, '测速中');
         if (bar) { bar.className = 'wait'; bar.style.width = ''; }
         return;
       }
 
-      if (ms > 0) {
+      if (result === 'ok') {
         const level = ms < 120 ? 'fast' : ms < 350 ? 'mid' : 'slow';
         badge.className = 'ping-badge ping-' + level;
         setText(badge, `${ms} ms`);
@@ -2200,21 +2352,20 @@
       }
 
       badge.className = 'ping-badge ping-fail';
-      setText(badge, '超时');
+      setText(badge, '未连通');
       if (bar) { bar.className = 'fail'; bar.style.width = '100%'; }
 
-      const hosts = [...new Set((site.probes || []).map((p) => {
-        try { return new URL(p).host; } catch { return p; }
-      }))];
+      const hosts = [...new Set((site.probes || []).map((p) => hostOf(typeof p === 'string' ? p : p.url)))];
       const detail = state.pingReason[group] && state.pingReason[group][site.id];
       const head = hosts.length
-        ? `已尝试 ${hosts.length} 个探测地址均无响应：${hosts.join('、')}`
+        ? `已配置 ${hosts.length} 个探测主机：${hosts.join('、')}`
         : '探测地址均无响应';
       const body = detail && detail.length ? '\n\n失败原因：\n· ' + detail.join('\n· ') : '';
       badge.title = head + body + '\n\n常见原因：代理规则未放行 / DNS 解析异常 / 浏览器扩展拦截 / 该站对海外 IP 拒绝服务';
     }
 
     function paintAverage(group) {
+      paintRoutingMap();
       const list = group === 'cn' ? CN_SITES : GLOBAL_SITES;
       const results = state.ping[group];
       const badge = document.getElementById(group === 'cn' ? 'cnAvgBadge' : 'globalAvgBadge');
@@ -2562,7 +2713,8 @@
             img.src = 'data:,';
           });
           // 阶梯起跑的探测要以「该任务自己的起跑时刻」计时，否则第 3 路会被前两路的等待时间污染
-          resolve({ ms: ok ? Math.max(1, Math.round(elapsed)) : -1, reasons });
+          resolve({ ms: ok ? Math.max(1, Math.round(elapsed)) : -1, reasons,
+            evidence: ok && task ? { host: hostOf(task.url), kind: task.kind } : null });
         };
 
         const onAbort = () => finish(false);
@@ -2648,16 +2800,20 @@
       }
 
       delete state.ping[group][siteId];
+      if (!state.pingEvidence) state.pingEvidence = { cn: {}, global: {} };
+      delete state.pingEvidence[group][siteId];
       delete state.pingReason[group][siteId];
       paintSiteBadge(group, site);
       paintAverage(group);
 
       let ms = -1;
       let reasons = [];
+      let evidence = null;
       try {
         const res = await siteLimit(() => probeLatency(site, SITE_TIMEOUT, controller.signal));
         ms = res.ms;
         reasons = res.reasons || [];
+        evidence = res.evidence || null;
       } catch {
         ms = -1;
       } finally {
@@ -2668,6 +2824,7 @@
       if (!isCurrent(key, token) || controller.signal.aborted) return;
 
       state.ping[group][siteId] = ms;
+      state.pingEvidence[group][siteId] = evidence;
       state.pingReason[group][siteId] = reasons;
       paintSiteBadge(group, site);
       paintAverage(group);
@@ -2848,6 +3005,7 @@
       state.v6 = '';
       IP_CHANNELS.forEach((ch) => { delete state.ip[ch.id]; });
       state.ping = { cn: {}, global: {} };
+      state.pingEvidence = { cn: {}, global: {} };
       state.pingReason = { cn: {}, global: {} };
       state.trace = { colo: '-', http: '-', warp: '-' };
       state.traceReady = false;
@@ -2919,8 +3077,10 @@
           };
         }),
         latency: {
-          cn: CN_SITES.map((s) => ({ name: s.name, domain: s.domain, ms: state.ping.cn[s.id] ?? null })),
-          global: GLOBAL_SITES.map((s) => ({ name: s.name, domain: s.domain, ms: state.ping.global[s.id] ?? null }))
+          cn: CN_SITES.map((s) => ({ name: s.name, domain: s.domain, ms: state.ping.cn[s.id] ?? null,
+            expectedRoute: 'DIRECT', actualRoute: 'unknown', probe: state.pingEvidence.cn[s.id] || null })),
+          global: GLOBAL_SITES.map((s) => ({ name: s.name, domain: s.domain, ms: state.ping.global[s.id] ?? null,
+            expectedRoute: 'PROXY', actualRoute: 'unknown', probe: state.pingEvidence.global[s.id] || null }))
         },
         webrtc: {
           publicIp: state.webrtc.publicIp.length ? state.webrtc.publicIp.join(', ') : null,
@@ -2932,7 +3092,7 @@
       };
     }
 
-    const latencyText = (ms) => (typeof ms === 'number' ? (ms > 0 ? `${ms}ms` : '超时') : '未测');
+    const latencyText = (ms) => (typeof ms === 'number' ? (ms > 0 ? `${ms}ms` : '未连通') : '未测');
 
     /** 均值从快照数据算，不再回读 DOM 里的 badge 文案（旧实现会把「计算中…」写进报告） */
     const avgText = (list) => {
@@ -2960,6 +3120,7 @@
       lines.push(`• 国内：${snap.latency.cn.map((s) => `${s.name} ${latencyText(s.ms)}`).join(' · ')}`);
       lines.push(`• 海外：${snap.latency.global.map((s) => `${s.name} ${latencyText(s.ms)}`).join(' · ')}`);
       lines.push(`• 均值：国内 ${avgText(snap.latency.cn)} / 海外 ${avgText(snap.latency.global)}`);
+      lines.push('• 预期策略：国内 DIRECT / 国际 PROXY；实际逐站路径未验证，请以代理客户端连接记录为准。');
       lines.push('');
       lines.push('🛡️ WebRTC 与 Anycast：');
       lines.push(`• WebRTC 公网：${snap.webrtc.publicIp || '未暴露'}（${snap.webrtc.verdict}）`);
@@ -2997,6 +3158,7 @@
       });
       lines.push('');
       lines.push(`> 均值：国内 ${avgText(snap.latency.cn)} · 海外 ${avgText(snap.latency.global)}`);
+      lines.push('> 预期策略：国内 DIRECT / 国际 PROXY；实际逐站路径未验证，请以代理客户端连接记录为准。');
       lines.push(`> WebRTC：${snap.webrtc.verdict} · Anycast：${snap.anycast.colo} · HTTP/TLS：${snap.anycast.http}`);
       lines.push('>');
       lines.push(`> 项目地址：[${REPO_URL}](${REPO_URL})`);
@@ -3224,6 +3386,12 @@
     const activeSignal = () => (runScope && !runScope.signal.aborted ? runScope.signal : null);
 
     const ACTIONS = {
+      'filter-sites': (btn) => {
+        if (!['all', 'ok', 'failed'].includes(btn.dataset.filter)) return;
+        state.siteFilter = btn.dataset.filter;
+        paintSiteFilters();
+      },
+      'toggle-site-details': () => { state.siteDetails = !state.siteDetails; paintSiteFilters(); },
       'save-report-image': saveReportImage,
       'share-x': shareReportToX,
       'toggle-privacy': () => {
