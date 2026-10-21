@@ -1067,7 +1067,9 @@
 
     .report-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
 
-    .modal-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; flex-wrap: wrap; }
+
+    .share-note { margin-top: 10px; color: var(--text-2); font-size: 11.5px; }
 
     /* ============ 页脚 ============ */
     .footer {
@@ -1458,8 +1460,11 @@
         </svg>
         <span>项目源码</span>
       </a>
+      <button type="button" class="btn" data-action="save-report-image">保存报告截图</button>
+      <button type="button" class="btn" data-action="share-x">分享到 X ↗</button>
       <button type="button" class="btn btn-primary" data-action="copy-report">一键复制报告内容</button>
     </div>
+    <p class="share-note">截图为完整报告 PNG，遵循上方 IP 打码选项。X 分享默认隐藏 IP；如需附图，请保存后在 X 手动添加。</p>
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -3019,6 +3024,85 @@
       $('#reportOutput').value = masked ? maskIpText(body) : body;
     }
 
+    /** 本地 Canvas 生成报告图片，不依赖截图 CDN，也不上传报告数据。 */
+    async function saveReportImage() {
+      const button = $('[data-action="save-report-image"]');
+      button.disabled = true;
+      try {
+        const snap = snapshot();
+        const masked = $('#maskCheck').checked;
+        const text = reportText(snap);
+        const body = masked ? maskIpText(text) : text;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('浏览器不支持图片导出');
+        const width = 1080;
+        const padding = 56;
+        const lineHeight = 36;
+        const font = '22px -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif';
+        ctx.font = font;
+        const lines = [];
+        body.split('\n').forEach((paragraph) => {
+          let line = '';
+          for (const char of paragraph) {
+            if (line && ctx.measureText(line + char).width > width - padding * 2) {
+              lines.push(line);
+              line = '';
+            }
+            line += char;
+          }
+          lines.push(line);
+        });
+        canvas.width = width;
+        canvas.height = 176 + lines.length * lineHeight;
+        ctx.fillStyle = '#0d1626';
+        ctx.fillRect(0, 0, width, canvas.height);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(0, 0, width, 8);
+        ctx.font = 'bold 32px "Segoe UI", "Microsoft YaHei", sans-serif';
+        ctx.fillText('NBAI · 网络分流诊断报告', padding, 68);
+        ctx.font = '18px "Segoe UI", "Microsoft YaHei", sans-serif';
+        ctx.fillStyle = '#9fb0c9';
+        ctx.fillText(masked ? '隐私模式：IP 已打码' : '注意：此图片包含未打码 IP，请谨慎公开分享', padding, 104);
+        ctx.font = font;
+        ctx.fillStyle = '#e9f0fc';
+        lines.forEach((line, index) => ctx.fillText(line, padding, 158 + index * lineHeight));
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+        if (!blob) throw new Error('图片生成失败');
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = `nbai-report-${new Date().toISOString().replace(/[:.]/g, '-')}${masked ? '-masked' : ''}.png`;
+        document.body.appendChild(link);
+        try { link.click(); } finally {
+          link.remove();
+          setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+        }
+        toast('报告截图已生成，请查看浏览器下载');
+      } catch (error) {
+        toast(error.message || '截图生成失败，请重试');
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function shareReportToX() {
+      const snap = snapshot();
+      // 公共分享始终打码，不受用户取消报告打码影响；不携带 IP、位置和候选地址。
+      const title = Array.from(maskIpText(snap.summary.title)).slice(0, 80).join('');
+      const text = `我的 NBAI 网络分流诊断\n${title}\n国内 ${avgText(snap.latency.cn)} · 海外 ${avgText(snap.latency.global)}\n#NBAI #网络诊断`;
+      const url = new URL('https://twitter.com/intent/tweet');
+      url.searchParams.set('text', text);
+      url.searchParams.set('url', SITE_URL);
+      const link = document.createElement('a');
+      link.href = url.toString();
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      try { link.click(); } finally { link.remove(); }
+      toast('已打开 X 分享；截图请在发帖时手动添加');
+    }
+
     function syncFormatButtons() {
       document.querySelectorAll('[data-action="report-format"]').forEach((btn) => {
         btn.setAttribute('aria-pressed', String(btn.dataset.format === state.reportFormat));
@@ -3140,6 +3224,8 @@
     const activeSignal = () => (runScope && !runScope.signal.aborted ? runScope.signal : null);
 
     const ACTIONS = {
+      'save-report-image': saveReportImage,
+      'share-x': shareReportToX,
       'toggle-privacy': () => {
         state.privacy = !state.privacy;
         store.set('privacy', state.privacy);
