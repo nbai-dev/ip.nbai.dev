@@ -1235,7 +1235,7 @@
         <div class="brand-text">
           <div class="brand-title-wrap">
             <h1 class="brand-title">NBAI · IP 与网络分流诊断</h1>
-            <span class="version-badge" data-ref="version">v2.8.1</span>
+            <span class="version-badge" data-ref="version">v2.8.2</span>
           </div>
           <span class="brand-sub">ip.nbai.dev · 浏览器本地检测</span>
         </div>
@@ -1483,7 +1483,7 @@
       <div class="footer-brand">
         <span class="brand-logo" aria-hidden="true">NB</span>
         <div>
-          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.8.1</span></div>
+          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.8.2</span></div>
           <div class="footer-note">© 2026 NBAI · 检测在浏览器本地完成，无需登录</div>
         </div>
       </div>
@@ -1503,7 +1503,7 @@
   <!-- 诊断摘要弹窗 -->
   <dialog class="report-modal" id="reportModal" aria-labelledby="reportTitle">
     <div class="modal-top">
-      <div class="modal-title" id="reportTitle">📋 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.8.1</span></div>
+      <div class="modal-title" id="reportTitle">📋 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.8.2</span></div>
       <button type="button" class="btn" data-action="close-report">关闭</button>
     </div>
     <div class="tab-row" aria-label="报告格式">
@@ -1539,7 +1539,7 @@
     /* ============================================================
      * 0. 常量与数据
      * ==========================================================*/
-    const VERSION = 'v2.8.1';
+    const VERSION = 'v2.8.2';
     const REPO_URL = 'https://github.com/nbai-dev/ip.nbai.dev';
     const SITE_URL = 'https://ip.nbai.dev';
     const STORE_PREFIX = 'nbai:';
@@ -1577,8 +1577,11 @@
         probes: ['https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico', 'https://www.qq.com/favicon.ico', 'https://mat1.gtimg.com/www/icon/favicon2.ico'] },
       { id: 'bilibili', name: '哔哩哔哩',    domain: 'bilibili.com', root: 'https://www.bilibili.com/',
         probes: ['https://www.bilibili.com/favicon.ico', 'https://s1.hdslb.com/bfs/static/jinkela/long/images/favicon.ico', 'https://i0.hdslb.com/bfs/static/jinkela/long/images/favicon.ico'] },
-      { id: 'jd',       name: '京东商城',    domain: 'jd.com',       root: 'https://www.jd.com/',
-        probes: ['https://www.jd.com/favicon.ico', 'https://m.jd.com/favicon.ico'] },
+      { id: 'jd',       name: '京东商城',    domain: 'jd.com',       root: false,
+        probes: [
+          { url: 'https://m.jd.com/favicon.ico', image: true, fetch: true, cacheBust: false },
+          { url: 'https://www.jd.com/favicon.ico', image: false, fetch: true, cacheBust: false }
+        ] },
       { id: 'netease',  name: '网易云音乐',  domain: '163.com',      root: 'https://music.163.com/',
         probes: ['https://s1.music.126.net/style/favicon.ico', 'https://music.163.com/favicon.ico'] },
       { id: 'douyin',   name: '字节 / 抖音', domain: 'toutiao.com',  root: 'https://www.toutiao.com/',
@@ -1602,8 +1605,11 @@
         probes: ['https://www.youtube.com/favicon.ico', 'https://i.ytimg.com/vi/dQw4w9WgXcQ/default.jpg'] },
       { id: 'chatgpt',   name: 'ChatGPT / OpenAI', domain: 'chatgpt.com', root: 'https://chatgpt.com/',
         probes: ['https://chatgpt.com/favicon.ico', 'https://cdn.oaistatic.com/assets/favicon-o20kmmos.svg'] },
-      { id: 'claude',    name: 'Claude AI',       domain: 'claude.ai',   root: 'https://claude.ai/',
-        probes: ['https://claude.ai/favicon.ico', 'https://www.anthropic.com/favicon.ico', 'https://anthropic.com/favicon.ico'] },
+      { id: 'claude',    name: 'Claude AI',       domain: 'claude.ai',   root: false,
+        serviceNote: '厂商资源连通 ≠ Claude 主站可用；地区与账号权限未验证',
+        probes: [
+          { url: 'https://www.anthropic.com/favicon.ico', image: true, fetch: true, cacheBust: false }
+        ] },
       { id: 'gemini',    name: 'Google Gemini',   domain: 'gemini.google.com', root: 'https://gemini.google.com/',
         probes: ['https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg', 'https://gemini.google.com/favicon.ico'] },
       { id: 'wikipedia', name: 'Wikipedia',       domain: 'wikipedia.org', root: 'https://en.wikipedia.org/',
@@ -2218,12 +2224,13 @@
       const v4El = $('#v4Status');
       const v6El = $('#v6Status');
       const busy = state.running;
-      const v4Text = state.v4 ? fmtIp(state.v4) : (busy ? '探测中…' : '不支持 / 超时');
-      const v6Text = state.v6 ? fmtIp(state.v6) : (busy ? '探测中…' : '未开启 IPv6');
+      const v4Text = state.v4 ? fmtIp(state.v4) : (busy ? '探测中…' : '未取得 IPv4 出口');
+      const v6Text = state.v6 ? fmtIp(state.v6) : (busy ? '探测中…' : 'IPv6 状态未确认');
       setText(v4El, v4Text);
       setText(v6El, v6Text);
       v4El.title = state.v4 && !state.privacy ? state.v4 : v4Text;
       v6El.title = state.v6 && !state.privacy ? state.v6 : v6Text;
+      if (!state.v6 && !busy) v6El.title = 'IPv6 探测未成功：可能是 DNS、网络、代理或浏览器策略问题，不能据此判定未开启 IPv6';
     }
 
     function routingObservation(cnIps, globalIps) {
@@ -2306,6 +2313,7 @@
             </span>
             <span class="site-route"><span class="route-tag ${group === 'global' ? 'proxy' : ''}">${group === 'cn' ? '预期直连' : '预期代理'}</span><span class="site-route-status" id="route_${group}_${s.id}">检测中</span></span>
             <span class="site-failure" id="failure_${group}_${s.id}" hidden></span>
+            ${s.serviceNote ? `<span class="site-actual">${escapeHtml(s.serviceNote)}</span>` : ''}
             <span class="site-technical" ${state.siteDetails ? '' : 'hidden'}>
               <span class="site-actual">实际出口 IP / 国家：未验证</span>
               <span class="site-evidence" id="evidence_${group}_${s.id}">等待探测资源响应</span>
@@ -2682,10 +2690,10 @@
 
         const tasks = [];
         targets.forEach((t, i) => {
-          if (t.image !== false) tasks.push({ kind: 'image', url: t.url, backup: i > 0 });
-          if (t.fetch || i === 0) tasks.push({ kind: 'fetch', url: t.url, backup: i > 0 });
+          if (t.image !== false) tasks.push({ kind: 'image', url: t.url, cacheBust: t.cacheBust, backup: i > 0 });
+          if (t.fetch || i === 0) tasks.push({ kind: 'fetch', url: t.url, cacheBust: t.cacheBust, backup: i > 0 });
         });
-        const root = site.root || originOf(targets[0].url);
+        const root = site.root === false ? '' : site.root || originOf(targets[0].url);
         if (root && !tasks.some((t) => t.kind === 'fetch' && t.url === root)) {
           tasks.push({ kind: 'fetch', url: root, root: true, backup: true });
         }
@@ -2745,7 +2753,7 @@
           img.onload = () => finish(true, task);
           img.onerror = () => fail(task, '无响应或返回的不是图片（防盗链 / 404 / 被拦截）');
           task.t0 = performance.now();
-          img.src = withCacheBust(task.url);
+          img.src = task.cacheBust === false ? task.url : withCacheBust(task.url);
           images.push(img);
         };
 
@@ -2755,8 +2763,9 @@
           fetchControllers.push(controller);
           // 父 signal 统一由 onAbort -> finish 转发，避免每个 Fetch 遗留监听器。
           task.t0 = performance.now();
-          fetch(withCacheBust(task.url), {
+          fetch(task.cacheBust === false ? task.url : withCacheBust(task.url), {
             mode: 'no-cors',
+            redirect: 'follow', // no-cors 仅支持 follow；通过资源选择与禁用首页兜底避免已知坏跳转
             cache: 'no-store',
             credentials: 'omit',
             referrerPolicy: 'no-referrer',
@@ -3095,8 +3104,10 @@
         }),
         latency: {
           cn: CN_SITES.map((s) => ({ name: s.name, domain: s.domain, ms: state.ping.cn[s.id] ?? null,
+            serviceAvailability: 'unverified', note: s.serviceNote || null,
             expectedRoute: 'DIRECT', actualRoute: 'unknown', probe: state.pingEvidence.cn[s.id] || null })),
           global: GLOBAL_SITES.map((s) => ({ name: s.name, domain: s.domain, ms: state.ping.global[s.id] ?? null,
+            serviceAvailability: 'unverified', note: s.serviceNote || null,
             expectedRoute: 'PROXY', actualRoute: 'unknown', probe: state.pingEvidence.global[s.id] || null }))
         },
         webrtc: {
@@ -3138,6 +3149,7 @@
       lines.push(`• 海外：${snap.latency.global.map((s) => `${s.name} ${latencyText(s.ms)}`).join(' · ')}`);
       lines.push(`• 均值：国内 ${avgText(snap.latency.cn)} / 海外 ${avgText(snap.latency.global)}`);
       lines.push('• 预期策略：国内 DIRECT / 国际 PROXY；实际逐站路径未验证，请以代理客户端连接记录为准。');
+      lines.push('• 资源响应不等于业务可用；Claude 等服务的地区限制、登录及账号权限未验证。');
       lines.push('');
       lines.push('🛡️ WebRTC 与 Anycast：');
       lines.push(`• WebRTC 公网：${snap.webrtc.publicIp || '未暴露'}（${snap.webrtc.verdict}）`);
@@ -3176,6 +3188,7 @@
       lines.push('');
       lines.push(`> 均值：国内 ${avgText(snap.latency.cn)} · 海外 ${avgText(snap.latency.global)}`);
       lines.push('> 预期策略：国内 DIRECT / 国际 PROXY；实际逐站路径未验证，请以代理客户端连接记录为准。');
+      lines.push('> 资源响应不等于业务可用；Claude 等服务的地区限制、登录及账号权限未验证。');
       lines.push(`> WebRTC：${snap.webrtc.verdict} · Anycast：${snap.anycast.colo} · HTTP/TLS：${snap.anycast.http}`);
       lines.push('>');
       lines.push(`> 项目地址：[${REPO_URL}](${REPO_URL})`);
