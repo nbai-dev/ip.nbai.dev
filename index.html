@@ -1235,7 +1235,7 @@
         <div class="brand-text">
           <div class="brand-title-wrap">
             <h1 class="brand-title">NBAI · IP 与网络分流诊断</h1>
-            <span class="version-badge" data-ref="version">v2.8.0</span>
+            <span class="version-badge" data-ref="version">v2.8.1</span>
           </div>
           <span class="brand-sub">ip.nbai.dev · 浏览器本地检测</span>
         </div>
@@ -1483,7 +1483,7 @@
       <div class="footer-brand">
         <span class="brand-logo" aria-hidden="true">NB</span>
         <div>
-          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.8.0</span></div>
+          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.8.1</span></div>
           <div class="footer-note">© 2026 NBAI · 检测在浏览器本地完成，无需登录</div>
         </div>
       </div>
@@ -1503,7 +1503,7 @@
   <!-- 诊断摘要弹窗 -->
   <dialog class="report-modal" id="reportModal" aria-labelledby="reportTitle">
     <div class="modal-top">
-      <div class="modal-title" id="reportTitle">📋 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.8.0</span></div>
+      <div class="modal-title" id="reportTitle">📋 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.8.1</span></div>
       <button type="button" class="btn" data-action="close-report">关闭</button>
     </div>
     <div class="tab-row" aria-label="报告格式">
@@ -1539,7 +1539,7 @@
     /* ============================================================
      * 0. 常量与数据
      * ==========================================================*/
-    const VERSION = 'v2.8.0';
+    const VERSION = 'v2.8.1';
     const REPO_URL = 'https://github.com/nbai-dev/ip.nbai.dev';
     const SITE_URL = 'https://ip.nbai.dev';
     const STORE_PREFIX = 'nbai:';
@@ -1568,7 +1568,9 @@
 
     const CN_SITES = [
       { id: 'baidu',    name: '百度搜索',    domain: 'baidu.com',    root: 'https://www.baidu.com/',
-        probes: ['https://www.baidu.com/favicon.ico', 'https://m.baidu.com/favicon.ico', 'https://www.baidu.com/img/flexible/logo/pc/result.png'] },
+        probes: ['https://www.baidu.com/favicon.ico',
+          { url: 'https://www.baidu.com/robots.txt', image: false, fetch: true },
+          'https://www.baidu.com/img/baidu_jgylogo3.gif', 'https://m.baidu.com/favicon.ico'] },
       { id: 'taobao',   name: '淘宝网',      domain: 'alicdn.com',   root: 'https://www.taobao.com/',
         probes: ['https://www.taobao.com/favicon.ico', 'https://img.alicdn.com/tfs/TB1_uT8a5ERMeJjSspiXXbZLFXa-143-59.png'] },
       { id: 'wechat',   name: '微信 / 腾讯', domain: 'qq.com',       root: 'https://www.qq.com/',
@@ -1582,7 +1584,9 @@
       { id: 'douyin',   name: '字节 / 抖音', domain: 'toutiao.com',  root: 'https://www.toutiao.com/',
         probes: ['https://www.toutiao.com/favicon.ico', 'https://sf1-cdn-tos.toutiaostatic.com/obj/eden-cn/uhbfnupkbps/toutiao_favicon.ico'] },
       { id: 'zhihu',    name: '知乎社区',    domain: 'zhihu.com',    root: 'https://www.zhihu.com/',
-        probes: ['https://static.zhihu.com/heifetz/favicon.ico', 'https://zhihu.com/favicon.ico', 'https://www.zhihu.com/favicon.ico'] }
+        probes: ['https://static.zhihu.com/heifetz/favicon.ico',
+          { url: 'https://www.zhihu.com/robots.txt', image: false, fetch: true },
+          'https://static.zhihu.com/static/favicon.ico', 'https://zhihu.com/favicon.ico'] }
     ];
 
     const GLOBAL_SITES = [
@@ -1591,7 +1595,9 @@
       { id: 'github',    name: 'GitHub',          domain: 'github.com',  root: 'https://github.com/',
         probes: ['https://github.com/favicon.ico', 'https://github.githubassets.com/favicons/favicon.svg'] },
       { id: 'x',         name: 'X (Twitter)',     domain: 'x.com',       root: 'https://x.com/',
-        probes: ['https://abs.twimg.com/favicons/twitter.3.ico', 'https://x.com/favicon.ico', 'https://abs.twimg.com/favicons/twitter.2.ico'] },
+        probes: ['https://abs.twimg.com/favicons/twitter.3.ico',
+          { url: 'https://x.com/robots.txt', image: false, fetch: true },
+          'https://abs.twimg.com/responsive-web/client-web/icon-default.522d363a.png', 'https://x.com/favicon.ico'] },
       { id: 'youtube',   name: 'YouTube',         domain: 'youtube.com', root: 'https://www.youtube.com/',
         probes: ['https://www.youtube.com/favicon.ico', 'https://i.ytimg.com/vi/dQw4w9WgXcQ/default.jpg'] },
       { id: 'chatgpt',   name: 'ChatGPT / OpenAI', domain: 'chatgpt.com', root: 'https://chatgpt.com/',
@@ -2328,7 +2334,7 @@
       setText(document.getElementById(`route_${group}_${site.id}`), result === 'ok' ? '● 探测连通' : result === 'failed' ? '! 未确认连通' : '检测中');
       const evidence = state.pingEvidence && state.pingEvidence[group][site.id];
       setText(document.getElementById(`evidence_${group}_${site.id}`), evidence
-        ? `响应资源：${evidence.host} · ${evidence.kind === 'image' ? '图片' : 'Fetch'}`
+        ? `${evidence.backup ? '备用资源' : '响应资源'}：${evidence.resource || evidence.host} · ${evidence.kind === 'image' ? '图片' : 'Fetch'}`
         : '实际路径待客户端确认');
 
       badge.removeAttribute('title');
@@ -2663,7 +2669,7 @@
      * 1) 每个探测地址都生成「图片」任务，首个地址额外并跑 fetch(no-cors)；
      * 2) 最后补一条「站点根路径 fetch」兜底 —— 百度/知乎/X 这类站点 favicon 常被
      *    防盗链、404、CORP 或代理规则拦掉，但站点本身是通的，不能因此判成超时；
-     * 3) 任务按 gap 阶梯起跑（默认 600ms），任一成功立即记录耗时并取消其余请求；
+     * 3) 任务按 gap 阶梯起跑（默认 600ms），明确失败立即补下一路；成功则取消其余请求；
      * 4) 全部失败时回传每个地址的具体失败原因，供 UI 展示，避免只显示一个「超时」。
      * 返回 { ms, reasons }，ms = -1 表示确实不可达。
      */
@@ -2676,12 +2682,12 @@
 
         const tasks = [];
         targets.forEach((t, i) => {
-          if (t.image !== false) tasks.push({ kind: 'image', url: t.url });
-          if (t.fetch || i === 0) tasks.push({ kind: 'fetch', url: t.url });
+          if (t.image !== false) tasks.push({ kind: 'image', url: t.url, backup: i > 0 });
+          if (t.fetch || i === 0) tasks.push({ kind: 'fetch', url: t.url, backup: i > 0 });
         });
         const root = site.root || originOf(targets[0].url);
         if (root && !tasks.some((t) => t.kind === 'fetch' && t.url === root)) {
-          tasks.push({ kind: 'fetch', url: root, root: true });
+          tasks.push({ kind: 'fetch', url: root, root: true, backup: true });
         }
 
         const startedAt = performance.now();
@@ -2714,7 +2720,8 @@
           });
           // 阶梯起跑的探测要以「该任务自己的起跑时刻」计时，否则第 3 路会被前两路的等待时间污染
           resolve({ ms: ok ? Math.max(1, Math.round(elapsed)) : -1, reasons,
-            evidence: ok && task ? { host: hostOf(task.url), kind: task.kind } : null });
+            evidence: ok && task ? { host: hostOf(task.url), kind: task.kind,
+              resource: task.url.split(/[?#]/)[0], backup: !!task.backup } : null });
         };
 
         const onAbort = () => finish(false);
@@ -2724,6 +2731,7 @@
           note(task, why);
           completed += 1;
           if (completed === tasks.length) finish(false);
+          else startNext();
         };
         if (signal) {
           if (signal.aborted) return finish(false);
@@ -2769,14 +2777,23 @@
         const runTask = (task) => (task.kind === 'image' ? runImage(task) : runFetch(task));
 
         const gap = Math.max(220, Math.min(600, Math.floor((timeout - 1500) / tasks.length)));
-        tasks.forEach((task, i) => {
-          if (i === 0) runTask(task);
-          else timers.push(setTimeout(() => runTask(task), i * gap));
-        });
+        let nextTask = 0;
+        let hedgeTimer = null;
+        const startNext = () => {
+          if (settled || nextTask >= tasks.length) return;
+          if (hedgeTimer !== null) clearTimeout(hedgeTimer);
+          const task = tasks[nextTask++];
+          if (nextTask < tasks.length) {
+            hedgeTimer = setTimeout(startNext, gap);
+            timers.push(hedgeTimer);
+          }
+          runTask(task);
+        };
         timers.push(setTimeout(() => {
           tasks.filter((task) => !task.done).forEach((task) => note(task, '超过探测时间预算'));
           finish(false);
         }, timeout));
+        startNext();
       });
     }
 
