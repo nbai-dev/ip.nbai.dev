@@ -18,7 +18,11 @@
     /* 首屏前应用主题，避免浅色模式用户看到深色闪烁 */
     (function () {
       var theme = null;
-      try { theme = localStorage.getItem('nbai:theme'); } catch (e) {}
+      try {
+        theme = localStorage.getItem('nbai:theme');
+        // 与 store.set 的 JSON 编码一致，同时兼容旧版纯字符串。
+        if (theme !== 'light' && theme !== 'dark') theme = JSON.parse(theme);
+      } catch (e) {}
       if (theme !== 'light' && theme !== 'dark') {
         theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
       }
@@ -730,6 +734,18 @@
     .site-technical { display: flex; flex-direction: column; gap: 5px; margin-top: 2px; padding-top: 8px; border-top: 1px dashed var(--border); }
     .site-actual { font-size: 10.5px; color: var(--text-2); }
     .site-failure { font-size: 11px; color: var(--warning); line-height: 1.5; }
+    .probe-progress { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 18px; align-items: center; margin: 16px 0 12px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--bg-card); }
+    .probe-progress-title { font-size: 13px; font-weight: 700; }
+    .probe-progress-meta { color: var(--text-2); font-size: 11.5px; margin-top: 3px; }
+    .probe-progress progress { grid-column: 1 / -1; width: 100%; height: 6px; border: none; border-radius: 999px; overflow: hidden; background: var(--track); accent-color: var(--primary); }
+    .probe-progress progress::-webkit-progress-bar { background: var(--track); }
+    .probe-progress progress::-webkit-progress-value { background: linear-gradient(90deg, var(--primary), var(--success)); border-radius: 999px; transition: width .2s ease; }
+    .probe-progress progress::-moz-progress-bar { background: var(--primary); }
+    .site-name::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 7px; border-radius: 50%; background: var(--primary); vertical-align: 2px; }
+    .site-item[data-result="ok"] .site-name::before { background: var(--success); }
+    .site-item[data-result="failed"] .site-name::before { background: var(--warning); }
+    .site-item[data-result="waiting"] .ping-bar > i { animation: breathe 1.6s ease-in-out infinite; }
+    @media (max-width: 400px) { .probe-progress { grid-template-columns: minmax(0, 1fr); } }
     @media (max-width: 640px) { .routing-lanes { grid-template-columns: minmax(0, 1fr); } }
 
     .latency-columns {
@@ -1235,7 +1251,7 @@
         <div class="brand-text">
           <div class="brand-title-wrap">
             <h1 class="brand-title">NBAI · IP 与网络分流诊断</h1>
-            <span class="version-badge" data-ref="version">v2.8.2</span>
+            <span class="version-badge" data-ref="version">v2.9.1</span>
           </div>
           <span class="brand-sub">ip.nbai.dev · 浏览器本地检测</span>
         </div>
@@ -1365,6 +1381,14 @@
         <p>上方出口与归属地来自 IP 探测服务，仅供参考，不等于下方每个网站的真实出口。连通只表示探测资源有响应，不代表网站业务可用。确认实际 DIRECT / PROXY、出口 IP 和国家，需代理客户端连接记录及节点出口信息。</p>
       </details>
     </section>
+    <section class="probe-progress" aria-labelledby="probeProgressTitle">
+      <div>
+        <div class="probe-progress-title" id="probeProgressTitle">站点探测准备中</div>
+        <p class="probe-progress-meta" id="probeProgressMeta">仅统计资源响应，不验证逐站出口与业务权限</p>
+      </div>
+      <button type="button" class="btn" data-action="retry-failed" disabled>重测未连通站点</button>
+      <progress id="siteProgress" max="16" value="0" aria-label="站点探测完成进度"></progress>
+    </section>
     <div class="site-toolbar">
       <div class="site-filters" role="group" aria-label="筛选网站探测结果">
         <button type="button" class="btn" data-action="filter-sites" data-filter="all" aria-pressed="true">全部 <span id="filterCountAll">16</span></button>
@@ -1483,7 +1507,7 @@
       <div class="footer-brand">
         <span class="brand-logo" aria-hidden="true">NB</span>
         <div>
-          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.8.2</span></div>
+          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.9.1</span></div>
           <div class="footer-note">© 2026 NBAI · 检测在浏览器本地完成，无需登录</div>
         </div>
       </div>
@@ -1503,7 +1527,7 @@
   <!-- 诊断摘要弹窗 -->
   <dialog class="report-modal" id="reportModal" aria-labelledby="reportTitle">
     <div class="modal-top">
-      <div class="modal-title" id="reportTitle">📋 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.8.2</span></div>
+      <div class="modal-title" id="reportTitle">📋 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.9.1</span></div>
       <button type="button" class="btn" data-action="close-report">关闭</button>
     </div>
     <div class="tab-row" aria-label="报告格式">
@@ -1539,7 +1563,7 @@
     /* ============================================================
      * 0. 常量与数据
      * ==========================================================*/
-    const VERSION = 'v2.8.2';
+    const VERSION = 'v2.9.1';
     const REPO_URL = 'https://github.com/nbai-dev/ip.nbai.dev';
     const SITE_URL = 'https://ip.nbai.dev';
     const STORE_PREFIX = 'nbai:';
@@ -1665,11 +1689,12 @@
       if (!text) return text;
       return String(text)
         .replace(/\b(\d{1,3}\.\d{1,3})\.\d{1,3}\.\d{1,3}\b/g, '$1.*.*')
-        // 至少 4 段才视为 IPv6，避免把 18:25:33 这类时间戳误伤
-        .replace(/\b[0-9a-f]{1,4}(?::[0-9a-f]{0,4}){3,}\b/gi, (token) => {
+        // 先匹配完整候选，再验证 IPv6；覆盖 ::1 / 2001:db8::，不误伤时间戳。
+        .replace(/(^|[^0-9a-z_:])((?:[0-9a-f]*:)+[0-9a-f]*)(?![0-9a-z_:])/gi, (match, prefix, token) => {
+          if (!isValidIPv6(token)) return match;
           const groups = token.split(':').filter(Boolean);
-          if (groups.length < 3) return token;
-          return `${groups[0]}:${groups[1]}:*:*`;
+          const masked = groups.length >= 2 ? `${groups[0]}:${groups[1]}:*:*` : '*:*';
+          return prefix + masked;
         })
         .replace(/\b[0-9a-f-]{6,}\.local\b/gi, '*.local');
     }
@@ -1740,15 +1765,30 @@
       const pump = () => {
         while (active < max && queue.length) {
           const job = queue.shift();
+          job.cleanup();
           active += 1;
           Promise.resolve()
-            .then(job.fn)
+            .then(() => {
+              if (job.signal && job.signal.aborted) throw new DOMException('已取消', 'AbortError');
+              return job.fn();
+            })
             .then(job.resolve, job.reject)
             .finally(() => { active -= 1; pump(); });
         }
       };
-      return (fn) => new Promise((resolve, reject) => {
-        queue.push({ fn, resolve, reject });
+      return (fn, signal) => new Promise((resolve, reject) => {
+        if (signal && signal.aborted) { reject(new DOMException('已取消', 'AbortError')); return; }
+        const onAbort = () => {
+          const index = queue.indexOf(job);
+          if (index < 0) return;
+          queue.splice(index, 1);
+          job.cleanup();
+          reject(new DOMException('已取消', 'AbortError'));
+        };
+        const job = { fn, resolve, reject, signal,
+          cleanup: () => { if (signal) signal.removeEventListener('abort', onAbort); } };
+        if (signal) signal.addEventListener('abort', onAbort, { once: true });
+        queue.push(job);
         pump();
       });
     }
@@ -2278,7 +2318,13 @@
           const result = siteResult(state.ping[group][card.dataset.id]);
           counts.all += 1;
           if (result !== 'waiting') counts[result] += 1;
-          card.hidden = state.siteFilter !== 'all' && result !== state.siteFilter;
+          const hiding = state.siteFilter !== 'all' && result !== state.siteFilter;
+          // 筛选中的站点重测时可能消失，先把键盘焦点送回当前筛选按钮。
+          if (hiding && document.activeElement === card) {
+            const filter = $(`[data-action="filter-sites"][data-filter="${state.siteFilter}"]`);
+            if (filter) filter.focus();
+          }
+          card.hidden = hiding;
           if (!card.hidden) visible += 1;
           card.querySelector('.site-technical').hidden = !state.siteDetails;
         });
@@ -2288,6 +2334,16 @@
       setText($('#filterCountAll'), String(counts.all));
       setText($('#filterCountOk'), String(counts.ok));
       setText($('#filterCountFailed'), String(counts.failed));
+      const completed = counts.ok + counts.failed;
+      const progress = $('#siteProgress');
+      if (progress) { progress.max = counts.all || 1; progress.value = completed; }
+      setText($('#probeProgressTitle'), completed < counts.all ? `站点探测中 · ${completed}/${counts.all}` : '站点探测完成');
+      setText($('#probeProgressMeta'), `资源响应 ${counts.ok} · 需排查 ${counts.failed} · 待完成 ${counts.all - completed}（非业务可用性验证）`);
+      const retry = $('[data-action="retry-failed"]');
+      if (retry) {
+        retry.disabled = counts.failed === 0;
+        setText(retry, counts.failed ? `重测未连通站点 (${counts.failed})` : '重测未连通站点');
+      }
       document.querySelectorAll('[data-action="filter-sites"]').forEach((btn) => {
         btn.setAttribute('aria-pressed', String(btn.dataset.filter === state.siteFilter));
       });
@@ -2298,10 +2354,21 @@
       }
     }
 
+    let siteOverviewQueued = false;
+    function scheduleSiteOverview() {
+      if (siteOverviewQueued) return;
+      siteOverviewQueued = true;
+      queueMicrotask(() => {
+        siteOverviewQueued = false;
+        paintSiteFilters();
+        paintAverages();
+      });
+    }
+
     function renderSiteGrids() {
       const build = (list, group, containerId) => {
         $('#' + containerId).innerHTML = list.map((s) => `
-          <button type="button" class="site-item" data-action="ping-site" data-group="${group}" data-id="${s.id}"
+          <button type="button" class="site-item" data-result="waiting" data-action="ping-site" data-group="${group}" data-id="${s.id}"
                   aria-label="重测 ${escapeHtml(s.name)} 延迟">
             <span class="site-top">
               <span class="site-name">${escapeHtml(s.name)}</span>
@@ -2338,7 +2405,7 @@
       const failure = document.getElementById(`failure_${group}_${site.id}`);
       failure.hidden = result !== 'failed';
       setText(failure, result === 'failed' ? '资源未响应或被拦截，不等于网站不可用' : '');
-      paintSiteFilters();
+      scheduleSiteOverview();
       setText(document.getElementById(`route_${group}_${site.id}`), result === 'ok' ? '● 探测连通' : result === 'failed' ? '! 未确认连通' : '检测中');
       const evidence = state.pingEvidence && state.pingEvidence[group][site.id];
       setText(document.getElementById(`evidence_${group}_${site.id}`), evidence
@@ -2379,7 +2446,6 @@
     }
 
     function paintAverage(group) {
-      paintRoutingMap();
       const list = group === 'cn' ? CN_SITES : GLOBAL_SITES;
       const results = state.ping[group];
       const badge = document.getElementById(group === 'cn' ? 'cnAvgBadge' : 'globalAvgBadge');
@@ -2401,6 +2467,7 @@
     function paintAverages() {
       paintAverage('cn');
       paintAverage('global');
+      paintRoutingMap();
     }
 
     function paintWebrtc() {
@@ -2830,13 +2897,12 @@
       delete state.pingEvidence[group][siteId];
       delete state.pingReason[group][siteId];
       paintSiteBadge(group, site);
-      paintAverage(group);
 
       let ms = -1;
       let reasons = [];
       let evidence = null;
       try {
-        const res = await siteLimit(() => probeLatency(site, SITE_TIMEOUT, controller.signal));
+        const res = await siteLimit(() => probeLatency(site, SITE_TIMEOUT, controller.signal), controller.signal);
         ms = res.ms;
         reasons = res.reasons || [];
         evidence = res.evidence || null;
@@ -2853,7 +2919,6 @@
       state.pingEvidence[group][siteId] = evidence;
       state.pingReason[group][siteId] = reasons;
       paintSiteBadge(group, site);
-      paintAverage(group);
     }
 
     /* ============================================================
@@ -3416,6 +3481,15 @@
     const activeSignal = () => (runScope && !runScope.signal.aborted ? runScope.signal : null);
 
     const ACTIONS = {
+      'retry-failed': () => {
+        const signal = activeSignal();
+        const jobs = [
+          ...CN_SITES.filter((s) => siteResult(state.ping.cn[s.id]) === 'failed').map((s) => ['cn', s.id]),
+          ...GLOBAL_SITES.filter((s) => siteResult(state.ping.global[s.id]) === 'failed').map((s) => ['global', s.id])
+        ];
+        jobs.forEach(([group, id]) => runSite(group, id, signal));
+        if (jobs.length) toast(`正在重测 ${jobs.length} 个未连通站点`);
+      },
       'filter-sites': (btn) => {
         if (!['all', 'ok', 'failed'].includes(btn.dataset.filter)) return;
         state.siteFilter = btn.dataset.filter;
