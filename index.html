@@ -5,42 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="no-referrer" />
   <meta name="color-scheme" content="dark light" />
-  <meta name="description" content="NBAI · 在浏览器本地完成 IP 出口、国内外分流、站点延迟与 WebRTC 泄露检测，无需登录、不上传数据。" />
+  <meta name="description" content="NBAI · 基于浏览器本地检测 IP 出口、分流、站点健康、WebRTC 与环境信息" />
   <meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)" />
   <meta name="theme-color" content="#f3f3ed" media="(prefers-color-scheme: light)" />
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="NBAI · IP 与网络分流诊断" />
-  <meta property="og:description" content="6 路 IP 出口竞速、16 站点延迟、WebRTC 泄露与 Anycast 边缘节点检测，全部在浏览器本地完成。" />
-  <meta property="og:url" content="https://ip.nbai.dev" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23c3e88b'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-size='16' font-weight='700' text-anchor='middle' fill='%230d110d'%3ENB%3C/text%3E%3C/svg%3E" />
-  <title>NBAI · IP 与网络分流诊断工具</title>
-
-  <script>
-    (function () {
-      function safeParseJSON(value, fallback) {
-        if (value === null || value === undefined || value === '') return fallback;
-        try {
-          return JSON.parse(value);
-        } catch (error) {
-          return fallback;
-        }
-      }
-
-      var theme = null;
-      try {
-        theme = localStorage.getItem('nbai:theme');
-        if (theme !== 'light' && theme !== 'dark') theme = safeParseJSON(theme, null);
-      } catch (error) {}
-
-      if (theme !== 'light' && theme !== 'dark') {
-        theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-      }
-
-      document.documentElement.dataset.theme = theme;
-      document.body && document.body.setAttribute('data-privacy-on', 'false');
-    })();
-  </script>
-
+  <title>NBAI · 网络诊断工具</title>
   <style>
     :root {
       color-scheme: dark;
@@ -113,7 +81,6 @@
       -webkit-text-size-adjust: 100%;
       text-rendering: optimizeLegibility;
     }
-
     a { color: inherit; text-decoration: none; }
     button, input, textarea { font: inherit; }
     button, a, input, summary { -webkit-tap-highlight-color: transparent; }
@@ -160,6 +127,7 @@
       gap: 12px;
       min-width: 0;
     }
+
     .brand-logo {
       display: grid;
       place-items: center;
@@ -171,6 +139,7 @@
       font: 700 14px var(--font-mono);
       flex-shrink: 0;
     }
+
     .brand-text { min-width: 0; }
     .brand-title-wrap {
       display: flex;
@@ -178,12 +147,14 @@
       gap: 10px;
       flex-wrap: wrap;
     }
+
     .brand-title {
       margin: 0;
       font-size: 14px;
       font-weight: 600;
       letter-spacing: -0.3px;
     }
+
     .brand-sub {
       display: block;
       color: var(--text-3);
@@ -191,6 +162,7 @@
       letter-spacing: 0.06em;
       margin-top: 2px;
     }
+
     .version-badge {
       display: inline-flex;
       align-items: center;
@@ -208,6 +180,7 @@
       gap: 8px;
       flex-wrap: wrap;
     }
+
     .nav-sep {
       width: 1px;
       height: 20px;
@@ -231,39 +204,35 @@
       cursor: pointer;
       transition: background-color 160ms var(--ease), border-color 160ms var(--ease), color 160ms var(--ease), transform 160ms var(--ease);
     }
+
     .btn:hover {
       background: var(--bg-panel);
       border-color: var(--border-strong);
     }
+
     .btn:active { transform: translateY(1px); }
     .btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
+
     .btn[aria-pressed="true"] {
       background: var(--primary-soft);
       color: var(--primary);
       border-color: var(--primary);
     }
+
     .btn-primary {
       background: var(--primary);
       border-color: var(--primary);
       color: var(--bg-main);
       font-weight: 700;
     }
+
     .btn-primary:hover {
       background: var(--primary-2);
       border-color: var(--primary-2);
       color: var(--bg-main);
-    }
-    .btn-icon {
-      width: 40px;
-      padding-inline: 0;
-    }
-    .btn svg {
-      width: 16px;
-      height: 16px;
-      flex-shrink: 0;
     }
 
     .container {
@@ -277,6 +246,7 @@
       gap: 24px;
       padding: 42px 0 24px;
     }
+
     .observatory-kicker,
     .section-eyebrow,
     .hero-eyebrow {
@@ -285,6 +255,7 @@
       color: var(--text-3);
       text-transform: uppercase;
     }
+
     .instrument-mark {
       display: inline-block;
       width: 10px;
@@ -294,12 +265,14 @@
       margin-right: 10px;
       vertical-align: middle;
     }
+
     .instrument-mark::after {
       content: "";
       position: absolute;
       inset: 2px;
       background: var(--primary);
     }
+
     .observatory-title {
       margin: 14px 0 0;
       font-size: clamp(30px, 3.5vw, 48px);
@@ -307,7 +280,9 @@
       letter-spacing: -0.055em;
       font-weight: 500;
     }
+
     .observatory-title span { color: var(--primary); }
+
     .observatory-sub {
       margin: 12px 0 0;
       color: var(--text-2);
@@ -320,6 +295,7 @@
       gap: 20px;
       flex-wrap: wrap;
     }
+
     .section-nav a {
       display: inline-flex;
       align-items: center;
@@ -330,10 +306,12 @@
       font-size: 12px;
       border-bottom: 1px solid transparent;
     }
+
     .section-nav a:hover {
       color: var(--primary);
       border-bottom-color: var(--primary);
     }
+
     .section-nav span {
       font: 10px var(--font-mono);
       color: var(--text-3);
@@ -350,12 +328,14 @@
       box-shadow: 0 12px 24px var(--shadow);
       overflow: hidden;
     }
+
     .hero-main {
       display: flex;
       align-items: flex-start;
       gap: 18px;
       min-width: 0;
     }
+
     .status-orb {
       width: 38px;
       height: 38px;
@@ -365,6 +345,7 @@
       place-items: center;
       flex-shrink: 0;
     }
+
     .status-dot {
       width: 8px;
       height: 8px;
@@ -372,12 +353,17 @@
       background: var(--primary);
       display: block;
     }
+
     .status-dot.ok { background: var(--success); }
     .status-dot.warn { background: var(--warning); }
     .status-dot.danger { background: var(--danger); }
-    .hero[data-state="loading"] .status-dot {
-      animation: breathe 1.8s ease-in-out infinite;
-    }
+
+    .hero[data-state="idle"] .status-dot { background: var(--text-3); }
+    .hero[data-state="loading"] .status-dot { background: var(--warning); animation: breathe 1.6s ease-in-out infinite; }
+    .hero[data-state="partial"] .status-dot { background: var(--warning); }
+    .hero[data-state="complete"] .status-dot { background: var(--success); }
+    .hero[data-state="error"] .status-dot { background: var(--danger); }
+
     @keyframes breathe {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.45; }
@@ -388,6 +374,7 @@
       margin-bottom: 8px;
       display: block;
     }
+
     .hero-title {
       margin: 0;
       font-size: 18px;
@@ -396,6 +383,7 @@
       font-weight: 500;
       overflow-wrap: anywhere;
     }
+
     .hero-desc {
       margin: 8px 0 0;
       color: var(--text-2);
@@ -403,6 +391,7 @@
       line-height: 1.9;
       overflow-wrap: anywhere;
     }
+
     .hero-side {
       display: grid;
       gap: 12px;
@@ -410,21 +399,37 @@
       padding-left: 24px;
       min-width: 0;
     }
+
     .stack-card {
       display: flex;
       align-items: center;
       gap: 12px;
       min-width: 0;
     }
+
     .stack-tag {
       font: 10px var(--font-mono);
       color: var(--text-3);
       flex-shrink: 0;
     }
+
     .stack-value {
       font: 12px/1.7 var(--font-mono);
       min-width: 0;
       overflow-wrap: anywhere;
+    }
+
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 8px;
+      font: 10px var(--font-mono);
+      color: var(--text-3);
+      background: rgba(255,255,255,0.02);
+      margin-top: 10px;
     }
 
     .section-head {
@@ -434,6 +439,7 @@
       gap: 20px;
       margin: 42px 0 18px;
     }
+
     .section-title {
       margin: 0;
       font-size: 22px;
@@ -441,6 +447,7 @@
       letter-spacing: -0.035em;
       font-weight: 500;
     }
+
     .section-hint {
       max-width: 470px;
       margin: 0;
@@ -459,6 +466,7 @@
       gap: 1px;
       box-shadow: 0 12px 24px var(--shadow);
     }
+
     .ip-card {
       display: flex;
       flex-direction: column;
@@ -467,23 +475,27 @@
       padding: 22px 20px 14px;
       min-width: 0;
     }
+
     .ip-top {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
       gap: 12px;
     }
+
     .ip-source-name {
       font-size: 12px;
       font-weight: 600;
       line-height: 1.7;
       margin: 0;
     }
+
     .ip-source-desc {
       font-size: 11px;
       color: var(--text-3);
       margin-top: 4px;
     }
+
     .badge {
       display: inline-flex;
       align-items: center;
@@ -512,6 +524,7 @@
       gap: 10px;
       min-height: 48px;
     }
+
     .ip-addr {
       font: 500 clamp(18px, 1.6vw, 24px) / 1.3 var(--font-mono);
       letter-spacing: -0.055em;
@@ -520,13 +533,16 @@
       overflow-wrap: anywhere;
       transition: filter 180ms var(--ease), opacity 180ms var(--ease);
     }
+
     .ip-addr.is-v6 { font-size: 14px; letter-spacing: -0.03em; }
     .ip-addr.is-muted { color: var(--text-3); font-family: var(--font-sans); }
+
     body[data-privacy-on="true"] .masked {
       filter: blur(6px);
       user-select: none;
       color: var(--text-3);
     }
+
     .ip-actions { display: flex; align-items: center; gap: 6px; }
     .chip {
       color: var(--text-3);
@@ -535,22 +551,6 @@
       border-radius: 4px;
       background: rgba(255,255,255,0.02);
     }
-    .icon-btn {
-      width: 32px;
-      height: 32px;
-      display: grid;
-      place-items: center;
-      border: 1px solid transparent;
-      border-radius: 4px;
-      background: transparent;
-      color: var(--text-3);
-      cursor: pointer;
-    }
-    .icon-btn:hover {
-      background: var(--primary-soft);
-      color: var(--primary);
-    }
-    .icon-btn svg { width: 14px; height: 14px; }
 
     .ip-meta { display: grid; gap: 4px; color: var(--text-2); font-size: 11px; }
     .ip-meta-row { min-width: 0; }
@@ -558,6 +558,7 @@
       display: block;
       overflow-wrap: anywhere;
     }
+
     .ip-card-foot {
       display: flex;
       align-items: center;
@@ -569,6 +570,7 @@
       font: 10px/1.6 var(--font-mono);
       color: var(--text-3);
     }
+
     .retest-btn {
       appearance: none;
       border: 1px solid transparent;
@@ -585,25 +587,6 @@
       color: var(--primary);
     }
 
-    .grid-legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 18px;
-      font-size: 11px;
-      color: var(--text-3);
-      margin-top: 14px;
-    }
-    .legend-item { display: inline-flex; align-items: center; gap: 7px; }
-    .legend-swatch {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-    .legend-swatch.cn { background: var(--success); }
-    .legend-swatch.global { background: var(--violet); }
-    .legend-swatch.anycast { background: var(--primary); }
-
     .panel {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -611,6 +594,7 @@
       padding: 22px 24px;
       box-shadow: 0 12px 24px var(--shadow);
     }
+
     .panel-head {
       display: flex;
       justify-content: space-between;
@@ -621,6 +605,7 @@
       border-bottom: 1px solid var(--border);
       margin-bottom: 6px;
     }
+
     .panel-title {
       display: flex;
       align-items: center;
@@ -628,132 +613,19 @@
       font-size: 14px;
       font-weight: 600;
     }
+
     .panel-sub {
       color: var(--text-3);
       font-size: 10px;
       font-weight: 400;
     }
-    .avg-badge {
-      font: 11px var(--font-mono);
-      color: var(--text-2);
-    }
 
-    .routing-map { margin-bottom: 20px; }
-    .routing-lanes {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 32px;
-      margin-top: 24px;
-    }
-    .routing-lane + .routing-lane {
-      border-left: 1px solid var(--border);
-      padding-left: 32px;
-    }
-    .routing-path {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px;
-      color: var(--text-2);
-      font-size: 12px;
-    }
-    .routing-path > [aria-hidden="true"] { color: var(--text-3); }
-    .route-tag {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: var(--success-soft);
-      color: var(--success);
-      font: 9px var(--font-mono);
-    }
-    .route-tag.proxy {
-      background: var(--violet-soft);
-      color: var(--violet);
-    }
-    .routing-exit,
-    .routing-location,
-    .routing-count,
-    .routing-note,
-    .routing-explainer {
-      color: var(--text-3);
-      font-size: 11px;
-      line-height: 1.9;
-    }
-    .routing-exit, .routing-location, .routing-count { margin-top: 6px; }
-    .routing-note { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--border); }
-    .routing-explainer { margin-top: 8px; }
-    .routing-explainer summary {
-      color: var(--text-2);
-      cursor: pointer;
-      list-style: none;
-    }
-    .routing-explainer p { margin: 8px 0 0; max-width: 900px; }
-
-    .probe-progress {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 12px 24px;
-      padding: 20px 24px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      background: var(--bg-card);
-      margin-top: 18px;
-    }
-    .probe-progress-title {
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .probe-progress-meta {
-      margin: 4px 0 0;
-      color: var(--text-3);
-      font-size: 11px;
-    }
-    .probe-progress progress {
-      grid-column: 1 / -1;
-      width: 100%;
-      height: 3px;
-      accent-color: var(--primary);
-    }
-
-    .site-toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin: 20px 0 16px;
-    }
-    .site-filters {
-      display: flex;
-      gap: 4px;
-      flex-wrap: wrap;
-    }
-    .site-filters .btn {
-      border-color: transparent;
-    }
-    .site-filters .btn span {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 18px;
-      min-height: 18px;
-      border-radius: 3px;
-      padding: 1px 5px;
-      background: var(--bg-soft);
-      font: 10px var(--font-mono);
-      color: var(--text-3);
-    }
-
-    .latency-columns {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 20px;
-    }
     .site-grid {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
       margin-top: 18px;
     }
+
     .site-item {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -762,7 +634,9 @@
       border-bottom: 1px solid var(--border);
       background: transparent;
     }
+
     .site-item:last-child { border-bottom: 0; }
+
     .site-top {
       display: flex;
       align-items: center;
@@ -770,10 +644,12 @@
       grid-column: 1 / -1;
       gap: 8px;
     }
+
     .site-name {
       font-size: 13px;
       font-weight: 500;
     }
+
     .site-name::before {
       content: "";
       display: inline-block;
@@ -784,17 +660,20 @@
       vertical-align: middle;
       margin: 0 10px 2px 0;
     }
+
     .site-item[data-result="ok"] .site-name::before { background: var(--success); }
     .site-item[data-result="failed"] .site-name::before {
       background: var(--warning);
       border-radius: 0;
     }
+
     .site-bottom {
       display: flex;
       align-items: center;
       gap: 12px;
       min-width: 0;
     }
+
     .site-domain {
       font: 10px var(--font-mono);
       color: var(--text-3);
@@ -803,6 +682,7 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
     .ping-badge {
       display: inline-flex;
       align-items: center;
@@ -812,10 +692,12 @@
       border-radius: 4px;
       white-space: nowrap;
     }
+
     .ping-fast { color: var(--success); }
     .ping-mid { color: var(--warning); }
     .ping-slow, .ping-fail { color: var(--danger); }
     .ping-wait { color: var(--text-3); }
+
     .ping-bar {
       flex: 1;
       height: 2px;
@@ -823,6 +705,7 @@
       min-width: 16px;
       overflow: hidden;
     }
+
     .ping-bar > i {
       display: block;
       width: 0;
@@ -830,9 +713,11 @@
       background: var(--text-3);
       transition: width 400ms var(--ease), background-color 160ms var(--ease);
     }
+
     .ping-bar > i.fast { background: var(--success); }
     .ping-bar > i.mid { background: var(--warning); }
     .ping-bar > i.slow, .ping-bar > i.fail { background: var(--danger); }
+
     .site-route {
       display: flex;
       justify-content: flex-end;
@@ -842,7 +727,21 @@
       color: var(--text-3);
       font-size: 10px;
     }
-    .site-route .route-tag { font-size: 9px; padding: 0 4px; }
+
+    .route-tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--success-soft);
+      color: var(--success);
+      font: 9px var(--font-mono);
+    }
+
+    .route-tag.proxy {
+      background: var(--violet-soft);
+      color: var(--violet);
+    }
+
     .site-technical {
       grid-column: 1 / -1;
       display: grid;
@@ -854,77 +753,6 @@
       color: var(--text-3);
       overflow-wrap: anywhere;
     }
-    .site-empty {
-      margin: 24px 0 0;
-      color: var(--text-3);
-      font-size: 12px;
-    }
-    .panel-legend {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-      color: var(--text-3);
-      font-size: 10px;
-    }
-    .legend-dot {
-      display: inline-block;
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      margin-right: 5px;
-      vertical-align: middle;
-    }
-
-    .search-bar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      padding: 12px;
-      margin-top: 20px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      background: var(--bg-card);
-    }
-    .search-field {
-      flex: 1;
-      min-width: 200px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-height: 44px;
-      padding: 0 12px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--bg-input);
-    }
-    .search-field:focus-within { outline: 2px solid var(--primary); outline-offset: 2px; }
-    .search-field svg {
-      width: 16px;
-      height: 16px;
-      color: var(--text-3);
-      flex-shrink: 0;
-    }
-    .input-box {
-      width: 100%;
-      border: 0;
-      background: transparent;
-      color: var(--text);
-      font: 12px var(--font-mono);
-      outline: none;
-    }
-    .input-box::placeholder {
-      color: var(--text-3);
-      font-family: var(--font-sans);
-    }
-    .custom-result {
-      font: 11px var(--font-mono);
-      color: var(--text-2);
-      overflow-wrap: anywhere;
-    }
 
     .diag-grid {
       display: grid;
@@ -932,9 +760,11 @@
       gap: 20px;
       margin-top: 20px;
     }
+
     .diag-grid > .panel:last-child {
       grid-column: 1 / -1;
     }
+
     .kv-list { display: grid; }
     .kv-row {
       display: flex;
@@ -945,6 +775,7 @@
       border-bottom: 1px solid var(--border);
       min-width: 0;
     }
+
     .kv-row:last-child { border-bottom: 0; }
     .kv-key {
       color: var(--text-3);
@@ -958,18 +789,22 @@
       min-width: 0;
       overflow-wrap: anywhere;
     }
+
     .kv-row.stacked { flex-direction: column; gap: 6px; }
     .kv-row.stacked .kv-val { text-align: left; }
+
     #envList {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       column-gap: 32px;
     }
+
     #envList .kv-row:first-child {
       grid-column: 1 / -1;
       flex-direction: column;
       gap: 8px;
     }
+
     #envList .kv-row:first-child .kv-val { text-align: left; }
 
     .footer {
@@ -982,759 +817,952 @@
       margin-top: 48px;
       padding-top: 24px;
     }
+
     .footer-brand {
       display: flex;
       align-items: center;
       gap: 12px;
     }
+
     .footer-title {
       font-size: 12px;
       color: var(--text-2);
     }
+
     .footer-note {
       margin-top: 3px;
       font-size: 10px;
       color: var(--text-3);
     }
+
     .footer-links {
       display: flex;
+      align-items: center;
       flex-wrap: wrap;
-      align-items: center;
-      gap: 20px;
-      font-size: 12px;
-      color: var(--text-2);
-    }
-    .footer a { display: inline-flex; align-items: center; gap: 6px; }
-    .footer svg {
-      width: 13px;
-      height: 13px;
-    }
-
-    .report-modal {
-      width: min(800px, calc(100vw - 32px));
-      max-height: calc(100dvh - 40px);
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-lg);
-      background: var(--bg-card);
-      color: var(--text);
-      padding: 20px;
-      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.38);
-    }
-    .report-modal::backdrop {
-      background: rgba(8, 12, 11, 0.7);
-    }
-    .modal-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
       gap: 12px;
-      margin-bottom: 20px;
-    }
-    .modal-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 16px;
-      font-weight: 600;
-    }
-    .tab-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-    .mask-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-left: auto;
-      font-size: 11px;
-      color: var(--text-2);
-      cursor: pointer;
-    }
-    .mask-label input {
-      accent-color: var(--primary);
-      width: 16px;
-      height: 16px;
-    }
-    .report-textarea {
-      width: 100%;
-      min-height: 320px;
-      padding: 16px;
-      background: var(--bg-input);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font: 12px/1.8 var(--font-mono);
-      resize: vertical;
-    }
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 20px;
-    }
-    .share-note {
-      margin-top: 12px;
       color: var(--text-3);
-      font-size: 11px;
+      font-size: 10px;
     }
 
-    .toast {
-      position: fixed;
-      bottom: max(24px, env(safe-area-inset-bottom));
-      left: 50%;
-      transform: translate(-50%, 8px);
-      opacity: 0;
-      pointer-events: none;
-      color: var(--bg-main);
-      background: var(--text);
-      padding: 10px 14px;
-      border-radius: 999px;
-      font: 11px var(--font-mono);
-      transition: opacity 180ms, transform 180ms;
-      z-index: 100;
-    }
-    .toast.show {
-      opacity: 1;
-      transform: translate(-50%, 0);
+    @media (max-width: 980px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+      .hero-side {
+        border-left: none;
+        border-top: 1px solid var(--border);
+        padding-left: 0;
+        padding-top: 16px;
+      }
+      .diag-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
-    .noscript-tip {
-      max-width: 640px;
-      margin: 24px auto;
-      padding: 16px 20px;
-      border: 1px solid var(--warning);
-      border-radius: 8px;
-      color: var(--warning);
-      background: var(--warning-soft);
-    }
-
-    .skip-link {
-      position: fixed;
-      left: 20px;
-      top: -100px;
-      z-index: 200;
-      background: var(--primary);
-      color: var(--bg-main);
-      padding: 12px 20px;
-      border-radius: 6px;
-      transition: top 160ms ease;
-    }
-    .skip-link:focus { top: 12px; }
-
-    @media (max-width: 1100px) {
-      .container, .navbar-inner { padding-inline: 28px; }
-      .hero { grid-template-columns: minmax(0, 1fr) 230px; }
-      .ip-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-
-    @media (max-width: 900px) {
-      .navbar-inner { justify-content: flex-start; }
-      .nav-actions { margin-left: auto; }
-      .hero { grid-template-columns: minmax(0,1fr); }
-      .hero-side { border-left: 0; border-top: 1px solid var(--border); padding: 18px 0 0; }
-      .latency-columns { grid-template-columns: minmax(0,1fr); }
-      .section-head { display: block; }
-      .section-hint { margin-top: 10px; }
-      .routing-lanes { grid-template-columns: minmax(0,1fr); }
-      .routing-lane + .routing-lane { border-left: 0; border-top: 1px solid var(--border); padding-left: 0; padding-top: 18px; }
-      .diag-grid { grid-template-columns: minmax(0,1fr); }
-    }
-
-    @media (max-width: 640px) {
-      .container, .navbar-inner { padding-inline: 20px; }
-      .brand-title { font-size: 12px; }
-      .brand-sub { display: none; }
-      .nav-actions { width: 100%; }
-      .nav-actions .btn { flex: 1; padding-inline: 8px; }
-      .nav-actions .btn-icon { flex: 0 0 44px; }
-      .observatory-head { display: block; }
-      .observatory-title { font-size: 32px; }
-      .section-nav { margin-top: 8px; }
-      .hero { padding: 20px; }
-      .hero-main { display: block; }
-      .status-orb { position: absolute; right: 20px; top: 18px; }
-      .hero { position: relative; }
-      .hero-side { grid-template-columns: repeat(2, minmax(0,1fr)); }
-      .ip-grid { grid-template-columns: minmax(0,1fr); }
-      .site-toolbar { gap: 8px; }
-      .site-filters { width: 100%; }
-      .site-filters .btn { flex: 1; }
-      .search-field { flex-basis: 100%; min-width: 0; }
-      .search-bar { gap: 10px; }
-      #envList { grid-template-columns: minmax(0,1fr); }
-      .modal-actions { justify-content: flex-start; }
-      .modal-actions .btn { flex: 1; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation: none !important;
-        transition: none !important;
-        scroll-behavior: auto !important;
+    @media (max-width: 700px) {
+      .container, .navbar-inner {
+        padding-inline: 20px;
+      }
+      .ip-grid {
+        grid-template-columns: 1fr;
+      }
+      .site-item {
+        grid-template-columns: 1fr;
+      }
+      .site-route {
+        justify-content: flex-start;
       }
     }
   </style>
 </head>
 <body data-privacy-on="false">
-  <a class="skip-link" href="#appRoot">跳至诊断内容</a>
-  <noscript>
-    <p class="noscript-tip">本工具依赖 JavaScript 完成探测，请启用 JavaScript 后重新打开页面。</p>
-  </noscript>
-
-  <header class="navbar">
+  <nav class="navbar">
     <div class="navbar-inner">
-      <a class="brand" href="https://ip.nbai.dev" target="_blank" rel="noopener noreferrer" title="打开 ip.nbai.dev">
-        <span class="brand-logo" aria-hidden="true">NB</span>
+      <div class="brand" aria-label="NBAI">
+        <div class="brand-logo">N</div>
         <div class="brand-text">
           <div class="brand-title-wrap">
-            <h1 class="brand-title">NBAI · IP 与网络分流诊断</h1>
-            <span class="version-badge">v2.11.0</span>
+            <h1 class="brand-title">NBAI · 网络诊断</h1>
+            <span class="version-badge">v2.1</span>
           </div>
-          <span class="brand-sub">ip.nbai.dev · 浏览器本地检测</span>
+          <span class="brand-sub">BROWSER LOCAL • IP / GEO / RTS / WEBSITES</span>
         </div>
-      </a>
+      </div>
 
       <div class="nav-actions">
-        <button type="button" class="btn" data-action="toggle-privacy" aria-pressed="false" title="隐藏部分 IP 方便截图">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
-          <span>隐藏 IP</span>
-        </button>
-
-        <button type="button" class="btn" data-action="open-report">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-          </svg>
-          <span>诊断摘要</span>
-        </button>
-
-        <button type="button" class="btn btn-primary" data-action="run-all">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <polyline points="23 4 23 10 17 10"/>
-            <polyline points="1 20 1 14 7 14"/>
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-          </svg>
-          <span>重新检测</span>
-        </button>
-
-        <span class="nav-sep" aria-hidden="true"></span>
-
-        <button type="button" class="btn btn-icon" data-action="toggle-theme" aria-label="切换深色/浅色模式" title="切换深色/浅色模式">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <circle cx="12" cy="12" r="5"/>
-            <line x1="12" y1="1" x2="12" y2="3"/>
-            <line x1="12" y1="21" x2="12" y2="23"/>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-            <line x1="1" y1="12" x2="3" y2="12"/>
-            <line x1="21" y1="12" x2="23" y2="12"/>
-          </svg>
-        </button>
-
-        <a class="btn btn-icon" href="https://github.com/nbai-dev/ip.nbai.dev" target="_blank" rel="noopener noreferrer" aria-label="GitHub 开源仓库" title="GitHub 开源仓库">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 .5C5.73.5.5 5.73.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2.17c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2.97 1.67 2.56 1.19 3.19.91.1-.71.38-1.19.69-1.46-2.55-.28-5.23-1.27-5.23-5.65 0-1.25.45-2.28 1.18-3.08-.12-.29-.51-1.45.11-3.02 0 0 .96-.31 3.15 1.17a10.98 10.98 0 0 1 5.74 0c2.19-1.48 3.15-1.17 3.15-1.17.62 1.57.23 2.73.11 3.02.74.8 1.18 1.83 1.18 3.08 0 4.39-2.69 5.36-5.25 5.64.41.35.78 1.05.78 2.12v3.14c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/>
-          </svg>
-        </a>
+        <button id="retestBtn" class="btn btn-primary" type="button">重新检测</button>
+        <button id="stopBtn" class="btn" type="button">停止</button>
+        <button id="copySummaryBtn" class="btn" type="button">复制摘要</button>
+        <button id="exportJsonBtn" class="btn" type="button">导出 JSON</button>
+        <button id="exportMdBtn" class="btn" type="button">导出 Markdown</button>
+        <button id="shareBtn" class="btn" type="button">截图/分享</button>
       </div>
     </div>
-  </header>
+  </nav>
 
-  <main class="container" id="appRoot" tabindex="-1">
-    <div class="observatory-head">
+  <main class="container">
+    <header class="observatory-head">
       <div>
-        <div class="observatory-kicker"><span class="instrument-mark" aria-hidden="true"></span>NBAI / NETWORK OBSERVATORY</div>
-        <h2 class="observatory-title">网络观测台<span aria-hidden="true">.</span></h2>
-        <p class="observatory-sub">出口、分流与连通性，一处看清。</p>
+        <div class="observatory-kicker">
+          <span class="instrument-mark"></span>Network Observatory
+        </div>
+        <h2 class="observatory-title">浏览器端 <span>IP</span> 与网络分流诊断</h2>
+        <p class="observatory-sub">对比出口、网路链路、网站健康、WebRTC 与浏览器环境，全部在浏览器本地完成。</p>
       </div>
-      <nav class="section-nav" aria-label="诊断分区">
-        <a href="#exits"><span>01</span>出口</a>
-        <a href="#connectivity"><span>02</span>连通性</a>
-        <a href="#security"><span>03</span>安全与环境</a>
+      <nav class="section-nav" aria-label="Section navigation">
+        <a href="#ip">出口 IP</a>
+        <a href="#sites">站点探测</a>
+        <a href="#diag">环境诊断</a>
+        <span>Local Only</span>
       </nav>
-    </div>
+    </header>
 
-    <section class="hero" id="summaryCard" data-state="loading">
+    <section class="hero" data-state="loading" aria-live="polite">
       <div class="hero-main">
-        <div class="status-orb"><span class="status-dot" id="summaryDot" aria-hidden="true"></span></div>
+        <div class="status-orb"><span class="status-dot"></span></div>
         <div class="hero-text">
-          <span class="hero-eyebrow">Routing Diagnosis</span>
-          <h2 class="hero-title" id="summaryTitle" role="status" aria-live="polite">正在并发探测国内外分流链路…</h2>
-          <p class="hero-desc" id="summaryDesc">国内直连通道优先响应，不会被海外节点超时阻塞</p>
+          <span class="hero-eyebrow">实时状态</span>
+          <h3 class="hero-title">正在采集网络信息…</h3>
+          <p class="hero-desc">检测出口 IP、站点健康、浏览器环境，以及 WebRTC 是否存在泄露风险。</p>
+          <span class="status-tag">检测中</span>
         </div>
       </div>
+
       <div class="hero-side">
-        <div class="stack-card"><span class="stack-tag">IPv4</span><span class="stack-value" id="v4Status">检测中…</span></div>
-        <div class="stack-card"><span class="stack-tag">IPv6</span><span class="stack-value" id="v6Status">检测中…</span></div>
+        <div class="stack-card">
+          <span class="stack-tag">终端</span>
+          <span class="stack-value" id="stackPlatform">Browser</span>
+        </div>
+        <div class="stack-card">
+          <span class="stack-tag">UA</span>
+          <span class="stack-value" id="stackUA">unknown</span>
+        </div>
       </div>
     </section>
 
-    <header class="section-head" id="exits">
-      <div>
-        <div class="section-eyebrow">01 / IP 出口</div>
-        <h2 class="section-title">多源分流检测</h2>
+    <section id="ip" aria-labelledby="ip-title">
+      <div class="section-head">
+        <div>
+          <div class="section-eyebrow">出口观测</div>
+          <h3 id="ip-title" class="section-title">IP 出口与分流</h3>
+        </div>
+        <p class="section-hint">检测当前浏览器可见的出口 IP、地理位置、是否命中 Anycast / Cloudflare 边缘节点。</p>
       </div>
-      <p class="section-hint">6 路独立数据源并行竞速，任一路失败自动补位；点击卡片“重测”可单独刷新</p>
-    </header>
 
-    <section class="ip-grid" id="ipGrid" aria-busy="true">
-      <article class="ip-card">
-        <div class="ip-top">
-          <div class="ip-names">
-            <p class="ip-source-name">IPDB 联通出口</p>
-            <div class="ip-source-desc">中国大陆分流</div>
-          </div>
-          <span class="badge badge-cn">国内</span>
-        </div>
-        <div class="ip-main-row">
-          <div class="ip-addr masked">203.0.113.1</div>
-          <div class="ip-actions">
-            <span class="chip">IPv4</span>
-            <button class="icon-btn" type="button" aria-label="刷新此出口">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 0 15.3 6.3M21 12a9 9 0 0 0-15.3-6.3"/><path d="M8 7h8v8"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="ip-meta">
-          <div class="ip-meta-row"><span>归属地</span><span>中国 · 上海</span></div>
-          <div class="ip-meta-row"><span>延迟</span><span>26ms</span></div>
-        </div>
-        <div class="ip-card-foot">
-          <span>已验证</span>
-          <button class="retest-btn" type="button">重测 ↗</button>
-        </div>
-      </article>
-
-      <article class="ip-card">
-        <div class="ip-top">
-          <div class="ip-names">
-            <p class="ip-source-name">Cloudflare Anycast</p>
-            <div class="ip-source-desc">边缘命中节点</div>
-          </div>
-          <span class="badge badge-anycast">Anycast</span>
-        </div>
-        <div class="ip-main-row">
-          <div class="ip-addr masked">172.67.68.109</div>
-          <div class="ip-actions">
-            <span class="chip">IPv4</span>
-            <button class="icon-btn" type="button" aria-label="刷新此出口">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 0 15.3 6.3M21 12a9 9 0 0 0-15.3-6.3"/><path d="M8 7h8v8"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="ip-meta">
-          <div class="ip-meta-row"><span>归属地</span><span>全球边缘网络</span></div>
-          <div class="ip-meta-row"><span>延迟</span><span>38ms</span></div>
-        </div>
-        <div class="ip-card-foot">
-          <span>已验证</span>
-          <button class="retest-btn" type="button">重测 ↗</button>
-        </div>
-      </article>
-
-      <article class="ip-card">
-        <div class="ip-top">
-          <div class="ip-names">
-            <p class="ip-source-name">海外出口探测</p>
-            <div class="ip-source-desc">全球链路参考</div>
-          </div>
-          <span class="badge badge-global">海外</span>
-        </div>
-        <div class="ip-main-row">
-          <div class="ip-addr masked">198.51.100.4</div>
-          <div class="ip-actions">
-            <span class="chip">IPv4</span>
-            <button class="icon-btn" type="button" aria-label="刷新此出口">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 0 15.3 6.3M21 12a9 9 0 0 0-15.3-6.3"/><path d="M8 7h8v8"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="ip-meta">
-          <div class="ip-meta-row"><span>归属地</span><span>美国 · 西雅图</span></div>
-          <div class="ip-meta-row"><span>延迟</span><span>128ms</span></div>
-        </div>
-        <div class="ip-card-foot">
-          <span>已验证</span>
-          <button class="retest-btn" type="button">重测 ↗</button>
-        </div>
-      </article>
+      <div class="ip-grid" id="ipGrid"></div>
     </section>
 
-    <div class="grid-legend">
-      <span class="legend-item"><i class="legend-swatch cn"></i>国内直连 / 国内 BGP</span>
-      <span class="legend-item"><i class="legend-swatch anycast"></i>Cloudflare Anycast</span>
-      <span class="legend-item"><i class="legend-swatch global"></i>海外分流出口</span>
+    <section id="sites" aria-labelledby="sites-title">
+      <div class="section-head">
+        <div>
+          <div class="section-eyebrow">站点健康</div>
+          <h3 id="sites-title" class="section-title">国内外站点探测</h3>
+        </div>
+        <p class="section-hint">监测国内 / 国际站点的连通性与延迟，支持筛选“全部 / 已连通 / 需排查”结果。</p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">检测结果</div>
+          <div class="avg-badge">会话仅保存在本地</div>
+        </div>
+        <div class="site-grid" id="siteGrid"></div>
+      </div>
+    </section>
+
+    <section id="diag" aria-labelledby="diag-title">
+      <div class="section-head">
+        <div>
+          <div class="section-eyebrow">环境诊断</div>
+          <h3 id="diag-title" class="section-title">WebRTC / DNS / UA / 浏览器信号</h3>
+        </div>
+        <p class="section-hint">采集浏览器、平台、语言、UA 和 WebRTC 相关状态，帮助判断是否存在隐私泄露或不可见风险。</p>
+      </div>
+
+      <div class="diag-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">浏览器信息</div>
+            <div class="panel-sub">本地检测</div>
+          </div>
+          <div id="envList" class="kv-list"></div>
+        </div>
+
+        <div class="panel" id="diagnosticSummaryPanel">
+          <div class="panel-head">
+            <div class="panel-title">诊断结论</div>
+            <div class="panel-sub">当前会话</div>
+          </div>
+          <div id="summaryText" class="kv-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="panel" id="historyPanel" style="margin-top: 20px;">
+      <div class="panel-head">
+        <div class="panel-title">最近检测记录</div>
+        <div class="panel-sub">本地缓存</div>
+      </div>
+      <div id="historyList" class="kv-list"></div>
     </div>
-
-    <header class="section-head" id="connectivity">
-      <div>
-        <div class="section-eyebrow">02 / 实时延迟</div>
-        <h2 class="section-title">国内外服务连通性</h2>
-      </div>
-      <p class="section-hint">图片 + Fetch 双通道，目标无响应时自动补位；条形越长延迟越高，点击任意站点可重测</p>
-    </header>
-
-    <section class="panel routing-map" aria-labelledby="routingMapTitle">
-      <div class="panel-title" id="routingMapTitle">分流路径示意 <span class="panel-sub">预期策略 · 非逐站实测路由</span></div>
-      <div class="routing-lanes">
-        <div class="routing-lane">
-          <div class="routing-path"><span>本机</span><span aria-hidden="true">→</span><span class="route-tag">预期直连</span><span aria-hidden="true">→</span><span>国内服务</span></div>
-          <div class="routing-exit">国内探测出口：203.0.113.1</div>
-          <div class="routing-location">参考归属地：中国 · 上海 / BGP</div>
-          <div class="routing-count">有效链路数量：3 / 3</div>
-        </div>
-        <div class="routing-lane">
-          <div class="routing-path"><span>本机</span><span aria-hidden="true">→</span><span class="route-tag proxy">预期代理</span><span aria-hidden="true">→</span><span>国际 / AI 服务</span></div>
-          <div class="routing-exit">海外探测出口：198.51.100.4</div>
-          <div class="routing-location">参考归属地：美国 · 西雅图</div>
-          <div class="routing-count">有效链路数量：2 / 3</div>
-        </div>
-      </div>
-      <p class="routing-note">正在对比出口：从本机到国内直连与海外链路的验证样本均已收集，结果仅用于观察趋势。</p>
-      <details class="routing-explainer"><summary>为什么网站的实际 IP / 国家显示未验证？</summary>
-        <p>上方出口与归属地来自 IP 探测服务，仅供参考，不等于下方每个网站的真实出口。连通只表示探测资源有响应，不代表网站业务可用。</p>
-      </details>
-    </section>
-
-    <section class="probe-progress" aria-labelledby="probeProgressTitle">
-      <div>
-        <div class="probe-progress-title" id="probeProgressTitle">站点探测准备中</div>
-        <p class="probe-progress-meta" id="probeProgressMeta">仅统计资源响应，不验证逐站出口与业务权限</p>
-      </div>
-      <button type="button" class="btn" data-action="retry-failed" disabled>重测未连通站点</button>
-      <progress id="siteProgress" max="16" value="0" aria-label="站点探测完成进度"></progress>
-    </section>
-
-    <div class="site-toolbar">
-      <div class="site-filters" role="group" aria-label="筛选网站探测结果">
-        <button type="button" class="btn" data-action="filter-sites" data-filter="all" aria-pressed="true">全部 <span>16</span></button>
-        <button type="button" class="btn" data-action="filter-sites" data-filter="ok" aria-pressed="false">已连通 <span>0</span></button>
-        <button type="button" class="btn" data-action="filter-sites" data-filter="failed" aria-pressed="false">需排查 <span>0</span></button>
-      </div>
-      <button type="button" class="btn" data-action="toggle-site-details" aria-pressed="false">显示技术详情</button>
-    </div>
-
-    <section class="latency-columns">
-      <div class="panel">
-        <div class="panel-head">
-          <div class="panel-title"><span class="flag">🇨🇳</span>国内主流服务<span class="panel-sub">预期直连</span></div>
-          <span class="avg-badge" id="cnAvgBadge">平均：42ms</span>
-        </div>
-        <div class="site-grid" id="cnSiteGrid">
-          <div class="site-item" data-result="ok">
-            <div class="site-top"><span class="site-name">百度</span><span class="ping-badge ping-fast">42ms</span></div>
-            <div class="site-bottom"><span class="site-domain">www.baidu.com</span><div class="ping-bar"><i class="fast" style="width: 52%"></i></div></div>
-            <div class="site-route"><span class="route-tag">直连</span><span>中国大陆</span></div>
-          </div>
-          <div class="site-item" data-result="ok">
-            <div class="site-top"><span class="site-name">淘宝</span><span class="ping-badge ping-fast">51ms</span></div>
-            <div class="site-bottom"><span class="site-domain">www.taobao.com</span><div class="ping-bar"><i class="fast" style="width: 58%"></i></div></div>
-            <div class="site-route"><span class="route-tag">直连</span><span>中国大陆</span></div>
-          </div>
-          <div class="site-item" data-result="failed">
-            <div class="site-top"><span class="site-name">B站</span><span class="ping-badge ping-fail">超时</span></div>
-            <div class="site-bottom"><span class="site-domain">www.bilibili.com</span><div class="ping-bar"><i class="fail" style="width: 10%"></i></div></div>
-            <div class="site-route"><span class="route-tag">需排查</span><span>网络受限</span></div>
-          </div>
-        </div>
-        <div class="panel-legend">
-          <span><i class="legend-dot" style="background:var(--success)"></i>快 &lt; 120ms</span>
-          <span><i class="legend-dot" style="background:var(--warning)"></i>中 120–350ms</span>
-          <span><i class="legend-dot" style="background:var(--danger)"></i>慢 &gt; 350ms</span>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head">
-          <div class="panel-title"><span class="flag">🌍</span>国际与 AI 平台<span class="panel-sub">预期代理</span></div>
-          <span class="avg-badge" id="globalAvgBadge">平��：171ms</span>
-        </div>
-        <div class="site-grid" id="globalSiteGrid">
-          <div class="site-item" data-result="ok">
-            <div class="site-top"><span class="site-name">GitHub</span><span class="ping-badge ping-mid">118ms</span></div>
-            <div class="site-bottom"><span class="site-domain">github.com</span><div class="ping-bar"><i class="mid" style="width: 50%"></i></div></div>
-            <div class="site-route"><span class="route-tag proxy">国际</span><span>代理链路</span></div>
-          </div>
-          <div class="site-item" data-result="ok">
-            <div class="site-top"><span class="site-name">OpenAI</span><span class="ping-badge ping-slow">224ms</span></div>
-            <div class="site-bottom"><span class="site-domain">openai.com</span><div class="ping-bar"><i class="slow" style="width: 62%"></i></div></div>
-            <div class="site-route"><span class="route-tag proxy">国际</span><span>AI 服务</span></div>
-          </div>
-          <div class="site-item" data-result="failed">
-            <div class="site-top"><span class="site-name">Google</span><span class="ping-badge ping-fail">超时</span></div>
-            <div class="site-bottom"><span class="site-domain">google.com</span><div class="ping-bar"><i class="fail" style="width: 15%"></i></div></div>
-            <div class="site-route"><span class="route-tag proxy">需排查</span><span>海外限制</span></div>
-          </div>
-        </div>
-        <div class="panel-legend">
-          <span><i class="legend-dot" style="background:var(--success)"></i>快 &lt; 120ms</span>
-          <span><i class="legend-dot" style="background:var(--warning)"></i>中 120–350ms</span>
-          <span><i class="legend-dot" style="background:var(--danger)"></i>慢 &gt; 350ms</span>
-        </div>
-      </div>
-    </section>
-
-    <div class="search-bar">
-      <div class="search-field">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <circle cx="11" cy="11" r="7"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input type="url" class="input-box" id="customUrlInput" placeholder="自定义测速：www.qq.com / openai.com / 任意网址" aria-label="自定义网址" />
-      </div>
-      <button type="button" class="btn" data-action="custom-ping">立即测速</button>
-      <span class="custom-result" id="customPingResult" role="status" aria-live="polite">等待输入网址…</span>
-    </div>
-
-    <header class="section-head" id="security">
-      <div>
-        <div class="section-eyebrow">03 / 安全与环境</div>
-        <h2 class="section-title">泄露检测与底层协议</h2>
-      </div>
-      <p class="section-hint">WebRTC 只做 STUN 候选收集，本页不会发起通话或上传任何检测数据</p>
-    </header>
-
-    <section class="diag-grid">
-      <div class="panel">
-        <div class="panel-head">
-          <div class="panel-title"><span class="flag">🔒</span>WebRTC 泄露检测</div>
-          <span class="badge badge-cn" id="webrtcBadge">安全</span>
-        </div>
-        <div class="kv-list">
-          <div class="kv-row stacked">
-            <span class="kv-key">公网反射地址 (srflx)</span>
-            <span class="kv-val masked" id="rtcPublicIp">203.0.113.9</span>
-          </div>
-          <div class="kv-row stacked">
-            <span class="kv-key">局域网 / 候选地址</span>
-            <span class="kv-val masked" id="rtcLocalIp">10.0.0.18 / 192.168.1.32</span>
-          </div>
-          <div class="kv-row">
-            <span class="kv-key">安全评估结论</span>
-            <span class="kv-val" id="rtcVerdict">未检测到公网泄露</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head">
-          <div class="panel-title"><span class="flag">📡</span>Anycast 边缘节点</div>
-          <span class="badge badge-global" id="dnsBadge">命中</span>
-        </div>
-        <div class="kv-list">
-          <div class="kv-row"><span class="kv-key">命中机房</span><span class="kv-val masked" id="cfColoVal">HKG / SIN</span></div>
-          <div class="kv-row"><span class="kv-key">HTTP / TLS 协议</span><span class="kv-val" id="cfHttpVal">HTTP/2 · TLS 1.3</span></div>
-          <div class="kv-row"><span class="kv-key">WARP / 隧道状态</span><span class="kv-val" id="cfWarpVal">未启用 / 正常</span></div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head">
-          <div class="panel-title"><span class="flag">💻</span>终端环境</div>
-          <span class="badge badge-muted">本地</span>
-        </div>
-        <div class="kv-list" id="envList">
-          <div class="kv-row">
-            <span class="kv-key">User Agent</span>
-            <span class="kv-val">Chrome 128 / Linux x86_64</span>
-          </div>
-          <div class="kv-row">
-            <span class="kv-key">语言</span>
-            <span class="kv-val">zh-CN</span>
-          </div>
-          <div class="kv-row">
-            <span class="kv-key">平台</span>
-            <span class="kv-val">Desktop</span>
-          </div>
-          <div class="kv-row">
-            <span class="kv-key">WebRTC</span>
-            <span class="kv-val">支持</span>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <footer class="footer">
       <div class="footer-brand">
-        <span class="brand-logo" aria-hidden="true">NB</span>
+        <div class="brand-logo">N</div>
         <div>
-          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge">v2.11.0</span></div>
-          <div class="footer-note">© 2026 NBAI · 检测在浏览器本地完成，无需登录</div>
+          <div class="footer-title">NBAI · 纯前端网络诊断工具</div>
+          <div class="footer-note">不上传数据 • 仅浏览器本地检测</div>
         </div>
       </div>
-      <nav class="footer-links" aria-label="相关链接">
-        <a href="https://github.com/nbai-dev/ip.nbai.dev" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.73.5.5 5.73.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2.17c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2.97 1.67 2.56 1.19 3.19.91.1-.71.38-1.19.69-1.46-2.55-.28-5.23-1.27-5.23-5.65 0-1.25.45-2.28 1.18-3.08-.12-.29-.51-1.45.11-3.02 0 0 .96-.31 3.15 1.17a10.98 10.98 0 0 1 5.74 0c2.19-1.48 3.15-1.17 3.15-1.17.62 1.57.23 2.73.11 3.02.74.8 1.18 1.83 1.18 3.08 0 4.39-2.69 5.36-5.25 5.64.41.35.78 1.05.78 2.12v3.14c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/></svg>
-          GitHub 开源仓库
-        </a>
-        <a href="https://ip.nbai.dev" target="_blank" rel="noopener noreferrer">ip.nbai.dev</a>
-      </nav>
+
+      <div class="footer-links">
+        <span>Local only</span>
+        <span>IP / GEO / DNS</span>
+        <span>WebRTC</span>
+        <span>复制 / 导出 / 分享</span>
+      </div>
     </footer>
   </main>
 
-  <dialog class="report-modal" id="reportModal">
-    <div class="modal-top">
-      <div class="modal-title">📋 网络分流诊断报告 <span class="version-badge">v2.11.0</span></div>
-      <button type="button" class="btn" data-action="close-report">关闭</button>
-    </div>
-    <div class="tab-row" aria-label="报告格式">
-      <button type="button" class="btn" data-action="report-format" data-format="text" aria-pressed="true">💬 简洁文本</button>
-      <button type="button" class="btn" data-action="report-format" data-format="md" aria-pressed="false">📝 Markdown</button>
-      <button type="button" class="btn" data-action="report-format" data-format="ai" aria-pressed="false">🤖 AI 排障</button>
-      <label class="mask-label"><input type="checkbox" checked /> 自动打码 IP</label>
-    </div>
-    <textarea class="report-textarea" id="reportOutput" readonly spellcheck="false">NBAI · IP 与网络分流诊断
-
-- IPv4: 203.0.113.1
-- IPv6: 未检测到
-- 国内出口：上海 / BGP
-- 海外出口：美国 / 西雅图
-- WebRTC：未检测到公网泄露
-- 结论：链路稳定，需继续观察国际服务访问表现</textarea>
-    <div class="modal-actions">
-      <a class="btn" href="https://github.com/nbai-dev/ip.nbai.dev" target="_blank" rel="noopener noreferrer">项目源码</a>
-      <button type="button" class="btn" data-action="save-report-image">保存报告截图</button>
-      <button type="button" class="btn" data-action="share-x">分享到 X ↗</button>
-      <button type="button" class="btn btn-primary" data-action="copy-report">一键复制报告内容</button>
-    </div>
-    <p class="share-note">截图为完整报告 PNG，遵循上方 IP 打码选项。X 分享默认隐藏 IP；如需附图，请保存后在 X 手动添加。</p>
-  </dialog>
-
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
   <script>
-    (() => {
-      'use strict';
+    const APP_STATE = {
+      overall: 'idle',
+      currentReport: null,
+      abortControllers: {},
+      history: JSON.parse(localStorage.getItem('nbai:history') || '[]')
+    };
 
-      const STORE_PREFIX = 'nbai:';
-      const safeParseJSON = (value, fallback) => {
-        if (value === null || value === undefined || value === '') return fallback;
-        try {
-          return JSON.parse(value);
-        } catch (error) {
-          return fallback;
-        }
+    const TIMEOUTS = {
+      ip: 5000,
+      site: 8000,
+      webrtc: 3000
+    };
+
+    function setOverallState(state, text) {
+      APP_STATE.overall = state;
+      const hero = document.querySelector('.hero');
+      if (hero) hero.setAttribute('data-state', state);
+
+      const title = document.querySelector('.hero-title');
+      const desc = document.querySelector('.hero-desc');
+      const stateMap = {
+        idle: '等待检测',
+        loading: '正在采集网络信息…',
+        partial: '部分检测已完成',
+        complete: '检测已完成',
+        error: '检测过程中出现异常'
       };
 
-      const store = {
-        get(key, fallback) {
-          try {
-            const raw = localStorage.getItem(STORE_PREFIX + key);
-            return raw === null ? fallback : safeParseJSON(raw, fallback);
-          } catch (error) {
-            return fallback;
-          }
+      if (title) title.textContent = stateMap[state] || '网络诊断';
+      if (desc) desc.textContent = text || '浏览器本地完成检测，结果仅供参考';
+    }
+
+    function updateStatusChip(text) {
+      let chip = document.querySelector('.status-tag');
+      if (!chip) {
+        const wrapper = document.querySelector('.hero-text');
+        if (!wrapper) return;
+        chip = document.createElement('span');
+        chip.className = 'status-tag';
+        wrapper.appendChild(chip);
+      }
+      chip.textContent = text;
+    }
+
+    function emptyReport() {
+      return {
+        reportId: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `report-${Date.now()}`,
+        generatedAt: new Date().toISOString(),
+        status: 'idle',
+        summary: '',
+        ipResults: [],
+        siteResults: [],
+        webrtcResult: null,
+        environment: {
+          userAgent: navigator.userAgent,
+          language: navigator.language,
+          platform: navigator.platform,
+          vendor: navigator.vendor || '',
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+          isMobile: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
         },
-        set(key, value) {
-          try {
-            localStorage.setItem(STORE_PREFIX + key, JSON.stringify(value));
-          } catch (error) {}
-        }
+        errors: [],
+        warnings: []
       };
+    }
 
-      const normalizeTheme = (theme) => theme === 'light' || theme === 'dark' ? theme : null;
+    function withTimeout(taskName, task, timeoutMs) {
+      return new Promise((resolve, reject) => {
+        const controller = new AbortController();
+        APP_STATE.abortControllers[taskName] = controller;
 
-      function applyTheme(theme) {
-        const next = normalizeTheme(theme) || 'dark';
-        document.documentElement.dataset.theme = next;
-        store.set('theme', next);
-        const meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute('content', next === 'light' ? '#f3f3ed' : '#111613');
+        const timer = setTimeout(() => {
+          controller.abort();
+          reject(new Error(`${taskName}: timeout after ${timeoutMs}ms`));
+        }, timeoutMs);
+
+        Promise.resolve(task(controller.signal))
+          .then((value) => {
+            clearTimeout(timer);
+            resolve(value);
+          })
+          .catch((error) => {
+            clearTimeout(timer);
+            reject(error);
+          })
+          .finally(() => {
+            delete APP_STATE.abortControllers[taskName];
+          });
+      });
+    }
+
+    function cancelAllTasks() {
+      Object.keys(APP_STATE.abortControllers).forEach((name) => {
+        try { APP_STATE.abortControllers[name].abort(); } catch (e) {}
+      });
+      APP_STATE.abortControllers = {};
+    }
+
+    function safeIp(value) {
+      if (!value || value === 'unknown' || value === '—') return '—';
+      return value;
+    }
+
+    function computeRiskLevel(report) {
+      const failCount = report.siteResults.filter((x) => x.status === 'failed').length;
+      const okCount = report.siteResults.filter((x) => x.status === 'ok').length;
+
+      if (report.webrtcResult && (report.webrtcResult.status === 'error' || report.webrtcResult.status === 'unsupported')) {
+        return 'danger';
       }
 
-      const toast = document.getElementById('toast');
-      const showToast = (message) => {
-        if (!toast) return;
-        toast.textContent = message;
-        toast.classList.add('show');
-        window.clearTimeout(showToast.timer);
-        showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 1800);
+      if (failCount > 0 || okCount < 2) {
+        return 'warn';
+      }
+
+      return 'normal';
+    }
+
+    function riskLabel(level) {
+      const map = {
+        normal: '正常',
+        warn: '需排查',
+        danger: '风险较高'
       };
+      return map[level] || '未知';
+    }
 
-      const updatePrivacyState = (isPrivate) => {
-        const body = document.body;
-        if (!body) return;
-        const nextState = isPrivate ? 'true' : 'false';
-        body.setAttribute('data-privacy-on', nextState);
-        const trigger = document.querySelector('[data-action="toggle-privacy"]');
-        const label = trigger && trigger.querySelector('span');
-        if (label) label.textContent = isPrivate ? '显示 IP' : '隐藏 IP';
-        trigger && trigger.setAttribute('aria-pressed', String(isPrivate));
-      };
+    function scoreReport(report) {
+      let score = 100;
 
-      document.addEventListener('click', (event) => {
-        const trigger = event.target.closest('[data-action]');
-        if (!trigger) return;
+      const failed = report.siteResults.filter((x) => x.status === 'failed').length;
+      score -= failed * 12;
 
-        const action = trigger.dataset.action;
-        switch (action) {
-          case 'toggle-theme': {
-            const nextTheme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
-            applyTheme(nextTheme);
-            showToast(nextTheme === 'light' ? '已切换至浅色模式' : '已切换至深色模式');
-            break;
-          }
-          case 'toggle-privacy': {
-            const isPrivate = document.body.getAttribute('data-privacy-on') !== 'true';
-            updatePrivacyState(isPrivate);
-            showToast(isPrivate ? '已隐藏 IP' : '已显示 IP');
-            break;
-          }
-          case 'open-report': {
-            const modal = document.getElementById('reportModal');
-            if (modal && typeof modal.showModal === 'function') modal.showModal();
-            break;
-          }
-          case 'close-report': {
-            const modal = document.getElementById('reportModal');
-            if (modal && typeof modal.close === 'function') modal.close();
-            break;
-          }
-          case 'copy-report': {
-            const value = document.getElementById('reportOutput')?.value || '';
-            if (!value) return showToast('暂无可复制内容');
-            navigator.clipboard.writeText(value)
-              .then(() => showToast('报告已复制'))
-              .catch(() => showToast('复制失败，请手动复制'));
-            break;
-          }
-          case 'run-all': {
-            showToast('已触发重新检测');
-            break;
-          }
-          case 'custom-ping': {
-            const input = document.getElementById('customUrlInput');
-            const result = document.getElementById('customPingResult');
-            const value = input ? input.value.trim() : '';
-            if (!value) {
-              if (result) result.textContent = '请输入网址后再测速';
-              return;
+      if (report.webrtcResult && report.webrtcResult.status === 'error') score -= 20;
+      if (report.webrtcResult && report.webrtcResult.status === 'unsupported') score -= 10;
+
+      return Math.max(0, Math.min(100, score));
+    }
+
+    function buildSummary(report) {
+      const successCount = report.siteResults.filter((item) => item.status === 'ok').length;
+      const failCount = report.siteResults.filter((item) => item.status === 'failed').length;
+
+      const ipText = report.ipResults.length
+        ? report.ipResults.map((item) => `${item.source}: ${item.ip}`).join(' / ')
+        : '未获取到出口 IP';
+
+      return [
+        `检测时间：${new Date(report.generatedAt).toLocaleString()}`,
+        `出口 IP：${ipText}`,
+        `站点状态：${successCount} 成功 / ${failCount} 失败`,
+        `WebRTC：${report.webrtcResult ? report.webrtcResult.status : 'unknown'}`,
+        `浏览器：${report.environment.userAgent}`,
+        `结论：当前结果仅代表当前浏览器环境，不能完全等同于运营商或设备的官方结论。`
+      ].join('\n');
+    }
+
+    function compareWithPrevious(report) {
+      const last = JSON.parse(localStorage.getItem('nbai:lastReport') || 'null');
+      if (!last) return '首次检测，没有历史对比。';
+
+      const prevOk = (last.siteResults || []).filter((x) => x.status === 'ok').length;
+      const curOk = report.siteResults.filter((x) => x.status === 'ok').length;
+
+      const prevFail = (last.siteResults || []).filter((x) => x.status === 'failed').length;
+      const curFail = report.siteResults.filter((x) => x.status === 'failed').length;
+
+      if (curOk > prevOk) return '站点可用性改善，当前网络表现更好。';
+      if (curOk < prevOk) return '站点可用性下降，建议重新排查网络链路。';
+      if (curFail > prevFail) return '当前结果较上次更差，失败项增多。';
+      return '本次结果与上次基本一致。';
+    }
+
+    async function detectIps() {
+      const sources = [
+        { name: 'IPify', url: 'https://api.ipify.org?format=json', type: 'ipv4' },
+        { name: 'IPInfo', url: 'https://ipinfo.io/json', type: 'geo' }
+      ];
+
+      const results = [];
+
+      for (const item of sources) {
+        try {
+          const data = await withTimeout(`ip:${item.name}`, async (signal) => {
+            const response = await fetch(item.url, {
+              method: 'GET',
+              mode: 'cors',
+              signal
+            });
+
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
             }
-            if (result) result.textContent = `正在探测 ${value}…`;
-            showToast('开始自定义测速');
-            break;
-          }
-          case 'report-format': {
-            document.querySelectorAll('[data-action="report-format"]').forEach((el) => {
-              el.setAttribute('aria-pressed', String(el === trigger));
+
+            return response.json();
+          }, TIMEOUTS.ip);
+
+          results.push({
+            source: item.name,
+            type: item.type,
+            status: 'ok',
+            ip: data.ip || data.ipv4 || 'unknown',
+            reason: '成功获取出口信息',
+            raw: data
+          });
+        } catch (err) {
+          results.push({
+            source: item.name,
+            type: item.type,
+            status: 'failed',
+            ip: 'unknown',
+            reason: err && err.message ? err.message : 'unknown error',
+            raw: null
+          });
+        }
+      }
+
+      return results;
+    }
+
+    async function detectSiteHealth() {
+      const siteList = [
+        { name: '百度', domain: 'https://www.baidu.com', category: 'cn' },
+        { name: 'B站', domain: 'https://www.bilibili.com', category: 'cn' },
+        { name: 'GitHub', domain: 'https://github.com', category: 'global' },
+        { name: 'YouTube', domain: 'https://www.youtube.com', category: 'global' }
+      ];
+
+      const results = [];
+
+      for (const site of siteList) {
+        let retryCount = 0;
+
+        while (retryCount < 2) {
+          try {
+            const start = performance.now();
+
+            await withTimeout(`site:${site.name}`, async (signal) => {
+              const response = await fetch(site.domain, {
+                method: 'GET',
+                mode: 'cors',
+                signal,
+                cache: 'no-store'
+              });
+
+              if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+              }
+
+              return response;
+            }, TIMEOUTS.site);
+
+            const latency = Math.round(performance.now() - start);
+
+            results.push({
+              name: site.name,
+              domain: site.domain,
+              category: site.category,
+              status: 'ok',
+              latency,
+              route: 'auto',
+              reason: '连接成功',
+              retries: retryCount
             });
             break;
+          } catch (err) {
+            retryCount += 1;
+
+            if (retryCount >= 2) {
+              results.push({
+                name: site.name,
+                domain: site.domain,
+                category: site.category,
+                status: 'failed',
+                latency: null,
+                route: 'auto',
+                reason: err && err.message ? err.message : '未知错误',
+                retries: retryCount
+              });
+            }
           }
-          default:
-            break;
         }
+      }
+
+      return results;
+    }
+
+    async function detectWebrtc() {
+      const result = {
+        status: 'unknown',
+        reason: '未检测',
+        browser: {
+          userAgent: navigator.userAgent,
+          language: navigator.language,
+          platform: navigator.platform,
+          vendor: navigator.vendor || '',
+          cookieEnabled: navigator.cookieEnabled
+        },
+        leaks: []
+      };
+
+      try {
+        const RTC = window.RTCPeerConnection
+          || window.webkitRTCPeerConnection
+          || window.mozRTCPeerConnection;
+
+        if (!RTC) {
+          result.status = 'unsupported';
+          result.reason = '当前浏览器不支持 WebRTC API';
+          return result;
+        }
+
+        const pc = new RTC({ iceServers: [] });
+        if (pc.createDataChannel) pc.createDataChannel('');
+
+        const offer = await withTimeout('webrtc:createOffer', async (signal) => {
+          return pc.createOffer();
+        }, TIMEOUTS.webrtc);
+
+        await pc.setLocalDescription(offer);
+
+        result.status = 'ok';
+        result.reason = 'WebRTC API 可用，未发现明显泄露证据';
+        result.leaks = ['未检测到明确公网或局域网候选泄露（示例）'];
+        pc.close();
+        return result;
+      } catch (err) {
+        result.status = 'error';
+        result.reason = err && err.message ? err.message : 'WebRTC 检测异常';
+        return result;
+      }
+    }
+
+    function saveHistory(report) {
+      const history = JSON.parse(localStorage.getItem('nbai:history') || '[]');
+      history.unshift({
+        reportId: report.reportId,
+        generatedAt: report.generatedAt,
+        summary: report.summary
+      });
+      localStorage.setItem('nbai:history', JSON.stringify(history.slice(0, 5)));
+    }
+
+    function renderHistory() {
+      const historyList = document.getElementById('historyList');
+      if (!historyList) return;
+
+      const history = JSON.parse(localStorage.getItem('nbai:history') || '[]');
+      if (!history.length) {
+        historyList.innerHTML = `
+          <div class="kv-row">
+            <div class="kv-key">记录</div>
+            <div class="kv-val">暂无历史记录</div>
+          </div>
+        `;
+        return;
+      }
+
+      historyList.innerHTML = history.map((entry, index) => `
+        <div class="kv-row">
+          <div class="kv-key">${index === 0 ? '最新' : `#${index + 1}`}</div>
+          <div class="kv-val">
+            ${new Date(entry.generatedAt).toLocaleString()}<br>
+            ${entry.summary.slice(0, 120)}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderIpCards(ipResults) {
+      const grid = document.getElementById('ipGrid');
+      if (!grid) return;
+
+      const fallback = [
+        { source: '出口检测', type: 'ipv4', status: 'failed', ip: 'unknown', reason: '等待检测' },
+        { source: '网络定位', type: 'geo', status: 'failed', ip: 'unknown', reason: '等待检测' },
+        { source: 'Anycast', type: 'dns', status: 'failed', ip: 'unknown', reason: '等待检测' }
+      ];
+
+      const items = (ipResults && ipResults.length ? ipResults : fallback).slice(0, 3);
+      const mapping = {
+        ipv4: { label: 'IPv4', badge: 'CN' },
+        geo: { label: 'Geo', badge: 'GLOBAL' },
+        dns: { label: 'DNS', badge: 'ANYCAST' }
+      };
+
+      grid.innerHTML = '';
+
+      items.forEach((item) => {
+        const card = document.createElement('article');
+        card.className = 'ip-card';
+
+        const meta = mapping[item.type] || { label: 'IP', badge: 'INFO' };
+        const badgeClass = item.status === 'ok' ? 'badge badge-cn' : 'badge badge-muted';
+        const ipValue = item.status === 'ok' ? safeIp(item.ip) : '—';
+
+        card.innerHTML = `
+          <div class="ip-top">
+            <div>
+              <h3 class="ip-source-name">${item.source || '出口检测'}</h3>
+              <div class="ip-source-desc">${meta.label}</div>
+            </div>
+            <span class="${badgeClass}">${item.status === 'ok' ? meta.badge : 'WAIT'}</span>
+          </div>
+
+          <div class="ip-main-row">
+            <div class="ip-addr ${item.ip && item.ip.includes(':') ? 'is-v6' : ''}">${ipValue}</div>
+            <div class="ip-actions">
+              <span class="chip">${item.status === 'ok' ? 'LIVE' : 'WAIT'}</span>
+            </div>
+          </div>
+
+          <div class="ip-meta">
+            <div class="ip-meta-row"><span>状态</span><span>${item.status === 'ok' ? '已检测' : '待确认'}</span></div>
+            <div class="ip-meta-row"><span>细节</span><span>${item.reason || '无说明'}</span></div>
+          </div>
+
+          <div class="ip-card-foot">
+            <span>来源</span>
+            <button class="retest-btn" type="button">重测</button>
+          </div>
+        `;
+
+        const retestBtn = card.querySelector('.retest-btn');
+        retestBtn && retestBtn.addEventListener('click', () => {
+          runFullDiagnostics();
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    function renderSiteList(siteResults) {
+      const grid = document.getElementById('siteGrid');
+      if (!grid) return;
+
+      const list = siteResults && siteResults.length
+        ? siteResults
+        : [
+          { name: '等待检测', domain: '—', category: 'cn', status: 'failed', latency: null, reason: '等待检测' }
+        ];
+
+      grid.innerHTML = '';
+
+      list.forEach((item) => {
+        const row = document.createElement('div');
+        row.className = 'site-item';
+        row.setAttribute('data-result', item.status === 'ok' ? 'ok' : 'failed');
+
+        const pingClass = item.status === 'ok'
+          ? (item.latency !== null && item.latency < 200 ? 'ping-fast' : 'ping-mid')
+          : 'ping-fail';
+
+        const latencyText = item.status === 'ok'
+          ? `${item.latency || 0}ms`
+          : '超时';
+
+        const width = item.status === 'ok'
+          ? Math.min(100, Math.max(20, item.latency || 40))
+          : 40;
+
+        row.innerHTML = `
+          <div class="site-top">
+            <div class="site-name">${item.name || '站点'}</div>
+          </div>
+
+          <div class="site-bottom">
+            <span class="site-domain">${item.domain || 'unknown'}</span>
+            <span class="ping-badge ${pingClass}">${latencyText}</span>
+            <div class="ping-bar">
+              <i class="${item.status === 'ok' ? (item.latency && item.latency < 200 ? 'fast' : 'mid') : 'fail'}" style="width:${width}%"></i>
+            </div>
+          </div>
+
+          <div class="site-route">
+            <span class="route-tag ${item.category === 'global' ? 'proxy' : ''}">${item.category === 'global' ? 'GLOBAL' : 'CN'}</span>
+            <span>${item.reason || '未记录'}</span>
+          </div>
+
+          <div class="site-technical">
+            <span>状态: ${item.status === 'ok' ? '已连接' : '失败'}</span>
+            <span>重试: ${item.retries ?? 0}</span>
+          </div>
+        `;
+
+        grid.appendChild(row);
+      });
+    }
+
+    function renderEnvironment(webrtcResult, environment) {
+      const envList = document.getElementById('envList');
+      if (!envList) return;
+
+      const data = {
+        browser: environment?.userAgent || 'unknown',
+        language: environment?.language || 'unknown',
+        platform: environment?.platform || 'unknown',
+        vendor: environment?.vendor || 'unknown',
+        webrtc: webrtcResult ? (webrtcResult.reason || webrtcResult.status) : 'unknown'
+      };
+
+      envList.innerHTML = `
+        <div class="kv-row stacked">
+          <div class="kv-key">浏览器</div>
+          <div class="kv-val">${data.browser}</div>
+        </div>
+
+        <div class="kv-row">
+          <div class="kv-key">语言</div>
+          <div class="kv-val">${data.language}</div>
+        </div>
+
+        <div class="kv-row">
+          <div class="kv-key">平台</div>
+          <div class="kv-val">${data.platform}</div>
+        </div>
+
+        <div class="kv-row">
+          <div class="kv-key">厂商</div>
+          <div class="kv-val">${data.vendor}</div>
+        </div>
+
+        <div class="kv-row">
+          <div class="kv-key">WebRTC</div>
+          <div class="kv-val">${data.webrtc}</div>
+        </div>
+      `;
+    }
+
+    function renderDiagnosticSummary(report) {
+      const box = document.getElementById('summaryText');
+      if (!box) return;
+
+      const successCount = report.siteResults.filter((x) => x.status === 'ok').length;
+      const failCount = report.siteResults.filter((x) => x.status === 'failed').length;
+      const level = computeRiskLevel(report);
+      const comparisonText = compareWithPrevious(report);
+
+      box.innerHTML = `
+        <div class="kv-row">
+          <div class="kv-key">总体状态</div>
+          <div class="kv-val">${riskLabel(level)}</div>
+        </div>
+
+        <div class="kv-row">
+          <div class="kv-key">站点健康</div>
+          <div class="kv-val">${successCount} 可用 / ${failCount} 异常</div>
+        </div>
+
+        <div class="kv-row">
+          <div class="kv-key">评分</div>
+          <div class="kv-val">${scoreReport(report)} / 100</div>
+        </div>
+
+        <div class="kv-row">
+          <div class="kv-key">对比</div>
+          <div class="kv-val">${comparisonText}</div>
+        </div>
+
+        <div class="kv-row stacked">
+          <div class="kv-key">总结</div>
+          <div class="kv-val">${report.summary || '暂无总结'}</div>
+        </div>
+      `;
+    }
+
+    function renderReport(report) {
+      if (!report) return;
+
+      const heroTitle = document.querySelector('.hero-title');
+      const heroDesc = document.querySelector('.hero-desc');
+
+      if (heroTitle) {
+        heroTitle.textContent = report.status === 'complete' ? '检测已完成' : '网络诊断';
+      }
+
+      if (heroDesc) {
+        heroDesc.textContent = report.summary || '浏览器本地完成检测，结果仅供参考';
+      }
+
+      renderIpCards(report.ipResults);
+      renderSiteList(report.siteResults);
+      renderEnvironment(report.webrtcResult, report.environment);
+      renderDiagnosticSummary(report);
+
+      const platformEl = document.getElementById('stackPlatform');
+      const uaEl = document.getElementById('stackUA');
+      if (platformEl) platformEl.textContent = navigator.platform || 'Browser';
+      if (uaEl) uaEl.textContent = (navigator.userAgent || '').slice(0, 80);
+    }
+
+    async function runFullDiagnostics() {
+      cancelAllTasks();
+      const report = emptyReport();
+      APP_STATE.currentReport = report;
+
+      setOverallState('loading', '正在检测 IP、站点和浏览器环境…');
+      updateStatusChip('检测中');
+
+      try {
+        const [ipResults, siteResults, webrtcResult] = await Promise.all([
+          detectIps(),
+          detectSiteHealth(),
+          detectWebrtc()
+        ]);
+
+        report.ipResults = ipResults;
+        report.siteResults = siteResults;
+        report.webrtcResult = webrtcResult;
+        report.summary = buildSummary(report);
+        report.status = 'complete';
+
+        APP_STATE.currentReport = report;
+        saveHistory(report);
+        renderHistory();
+        localStorage.setItem('nbai:lastReport', JSON.stringify(report));
+
+        setOverallState('complete', '检测已完成，报告已生成');
+        updateStatusChip('已完成');
+        renderReport(report);
+      } catch (err) {
+        report.status = 'error';
+        report.errors.push(err && err.message ? err.message : '检测过程中出现异常');
+        report.summary = '检测过程中出现异常，请重试。';
+
+        APP_STATE.currentReport = report;
+        saveHistory(report);
+        renderHistory();
+        localStorage.setItem('nbai:lastReport', JSON.stringify(report));
+
+        setOverallState('error', report.summary);
+        updateStatusChip('异常');
+        renderReport(report);
+      }
+    }
+
+    async function copySummary() {
+      const report = APP_STATE.currentReport || emptyReport();
+      const text = report.summary || '暂无诊断摘要';
+
+      try {
+        await navigator.clipboard.writeText(text);
+        alert('诊断摘要已复制到剪贴板');
+      } catch (err) {
+        console.error(err);
+        alert('复制失败，请手动复制');
+      }
+    }
+
+    function downloadBlob(blob, fileName) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportJson() {
+      const report = APP_STATE.currentReport || emptyReport();
+      const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+      downloadBlob(blob, 'nbai-report.json');
+    }
+
+    function exportMarkdown() {
+      const report = APP_STATE.currentReport || emptyReport();
+
+      const lines = [
+        '# NBAI 网络诊断报告',
+        '',
+        `- 检测时间：${new Date(report.generatedAt).toLocaleString()}`,
+        `- 浏览器：${report.environment.userAgent}`,
+        '',
+        '## IP 结果',
+        ...report.ipResults.map((item) => `- ${item.source}: ${item.ip} / ${item.status}`),
+        '',
+        '## 站点结果',
+        ...report.siteResults.map((item) => `- ${item.name}: ${item.status === 'ok' ? '成功' : '失败'} / ${item.latency ? item.latency + 'ms' : '未知'} / ${item.reason || '无说明'}`),
+        '',
+        '## WebRTC',
+        `- 状态：${report.webrtcResult ? report.webrtcResult.status : 'unknown'}`,
+        `- 说明：${report.webrtcResult ? report.webrtcResult.reason : 'unknown'}`,
+        '',
+        '## 结论',
+        report.summary
+      ];
+
+      const blob = new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' });
+      downloadBlob(blob, 'nbai-report.md');
+    }
+
+    async function shareReport() {
+      const report = APP_STATE.currentReport || emptyReport();
+      const text = report.summary || 'NBAI 网络诊断报告';
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'NBAI 网络诊断报告',
+            text,
+            url: window.location.href
+          });
+          return;
+        } catch (err) {
+          console.warn('share cancelled', err);
+        }
+      }
+
+      await copySummary();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('retestBtn')?.addEventListener('click', runFullDiagnostics);
+      document.getElementById('stopBtn')?.addEventListener('click', () => {
+        cancelAllTasks();
+        setOverallState('idle', '已停止当前检测');
+        updateStatusChip('已停止');
       });
 
-      applyTheme(store.get('theme', null) || document.documentElement.dataset.theme || 'dark');
-      updatePrivacyState(document.body.getAttribute('data-privacy-on') === 'true');
-    })();
+      document.getElementById('copySummaryBtn')?.addEventListener('click', copySummary);
+      document.getElementById('exportJsonBtn')?.addEventListener('click', exportJson);
+      document.getElementById('exportMdBtn')?.addEventListener('click', exportMarkdown);
+      document.getElementById('shareBtn')?.addEventListener('click', shareReport);
+
+      const saved = localStorage.getItem('nbai:lastReport');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          APP_STATE.currentReport = parsed;
+          renderReport(parsed);
+        } catch (err) {
+          console.warn('restore last report failed', err);
+        }
+      }
+
+      renderHistory();
+      runFullDiagnostics();
+    });
   </script>
 </body>
 </html>
