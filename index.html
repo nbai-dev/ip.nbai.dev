@@ -37,6 +37,7 @@
       }
 
       document.documentElement.dataset.theme = theme;
+      document.body && document.body.setAttribute('data-privacy-on', 'false');
     })();
   </script>
 
@@ -53,18 +54,18 @@
       --primary: #c3e88b;
       --primary-2: #d9f5a6;
       --primary-soft: rgba(195, 232, 139, 0.12);
-      --text: #edf2e8;
-      --text-2: #bbc7b9;
-      --text-3: #98a594;
+      --text: #eef3ea;
+      --text-2: #c2cdbd;
+      --text-3: #9aa893;
       --success: #a7dcb5;
       --success-soft: rgba(167, 220, 181, 0.13);
       --warning: #efca86;
       --warning-soft: rgba(239, 202, 134, 0.12);
       --danger: #f2a79b;
       --danger-soft: rgba(242, 167, 155, 0.12);
-      --violet: #bbc9e6;
-      --violet-soft: rgba(187, 201, 230, 0.12);
-      --shadow: rgba(0, 0, 0, 0.24);
+      --violet: #b9c7ed;
+      --violet-soft: rgba(185, 199, 237, 0.12);
+      --shadow: rgba(0, 0, 0, 0.22);
       --radius-sm: 6px;
       --radius-md: 10px;
       --radius-lg: 16px;
@@ -77,25 +78,25 @@
       color-scheme: light;
       --bg-main: #f3f3ed;
       --bg-card: #fafbf5;
-      --bg-panel: #f0f3ea;
-      --bg-soft: #eef2e9;
-      --bg-input: #f3f5ef;
-      --border: #d8dccc;
-      --border-strong: #8a9484;
+      --bg-panel: #f3f5ee;
+      --bg-soft: #eef2ea;
+      --bg-input: #f4f7ef;
+      --border: #d8dfd0;
+      --border-strong: #8b9587;
       --primary: #3d6228;
       --primary-2: #2f4d1c;
       --primary-soft: rgba(61, 98, 40, 0.08);
-      --text: #1f2a21;
-      --text-2: #4b5848;
-      --text-3: #5d6a57;
+      --text: #1e2a20;
+      --text-2: #4d5847;
+      --text-3: #5f6d5d;
       --success: #326344;
       --success-soft: rgba(50, 99, 68, 0.08);
       --warning: #805213;
       --warning-soft: rgba(128, 82, 19, 0.08);
       --danger: #a14233;
       --danger-soft: rgba(161, 66, 51, 0.08);
-      --violet: #4b5e85;
-      --violet-soft: rgba(75, 94, 133, 0.09);
+      --violet: #4b5f86;
+      --violet-soft: rgba(75, 95, 134, 0.09);
       --shadow: rgba(42, 53, 38, 0.06);
     }
 
@@ -135,12 +136,12 @@
       position: sticky;
       top: 0;
       z-index: 30;
-      background: rgba(17, 22, 19, 0.86);
+      background: rgba(17, 22, 19, 0.82);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
     }
     html[data-theme="light"] .navbar {
-      background: rgba(243, 243, 237, 0.86);
+      background: rgba(243, 243, 237, 0.84);
     }
 
     .navbar-inner {
@@ -515,11 +516,17 @@
       font: 500 clamp(18px, 1.6vw, 24px) / 1.3 var(--font-mono);
       letter-spacing: -0.055em;
       min-width: 0;
-      overflow-wrap: anywhere;
       font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+      transition: filter 180ms var(--ease), opacity 180ms var(--ease);
     }
     .ip-addr.is-v6 { font-size: 14px; letter-spacing: -0.03em; }
     .ip-addr.is-muted { color: var(--text-3); font-family: var(--font-sans); }
+    body[data-privacy-on="true"] .masked {
+      filter: blur(6px);
+      user-select: none;
+      color: var(--text-3);
+    }
     .ip-actions { display: flex; align-items: center; gap: 6px; }
     .chip {
       color: var(--text-3);
@@ -1172,7 +1179,7 @@
     }
   </style>
 </head>
-<body>
+<body data-privacy-on="false">
   <a class="skip-link" href="#appRoot">跳至诊断内容</a>
   <noscript>
     <p class="noscript-tip">本工具依赖 JavaScript 完成探测，请启用 JavaScript 后重新打开页面。</p>
@@ -1287,7 +1294,7 @@
           <span class="badge badge-cn">国内</span>
         </div>
         <div class="ip-main-row">
-          <div class="ip-addr">203.0.113.1</div>
+          <div class="ip-addr masked">203.0.113.1</div>
           <div class="ip-actions">
             <span class="chip">IPv4</span>
             <button class="icon-btn" type="button" aria-label="刷新此出口">
@@ -1314,7 +1321,7 @@
           <span class="badge badge-anycast">Anycast</span>
         </div>
         <div class="ip-main-row">
-          <div class="ip-addr">172.67.68.109</div>
+          <div class="ip-addr masked">172.67.68.109</div>
           <div class="ip-actions">
             <span class="chip">IPv4</span>
             <button class="icon-btn" type="button" aria-label="刷新此出口">
@@ -1341,7 +1348,7 @@
           <span class="badge badge-global">海外</span>
         </div>
         <div class="ip-main-row">
-          <div class="ip-addr">198.51.100.4</div>
+          <div class="ip-addr masked">198.51.100.4</div>
           <div class="ip-actions">
             <span class="chip">IPv4</span>
             <button class="icon-btn" type="button" aria-label="刷新此出口">
@@ -1375,7 +1382,7 @@
     </header>
 
     <section class="panel routing-map" aria-labelledby="routingMapTitle">
-      <div class="panel-title" id="routingMapTitle">分流路径示意 <span class="panel-sub">预期策��� · 非逐站实测路由</span></div>
+      <div class="panel-title" id="routingMapTitle">分流路径示意 <span class="panel-sub">预期策略 · 非逐站实测路由</span></div>
       <div class="routing-lanes">
         <div class="routing-lane">
           <div class="routing-path"><span>本机</span><span aria-hidden="true">→</span><span class="route-tag">预期直连</span><span aria-hidden="true">→</span><span>国内服务</span></div>
@@ -1447,7 +1454,7 @@
       <div class="panel">
         <div class="panel-head">
           <div class="panel-title"><span class="flag">🌍</span>国际与 AI 平台<span class="panel-sub">预期代理</span></div>
-          <span class="avg-badge" id="globalAvgBadge">平均：171ms</span>
+          <span class="avg-badge" id="globalAvgBadge">平��：171ms</span>
         </div>
         <div class="site-grid" id="globalSiteGrid">
           <div class="site-item" data-result="ok">
@@ -1503,11 +1510,11 @@
         <div class="kv-list">
           <div class="kv-row stacked">
             <span class="kv-key">公网反射地址 (srflx)</span>
-            <span class="kv-val" id="rtcPublicIp">203.0.113.9</span>
+            <span class="kv-val masked" id="rtcPublicIp">203.0.113.9</span>
           </div>
           <div class="kv-row stacked">
             <span class="kv-key">局域网 / 候选地址</span>
-            <span class="kv-val" id="rtcLocalIp">10.0.0.18 / 192.168.1.32</span>
+            <span class="kv-val masked" id="rtcLocalIp">10.0.0.18 / 192.168.1.32</span>
           </div>
           <div class="kv-row">
             <span class="kv-key">安全评估结论</span>
@@ -1522,7 +1529,7 @@
           <span class="badge badge-global" id="dnsBadge">命中</span>
         </div>
         <div class="kv-list">
-          <div class="kv-row"><span class="kv-key">命中机房</span><span class="kv-val" id="cfColoVal">HKG / SIN</span></div>
+          <div class="kv-row"><span class="kv-key">命中机房</span><span class="kv-val masked" id="cfColoVal">HKG / SIN</span></div>
           <div class="kv-row"><span class="kv-key">HTTP / TLS 协议</span><span class="kv-val" id="cfHttpVal">HTTP/2 · TLS 1.3</span></div>
           <div class="kv-row"><span class="kv-key">WARP / 隧道状态</span><span class="kv-val" id="cfWarpVal">未启用 / 正常</span></div>
         </div>
@@ -1579,8 +1586,8 @@
     </div>
     <div class="tab-row" aria-label="报告格式">
       <button type="button" class="btn" data-action="report-format" data-format="text" aria-pressed="true">💬 简洁文本</button>
-      <button type="button" class="btn" data-action="report-format" data-format="md" aria-pressed="false">📝 Markdown 表格</button>
-      <button type="button" class="btn" data-action="report-format" data-format="ai" aria-pressed="false">🤖 AI 排障 + JSON</button>
+      <button type="button" class="btn" data-action="report-format" data-format="md" aria-pressed="false">📝 Markdown</button>
+      <button type="button" class="btn" data-action="report-format" data-format="ai" aria-pressed="false">🤖 AI 排障</button>
       <label class="mask-label"><input type="checkbox" checked /> 自动打码 IP</label>
     </div>
     <textarea class="report-textarea" id="reportOutput" readonly spellcheck="false">NBAI · IP 与网络分流诊断
@@ -1638,6 +1645,8 @@
         const next = normalizeTheme(theme) || 'dark';
         document.documentElement.dataset.theme = next;
         store.set('theme', next);
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', next === 'light' ? '#f3f3ed' : '#111613');
       }
 
       const toast = document.getElementById('toast');
@@ -1649,23 +1658,33 @@
         showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 1800);
       };
 
+      const updatePrivacyState = (isPrivate) => {
+        const body = document.body;
+        if (!body) return;
+        const nextState = isPrivate ? 'true' : 'false';
+        body.setAttribute('data-privacy-on', nextState);
+        const trigger = document.querySelector('[data-action="toggle-privacy"]');
+        const label = trigger && trigger.querySelector('span');
+        if (label) label.textContent = isPrivate ? '显示 IP' : '隐藏 IP';
+        trigger && trigger.setAttribute('aria-pressed', String(isPrivate));
+      };
+
       document.addEventListener('click', (event) => {
         const trigger = event.target.closest('[data-action]');
         if (!trigger) return;
 
         const action = trigger.dataset.action;
-
         switch (action) {
           case 'toggle-theme': {
             const nextTheme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
             applyTheme(nextTheme);
+            showToast(nextTheme === 'light' ? '已切换至浅色模式' : '已切换至深色模式');
             break;
           }
           case 'toggle-privacy': {
-            const isPrivate = document.body.dataset.privacyOn === 'true';
-            document.body.dataset.privacyOn = String(!isPrivate);
-            const label = trigger.querySelector('span');
-            if (label) label.textContent = !isPrivate ? '显示 IP' : '隐藏 IP';
+            const isPrivate = document.body.getAttribute('data-privacy-on') !== 'true';
+            updatePrivacyState(isPrivate);
+            showToast(isPrivate ? '已隐藏 IP' : '已显示 IP');
             break;
           }
           case 'open-report': {
@@ -1714,6 +1733,7 @@
       });
 
       applyTheme(store.get('theme', null) || document.documentElement.dataset.theme || 'dark');
+      updatePrivacyState(document.body.getAttribute('data-privacy-on') === 'true');
     })();
   </script>
 </body>
