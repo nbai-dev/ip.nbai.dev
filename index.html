@@ -668,7 +668,7 @@
         <div class="brand-text">
           <div class="brand-title-wrap">
             <h1 class="brand-title">NBAI · IP 与网络分流诊断</h1>
-            <span class="version-badge" data-ref="version">v2.13.5</span>
+            <span class="version-badge" data-ref="version">v2.13.7</span>
           </div>
           <span class="brand-sub">ip.nbai.dev · 浏览器本地检测</span>
         </div>
@@ -953,7 +953,7 @@
       <div class="footer-brand">
         <span class="brand-logo" aria-hidden="true">NB</span>
         <div>
-          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.13.5</span></div>
+          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.13.7</span></div>
           <div class="footer-note">© 2026 NBAI · 检测在浏览器本地完成，无需登录</div>
         </div>
       </div>
@@ -973,7 +973,7 @@
   <!-- 诊断摘要弹窗 -->
   <dialog class="report-modal" id="reportModal" aria-labelledby="reportTitle">
     <div class="modal-top">
-      <div class="modal-title" id="reportTitle"><span aria-hidden="true">📋</span> 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.13.5</span></div>
+      <div class="modal-title" id="reportTitle"><span aria-hidden="true">📋</span> 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.13.7</span></div>
       <button type="button" class="btn" data-action="close-report">关闭</button>
     </div>
     <div class="tab-row" aria-label="报告格式">
@@ -1013,7 +1013,7 @@
     /* ============================================================
      * 0. 常量与数据
      * ==========================================================*/
-    const VERSION = 'v2.13.5';
+    const VERSION = 'v2.13.7';
     const REPO_URL = 'https://github.com/nbai-dev/ip.nbai.dev';
     const SITE_URL = 'https://ip.nbai.dev';
     const STORE_PREFIX = 'nbai:';
@@ -1889,18 +1889,18 @@
                   aria-label="${escapeHtml(s.name)} 探测中，点击重测">
             <span class="site-top">
               <span class="site-name">${escapeHtml(s.name)}</span>
-              <span class="ping-badge ping-wait" id="ping_${group}_${s.id}">测速中</span>
+              <span class="ping-badge ping-wait" id="${siteElId(group, s.id, 'ping')}">测速中</span>
             </span>
             <span class="site-bottom">
               <span class="site-domain">${escapeHtml(s.domain)}</span>
-              <span class="ping-bar" id="barwrap_${group}_${s.id}" role="img" aria-label="延迟条形图：等待探测"><i class="wait" id="bar_${group}_${s.id}"></i></span>
+              <span class="ping-bar" id="${siteElId(group, s.id, 'barwrap')}" role="img" aria-label="延迟条形图：等待探测"><i class="wait" id="${siteElId(group, s.id, 'bar')}"></i></span>
             </span>
-            <span class="site-route"><span class="route-tag ${group === 'global' ? 'proxy' : ''}">${group === 'cn' ? '预期直连' : '预期代理'}</span><span class="site-route-status" id="route_${group}_${s.id}">检测中</span></span>
-            <span class="site-failure" id="failure_${group}_${s.id}" hidden></span>
+            <span class="site-route"><span class="route-tag ${group === 'global' ? 'proxy' : ''}">${group === 'cn' ? '预期直连' : '预期代理'}</span><span class="site-route-status" id="${siteElId(group, s.id, 'route')}">检测中</span></span>
+            <span class="site-failure" id="${siteElId(group, s.id, 'failure')}" hidden></span>
             ${s.serviceNote ? `<span class="site-actual">${escapeHtml(s.serviceNote)}</span>` : ''}
             <span class="site-technical" ${state.siteDetails ? '' : 'hidden'}>
               <span class="site-actual">实际出口 IP / 国家：未验证</span>
-              <span class="site-evidence" id="evidence_${group}_${s.id}">等待探测资源响应</span>
+              <span class="site-evidence" id="${siteElId(group, s.id, 'evidence')}">等待探测资源响应</span>
               <span class="site-actual">点击卡片重测 · 真实路径请在客户端确认</span>
             </span>
           </button>
@@ -1912,21 +1912,20 @@
     }
 
     function paintSiteBadge(group, site) {
-      const badge = document.getElementById(`ping_${group}_${site.id}`);
-      if (!badge) return;
-      const bar = document.getElementById(`bar_${group}_${site.id}`);
+      const badge = siteEl(group, site.id, 'ping');
+      const bar = siteEl(group, site.id, 'bar');
       const ms = state.ping[group][site.id];
       const result = siteResult(ms);
       const cancelled = result === 'waiting' && !state.running && !siteScopes.has(`${group}:${site.id}`);
       badge.closest('.site-item').dataset.result = result;
       badge.closest('.site-item').setAttribute('aria-busy', String(result === 'waiting' && !cancelled));
-      const failure = document.getElementById(`failure_${group}_${site.id}`);
+      const failure = siteEl(group, site.id, 'failure');
       failure.hidden = result !== 'failed';
       setText(failure, result === 'failed' ? '资源未响应或被拦截，不等于网站不可用' : '');
       scheduleSiteOverview();
-      setText(document.getElementById(`route_${group}_${site.id}`), result === 'ok' ? '● 探测连通' : result === 'failed' ? '! 未确认连通' : cancelled ? '未完成' : '检测中');
+      setText(siteEl(group, site.id, 'route'), result === 'ok' ? '● 探测连通' : result === 'failed' ? '! 未确认连通' : cancelled ? '未完成' : '检测中');
       const evidence = state.pingEvidence && state.pingEvidence[group][site.id];
-      setText(document.getElementById(`evidence_${group}_${site.id}`), evidence
+      setText(siteEl(group, site.id, 'evidence'), evidence
         ? `${evidence.backup ? '备用资源' : '响应资源'}：${evidence.resource || evidence.host} · ${evidence.kind === 'image' ? '图片' : 'Fetch'}`
         : '实际路径待客户端确认');
 
@@ -1944,13 +1943,14 @@
 
       // 条形图是唯一编码「延迟量级」的视觉元素，用 role=img + 文字描述呈现给读屏，
       // 让用户不仅听到毫秒数，也知道这个延迟在本站的快 / 中 / 慢分档里落在哪一档。
-      const barWrap = document.getElementById(`barwrap_${group}_${site.id}`);
-      const setBarLabel = (text) => { if (barWrap) barWrap.setAttribute('aria-label', text); };
+      const barWrap = siteEl(group, site.id, 'barwrap');
+      const setBarLabel = (text) => { barWrap.setAttribute('aria-label', text); };
 
       if (result === 'waiting') {
         badge.className = 'ping-badge ping-wait';
         setText(badge, cancelled ? '未完成' : '测速中');
-        if (bar) { bar.className = cancelled ? '' : 'wait'; bar.style.width = ''; }
+        bar.className = cancelled ? '' : 'wait';
+        bar.style.width = '';
         setBarLabel(cancelled ? '延迟条形图：探测已停止' : '延迟条形图：正在探测');
         return;
       }
@@ -1960,17 +1960,16 @@
         const levelText = level === 'fast' ? '快' : level === 'mid' ? '中等' : '慢';
         badge.className = 'ping-badge ping-' + level;
         setText(badge, `${ms} ms`);
-        if (bar) {
-          bar.className = level;
-          bar.style.width = Math.max(6, Math.min(100, (ms / 600) * 100)).toFixed(1) + '%';
-        }
+        bar.className = level;
+        bar.style.width = Math.max(6, Math.min(100, (ms / 600) * 100)).toFixed(1) + '%';
         setBarLabel(`延迟条形图：${ms} 毫秒，属${levelText}档（本站分档为 120 毫秒内为快、350 毫秒内为中等、其余为慢）`);
         return;
       }
 
       badge.className = 'ping-badge ping-fail';
       setText(badge, '未连通');
-      if (bar) { bar.className = 'fail'; bar.style.width = '100%'; }
+      bar.className = 'fail';
+      bar.style.width = '100%';
       setBarLabel('延迟条形图：未连通，条形满格表示未取得响应');
 
       const hosts = [...new Set((site.probes || []).map((p) => hostOf(typeof p === 'string' ? p : p.url)))];
@@ -1980,6 +1979,29 @@
         : '探测地址均无响应';
       const body = detail && detail.length ? '\n\n失败原因：\n· ' + detail.join('\n· ') : '';
       badge.title = head + body + '\n\n常见原因：代理规则未放行 / DNS 解析异常 / 浏览器扩展拦截 / 该站对海外 IP 拒绝服务';
+    }
+
+    /**
+     * 站点卡片子元素的 id 拼装与查找。
+     *
+     * 旧实现把 `ping_${group}_${site.id}` 这类约定在两处各写一遍：
+     * 一处建 HTML 模板，一处 getElementById 取回。约定靠人工同步，
+     * 一旦两边拼错，取到的是 null，而 setText 的 `if (el && ...)`
+     * 会把它静静吞掉——表现只是「界面某个数字不更新」，极难排查。
+     *
+     * 现在 id 格式只有这一处定义；查不到元素时抛出带上下文的错误，
+     * 让约定一旦被破坏就立刻暴露，而不是悄悄失效。
+     */
+    function siteElId(group, siteId, part) {
+      return `${part}_${group}_${siteId}`;
+    }
+
+    function siteEl(group, siteId, part) {
+      const el = document.getElementById(siteElId(group, siteId, part));
+      if (!el) {
+        throw new Error(`站点卡片缺少子元素：group=${group} id=${siteId} part=${part}`);
+      }
+      return el;
     }
 
     function paintAverage(group) {
@@ -2863,6 +2885,27 @@
       return `${avg}ms (${ok.length}/${list.length})`;
     };
 
+    /**
+     * 报告里必须始终出现的两条免责声明。
+     *
+     * 这两条是产品的核心承诺——「预期路径」「观测到的资源响应」「已验证路径」
+     * 必须保持区分，不能混为一谈。此前它们在纯文本与 Markdown 两种报告里
+     * 各手写一遍（共四处），措辞一旦只改一处，两种导出会互相矛盾。
+     * 现在只有这一处定义，报告函数按格式加前缀引用。
+     */
+    const DISCLAIMER_ROUTE = '预期策略：国内 DIRECT / 国际 PROXY；实际逐站路径未验证，请以代理客户端连接记录为准。';
+    const DISCLAIMER_USAGE = '资源响应不等于业务可用；Claude 等服务的地区限制、登录及账号权限未验证。';
+
+    /**
+     * 实际路径的统一表述。
+     *
+     * 快照里的 actualRoute 恒为 'unknown'——浏览器侧无法判定某个站点的
+     * 流量实际走了哪条线路。探测只能证明资源有响应，不能证明路径，
+     * 因此这里必须如实说「未验证」，不能因为探测成功就写成已连通。
+     */
+    // 当前没有逐站路径验证的数据源，不能把任意路径字符串升级为证据。
+    const routeStateText = () => '未验证（浏览器侧无法判定逐站实际线路）';
+
     function reportText(snap) {
       const lines = [];
       lines.push(`📊 NBAI 网络分流诊断报告 ${VERSION} (${snap.time})`);
@@ -2881,8 +2924,15 @@
       lines.push(`• 国内：${snap.latency.cn.map((s) => `${s.name} ${latencyText(s.ms)}`).join(' · ')}`);
       lines.push(`• 海外：${snap.latency.global.map((s) => `${s.name} ${latencyText(s.ms)}`).join(' · ')}`);
       lines.push(`• 均值：国内 ${avgText(snap.latency.cn)} / 海外 ${avgText(snap.latency.global)}`);
-      lines.push('• 预期策略：国内 DIRECT / 国际 PROXY；实际逐站路径未验证，请以代理客户端连接记录为准。');
-      lines.push('• 资源响应不等于业务可用；Claude 等服务的地区限制、登录及账号权限未验证。');
+      // 预期路径与实际路径必须分开陈述：这里只知道策略应当如何，
+      // 不知道每个站点的流量实际走了哪条线路。
+      // 同一区域内所有站点的预期路径相同，压缩成集合去重输出，
+      // 避免出现「DIRECT/DIRECT/DIRECT…」这种没有信息量的重复。
+      const expectedRoutes = (list) => [...new Set(list.map((s) => s.expectedRoute || '未知'))].join('/') || '无站点样本';
+      lines.push(`• 预期路径：国内 ${expectedRoutes(snap.latency.cn)} / 海外 ${expectedRoutes(snap.latency.global)}`);
+      lines.push(`• 实际路径：${routeStateText(snap)}`);
+      lines.push(`• ${DISCLAIMER_ROUTE}`);
+      lines.push(`• ${DISCLAIMER_USAGE}`);
       lines.push('');
       lines.push('🛡️ WebRTC 与 Anycast：');
       lines.push(`• WebRTC 公网：${snap.webrtc.publicIp || '未取得候选'}（${snap.webrtc.verdict}）`);
@@ -2909,19 +2959,22 @@
         lines.push(`| ${c.name} | ${c.status} | ${c.ip ? '`' + c.ip + '`' : '-'} | ${c.ip ? `${c.location} ${c.isp}` : '-'} | ${c.ms ? c.ms + 'ms' : '-'} |`);
       });
       lines.push('');
-      lines.push('| 站点 | 区域 | 延迟 |');
-      lines.push('| :--- | :--- | :--- |');
+      lines.push('| 站点 | 区域 | 预期路径 | 实际路径 | 延迟 |');
+      lines.push('| :--- | :--- | :--- | :--- | :--- |');
       const rows = [
-        ...snap.latency.cn.map((s) => [s.name, '国内', s.ms]),
-        ...snap.latency.global.map((s) => [s.name, '海外', s.ms])
+        ...snap.latency.cn.map((s) => [s.name, '国内', s]),
+        ...snap.latency.global.map((s) => [s.name, '海外', s])
       ];
-      rows.forEach(([name, area, ms]) => {
-        lines.push(`| ${name} | ${area} | ${latencyText(ms)} |`);
+      rows.forEach(([name, area, s]) => {
+        // 当前没有逐站路径证据，原始字段中的任意字符串都不代表已验证。
+        const actual = '未验证';
+        lines.push(`| ${name} | ${area} | ${s.expectedRoute || '未知'} | ${actual} | ${latencyText(s.ms)} |`);
       });
       lines.push('');
       lines.push(`> 均值：国内 ${avgText(snap.latency.cn)} · 海外 ${avgText(snap.latency.global)}`);
-      lines.push('> 预期策略：国内 DIRECT / 国际 PROXY；实际逐站路径未验证，请以代理客户端连接记录为准。');
-      lines.push('> 资源响应不等于业务可用；Claude 等服务的地区限制、登录及账号权限未验证。');
+      lines.push(`> 实际路径：${routeStateText(snap)}`);
+      lines.push(`> ${DISCLAIMER_ROUTE}`);
+      lines.push(`> ${DISCLAIMER_USAGE}`);
       lines.push(`> WebRTC：${snap.webrtc.verdict} · Anycast：${snap.anycast.colo} · HTTP/TLS：${snap.anycast.http}`);
       lines.push('>');
       lines.push(`> 项目地址：[${REPO_URL}](${REPO_URL})`);
