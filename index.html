@@ -17,15 +17,8 @@
   <script>
     /* 首屏前应用主题，避免浅色模式用户看到深色闪烁 */
     (function () {
-      var theme = null;
-      try {
-        theme = localStorage.getItem('nbai:theme');
-        // 与 store.set 的 JSON 编码一致，同时兼容旧版纯字符串。
-        if (theme !== 'light' && theme !== 'dark') theme = JSON.parse(theme);
-      } catch (e) {}
-      if (theme !== 'light' && theme !== 'dark') {
-        theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-      }
+      // 每次打开均以系统配色为准；手动切换仅影响当前页面。
+      var theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
       document.documentElement.dataset.theme = theme;
     })();
   </script>
@@ -668,7 +661,7 @@
         <div class="brand-text">
           <div class="brand-title-wrap">
             <h1 class="brand-title">NBAI · IP 与网络分流诊断</h1>
-            <span class="version-badge" data-ref="version">v2.13.7</span>
+            <span class="version-badge" data-ref="version">v2.13.8</span>
           </div>
           <span class="brand-sub">ip.nbai.dev · 浏览器本地检测</span>
         </div>
@@ -953,7 +946,7 @@
       <div class="footer-brand">
         <span class="brand-logo" aria-hidden="true">NB</span>
         <div>
-          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.13.7</span></div>
+          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.13.8</span></div>
           <div class="footer-note">© 2026 NBAI · 检测在浏览器本地完成，无需登录</div>
         </div>
       </div>
@@ -973,7 +966,7 @@
   <!-- 诊断摘要弹窗 -->
   <dialog class="report-modal" id="reportModal" aria-labelledby="reportTitle">
     <div class="modal-top">
-      <div class="modal-title" id="reportTitle"><span aria-hidden="true">📋</span> 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.13.7</span></div>
+      <div class="modal-title" id="reportTitle"><span aria-hidden="true">📋</span> 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.13.8</span></div>
       <button type="button" class="btn" data-action="close-report">关闭</button>
     </div>
     <div class="tab-row" aria-label="报告格式">
@@ -1013,7 +1006,7 @@
     /* ============================================================
      * 0. 常量与数据
      * ==========================================================*/
-    const VERSION = 'v2.13.7';
+    const VERSION = 'v2.13.8';
     const REPO_URL = 'https://github.com/nbai-dev/ip.nbai.dev';
     const SITE_URL = 'https://ip.nbai.dev';
     const STORE_PREFIX = 'nbai:';
@@ -3214,7 +3207,6 @@
     function toggleTheme() {
       const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
       document.documentElement.dataset.theme = next;
-      store.set('theme', next);
     }
 
     /* ============================================================
