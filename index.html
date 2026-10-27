@@ -319,6 +319,13 @@
     /* Diagnostics and reports. */
     .diag-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
     .diag-grid > .panel:last-child { grid-column: 1/-1; }
+    .webrtc-control { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 12px; }
+    .webrtc-control summary { cursor: pointer; min-height: 44px; padding-block: 10px; color: var(--text-2); font-size: 13px; }
+    .webrtc-control-body { display: grid; gap: 12px; padding-top: 8px; }
+    .webrtc-control-body p { color: var(--text-3); font-size: 12px; line-height: 1.85; overflow-wrap: anywhere; }
+    .webrtc-control-body p a { color: var(--text-2); text-underline-offset: 3px; white-space: nowrap; }
+    .webrtc-extension-links { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+    .webrtc-extension-links .btn { min-height: 44px; }
     .kv-list { display: grid; }
     .kv-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border-bottom: 1px solid var(--border); padding: 12px 0; min-width: 0; }
     .kv-row:last-child { border: 0; }
@@ -661,7 +668,7 @@
         <div class="brand-text">
           <div class="brand-title-wrap">
             <h1 class="brand-title">NBAI · IP 与网络分流诊断</h1>
-            <span class="version-badge" data-ref="version">v2.13.8</span>
+            <span class="version-badge" data-ref="version">v2.14.0</span>
           </div>
           <span class="brand-sub">ip.nbai.dev · 浏览器本地检测</span>
         </div>
@@ -896,6 +903,20 @@
             <span class="kv-val" id="rtcVerdict">分析中…</span>
           </div>
         </div>
+        <details class="webrtc-control">
+          <summary>管理 WebRTC · 获取控制扩展</summary>
+          <div class="webrtc-control-body">
+            <p>WebRTC Control 是可用于管理 WebRTC 的第三方扩展。本页无法直接开关浏览器的 WebRTC，也无法确认扩展是否已安装或生效。</p>
+            <nav class="webrtc-extension-links" aria-label="WebRTC Control 浏览器扩展商店">
+              <a class="btn" href="https://chromewebstore.google.com/detail/webrtc-control/fjkmabmdepjfammlpliljpnbhleegehm" target="_blank" rel="noopener noreferrer">Chrome</a>
+              <a class="btn" href="https://microsoftedge.microsoft.com/addons/detail/webrtc-control/eepeadgljpkkjpbfecfkijnnliikglpl" target="_blank" rel="noopener noreferrer">Edge</a>
+              <a class="btn" href="https://addons.mozilla.org/en-US/firefox/addon/webrtc-control/" target="_blank" rel="noopener noreferrer">Firefox</a>
+              <a class="btn" href="https://addons.opera.com/en/extensions/details/webrtc-control/" target="_blank" rel="noopener noreferrer">Opera</a>
+            </nav>
+            <p>请按实际使用的浏览器选择商店，安装前核对发布者、权限与隐私政策；兼容性以商店说明为准。<a href="https://mybrowseraddon.com/webrtc-control.html" target="_blank" rel="noopener noreferrer">扩展官网与使用说明 ↗</a></p>
+            <p>禁用 WebRTC 可能影响音视频通话、屏幕共享及本页候选收集。调整扩展后，请刷新本页重新检测；接口被禁用或未取得候选时，不能据此保证安全。</p>
+          </div>
+        </details>
       </div>
 
       <div class="panel">
@@ -946,7 +967,7 @@
       <div class="footer-brand">
         <span class="brand-logo" aria-hidden="true">NB</span>
         <div>
-          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.13.8</span></div>
+          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.14.0</span></div>
           <div class="footer-note">© 2026 NBAI · 检测在浏览器本地完成，无需登录</div>
         </div>
       </div>
@@ -966,7 +987,7 @@
   <!-- 诊断摘要弹窗 -->
   <dialog class="report-modal" id="reportModal" aria-labelledby="reportTitle">
     <div class="modal-top">
-      <div class="modal-title" id="reportTitle"><span aria-hidden="true">📋</span> 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.13.8</span></div>
+      <div class="modal-title" id="reportTitle"><span aria-hidden="true">📋</span> 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.14.0</span></div>
       <button type="button" class="btn" data-action="close-report">关闭</button>
     </div>
     <div class="tab-row" aria-label="报告格式">
@@ -1006,7 +1027,7 @@
     /* ============================================================
      * 0. 常量与数据
      * ==========================================================*/
-    const VERSION = 'v2.13.8';
+    const VERSION = 'v2.14.0';
     const REPO_URL = 'https://github.com/nbai-dev/ip.nbai.dev';
     const SITE_URL = 'https://ip.nbai.dev';
     const STORE_PREFIX = 'nbai:';
