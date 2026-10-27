@@ -668,7 +668,7 @@
         <div class="brand-text">
           <div class="brand-title-wrap">
             <h1 class="brand-title">NBAI · IP 与网络分流诊断</h1>
-            <span class="version-badge" data-ref="version">v2.14.0</span>
+            <span class="version-badge" data-ref="version">v2.14.2</span>
           </div>
           <span class="brand-sub">ip.nbai.dev · 浏览器本地检测</span>
         </div>
@@ -967,7 +967,7 @@
       <div class="footer-brand">
         <span class="brand-logo" aria-hidden="true">NB</span>
         <div>
-          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.14.0</span></div>
+          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.14.2</span></div>
           <div class="footer-note">© 2026 NBAI · 检测在浏览器本地完成，无需登录</div>
         </div>
       </div>
@@ -987,7 +987,7 @@
   <!-- 诊断摘要弹窗 -->
   <dialog class="report-modal" id="reportModal" aria-labelledby="reportTitle">
     <div class="modal-top">
-      <div class="modal-title" id="reportTitle"><span aria-hidden="true">📋</span> 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.14.0</span></div>
+      <div class="modal-title" id="reportTitle"><span aria-hidden="true">📋</span> 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.14.2</span></div>
       <button type="button" class="btn" data-action="close-report">关闭</button>
     </div>
     <div class="tab-row" aria-label="报告格式">
@@ -1027,7 +1027,7 @@
     /* ============================================================
      * 0. 常量与数据
      * ==========================================================*/
-    const VERSION = 'v2.14.0';
+    const VERSION = 'v2.14.2';
     const REPO_URL = 'https://github.com/nbai-dev/ip.nbai.dev';
     const SITE_URL = 'https://ip.nbai.dev';
     const STORE_PREFIX = 'nbai:';
@@ -2960,17 +2960,23 @@
     }
 
     function reportMarkdown(snap) {
+      // 服务商返回的文本不是 Markdown；避免竖线、换行或 HTML 改写报告结构。
+      const literal = (value) => String(value ?? '')
+        .replace(/\\/g, '\\\\')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/([`*_{}\[\]()!|])/g, '\\$1')
+        .replace(/[\r\n\u2028\u2029]+/g, ' ');
       const lines = [];
       lines.push(`### 📊 NBAI 网络分流诊断报告 ${VERSION}`);
       lines.push('');
-      lines.push(`- **检测时间**：${snap.time}`);
-      lines.push(`- **综合结论**：${snap.summary.title}`);
+      lines.push(`- **检测时间**：${literal(snap.time)}`);
+      lines.push(`- **综合结论**：${literal(snap.summary.title)}`);
       lines.push(`- **IPv4 / IPv6**：\`${snap.dualStack.v4 || '无'}\` / \`${snap.dualStack.v6 || '无'}\``);
       lines.push('');
       lines.push('| 通道 | 状态 | 出口 IP | 归属地 / 运营商 | 延迟 |');
       lines.push('| :--- | :--- | :--- | :--- | :--- |');
       snap.channels.forEach((c) => {
-        lines.push(`| ${c.name} | ${c.status} | ${c.ip ? '`' + c.ip + '`' : '-'} | ${c.ip ? `${c.location} ${c.isp}` : '-'} | ${c.ms ? c.ms + 'ms' : '-'} |`);
+        lines.push(`| ${literal(c.name)} | ${literal(c.status)} | ${c.ip ? '`' + literal(c.ip) + '`' : '-'} | ${c.ip ? literal(`${c.location} ${c.isp}`) : '-'} | ${c.ms ? literal(c.ms) + 'ms' : '-'} |`);
       });
       lines.push('');
       lines.push('| 站点 | 区域 | 预期路径 | 实际路径 | 延迟 |');
@@ -2982,14 +2988,14 @@
       rows.forEach(([name, area, s]) => {
         // 当前没有逐站路径证据，原始字段中的任意字符串都不代表已验证。
         const actual = '未验证';
-        lines.push(`| ${name} | ${area} | ${s.expectedRoute || '未知'} | ${actual} | ${latencyText(s.ms)} |`);
+        lines.push(`| ${literal(name)} | ${area} | ${literal(s.expectedRoute || '未知')} | ${actual} | ${latencyText(s.ms)} |`);
       });
       lines.push('');
       lines.push(`> 均值：国内 ${avgText(snap.latency.cn)} · 海外 ${avgText(snap.latency.global)}`);
       lines.push(`> 实际路径：${routeStateText(snap)}`);
       lines.push(`> ${DISCLAIMER_ROUTE}`);
       lines.push(`> ${DISCLAIMER_USAGE}`);
-      lines.push(`> WebRTC：${snap.webrtc.verdict} · Anycast：${snap.anycast.colo} · HTTP/TLS：${snap.anycast.http}`);
+      lines.push(`> WebRTC：${literal(snap.webrtc.verdict)} · Anycast：${literal(snap.anycast.colo)} · HTTP/TLS：${literal(snap.anycast.http)}`);
       lines.push('>');
       lines.push(`> 项目地址：[${REPO_URL}](${REPO_URL})`);
       return lines.join('\n');
@@ -3076,7 +3082,7 @@
           const tokens = paragraph.match(/\s+|\S+/g) || [];
           let line = '';
           for (const token of tokens) {
-            if (!line) { line = token; continue; }
+            // 段首词也必须测宽，不能跳过超长中文或 URL 的换行处理。
             if (ctx.measureText(line + token).width <= maxWidth) {
               line += token;
               continue;
@@ -3103,7 +3109,7 @@
             }
             // 词本身长于一整行（URL 之类），只能硬断
             if (ctx.measureText(token).width > maxWidth) {
-              lines.push(line);
+              if (line) lines.push(line.replace(/\s+$/, ''));
               line = '';
               let acc = '';
               for (const chunk of graphemeChunks(token)) {
@@ -3266,12 +3272,11 @@
       btn.disabled = true;
       setText(out, '正在测速…');
 
+      // 保留用户输入的路径和查询参数，不用首页或 favicon 代替目标。
+      // 禁止添加缓存参数，以免破坏带签名的查询字符串。
       const site = {
-        root: url.origin + '/',
-        probes: [
-          new URL('/favicon.ico', url.origin).toString(),
-          { url: url.origin + '/', image: false, fetch: true }
-        ]
+        root: false,
+        probes: [{ url: url.href, image: false, fetch: true, cacheBust: false }]
       };
 
       const res = await probeLatency(site, SITE_TIMEOUT, signal);
@@ -3280,7 +3285,7 @@
       if (customScope && customScope.signal === signal) btn.disabled = false;
       if (signal.aborted) return;
 
-      setText(out, res.ms > 0 ? `✅ 响应耗时：${res.ms} ms` : '❌ 连接超时或不可达');
+      setText(out, res.ms > 0 ? `响应耗时：${res.ms} ms（跨域响应可能不透明，状态及最终地址未验证）` : '请求失败或超时（可能受浏览器策略限制）');
       if (res.ms > 0 || !res.reasons.length) out.removeAttribute('title');
       else out.title = '失败原因：\n· ' + res.reasons.join('\n· ');
     }
@@ -3309,11 +3314,13 @@
      * 首行多出空格。用 Intl.Segmenter 可正确处理；不可用时退回
      * 至少合并代理对与组合附加符号。
      */
+    let graphemeSegmenter = null;
     const graphemeChunks = (text) => {
       const str = String(text);
       if (typeof Intl !== 'undefined' && Intl.Segmenter) {
         try {
-          const seg = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+          // Segmenter 的配置不变，复用实例避免长报告逐词重复创建。
+          const seg = graphemeSegmenter || (graphemeSegmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' }));
           const out = [];
           for (const part of seg.segment(str)) out.push(part.segment);
           return out;
