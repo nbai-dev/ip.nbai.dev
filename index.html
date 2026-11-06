@@ -6,13 +6,13 @@
   <meta name="referrer" content="no-referrer" />
   <meta name="color-scheme" content="dark light" />
   <meta name="description" content="NBAI · 在浏览器本地完成 IP 出口、国内外分流、站点延迟与 WebRTC 泄露检测，无需登录、不上传数据。" />
-  <meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)" />
-  <meta name="theme-color" content="#f3f3ed" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#141414" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="NBAI · IP 与网络分流诊断" />
   <meta property="og:description" content="6 路 IP 出口竞速、16 站点延迟、WebRTC 泄露与 Anycast 边缘节点检测，全部在浏览器本地完成。" />
   <meta property="og:url" content="https://ip.nbai.dev" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23c3e88b'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-size='13' font-weight='700' fill='%23111613' text-anchor='middle'%3ENB%3C/text%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23141414'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-size='13' font-weight='700' fill='%23f2f2f2' text-anchor='middle'%3ENB%3C/text%3E%3C/svg%3E" />
   <title>NBAI · IP 与网络分流诊断工具</title>
   <script>
     /* 首屏前应用主题，避免浅色模式用户看到深色闪烁 */
@@ -126,8 +126,6 @@
     button, a { touch-action: manipulation; }
     button { color: inherit; }
     a { color: inherit; }
-    ::selection { background: var(--primary); color: var(--bg-main); }
-    :focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
     [hidden] { display: none !important; }
     /* skip-link：未聚焦时移出视口上方，聚焦时滑入。
        不用 transform 移出 —— position:fixed 元素加 transform 会让 offsetParent
@@ -469,9 +467,6 @@
       .nav-actions .btn { gap: 5px; padding-inline: 5px; }
       .section-nav { gap: 20px; }
     }
-    @media (prefers-reduced-motion:reduce) {
-      *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
-    }
   
     /* ============================================================
      * Arc UI layer — 排版、大圆角、克制的动效
@@ -598,9 +593,9 @@
      * ============================================================ */
 
     /* 触摸目标：可点击的小控件至少 44×44（iOS HIG / WCAG 2.5.5 AA），
-       视觉尺寸不变，用伪元素扩大命中区域。 */
+       视觉尺寸不变，用 ::before 伪元素扩大命中区域，保留 .retest-btn::after 图标。 */
     .icon-btn, .retest-btn, .copy-ip, [data-action="copy-ip"] { position: relative; }
-    .icon-btn::after, .retest-btn::after, [data-action="copy-ip"]::after {
+    .icon-btn::before, .retest-btn::before, [data-action="copy-ip"]::before {
       content: ''; position: absolute; left: 50%; top: 50%;
       width: 44px; height: 44px; transform: translate(-50%, -50%);
     }
@@ -668,7 +663,7 @@
         <div class="brand-text">
           <div class="brand-title-wrap">
             <h1 class="brand-title">NBAI · IP 与网络分流诊断</h1>
-            <span class="version-badge" data-ref="version">v2.14.2</span>
+            <span class="version-badge" data-ref="version">v2.14.3</span>
           </div>
           <span class="brand-sub">ip.nbai.dev · 浏览器本地检测</span>
         </div>
@@ -967,7 +962,7 @@
       <div class="footer-brand">
         <span class="brand-logo" aria-hidden="true">NB</span>
         <div>
-          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.14.2</span></div>
+          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.14.3</span></div>
           <div class="footer-note">© 2026 NBAI · 检测在浏览器本地完成，无需登录</div>
         </div>
       </div>
@@ -987,7 +982,7 @@
   <!-- 诊断摘要弹窗 -->
   <dialog class="report-modal" id="reportModal" aria-labelledby="reportTitle">
     <div class="modal-top">
-      <div class="modal-title" id="reportTitle"><span aria-hidden="true">📋</span> 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.14.2</span></div>
+      <div class="modal-title" id="reportTitle"><span aria-hidden="true">📋</span> 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.14.3</span></div>
       <button type="button" class="btn" data-action="close-report">关闭</button>
     </div>
     <div class="tab-row" aria-label="报告格式">
@@ -1027,7 +1022,7 @@
     /* ============================================================
      * 0. 常量与数据
      * ==========================================================*/
-    const VERSION = 'v2.14.2';
+    const VERSION = 'v2.14.3';
     const REPO_URL = 'https://github.com/nbai-dev/ip.nbai.dev';
     const SITE_URL = 'https://ip.nbai.dev';
     const STORE_PREFIX = 'nbai:';
@@ -1129,8 +1124,13 @@
      */
     const isValidIPv6 = (s) => {
       if (typeof s !== 'string') return false;
-      const v = s.trim();
+      let v = s.trim();
       if (!v.includes(':') || !/^[0-9a-f:.]+$/i.test(v)) return false;
+      if (v.includes('.')) {
+        const lastColon = v.lastIndexOf(':');
+        if (lastColon < 0 || !isValidIPv4(v.slice(lastColon + 1))) return false;
+        v = `${v.slice(0, lastColon)}:0:0`;
+      }
 
       const halves = v.split('::');
       if (halves.length > 2) return false;
@@ -1151,25 +1151,26 @@
     /** 打码：用于隐私开关与报告勾选 */
     function maskIpText(text) {
       if (!text) return text;
+      const maskIpv6Token = (token) => {
+        if (!token.includes(':')) return token;
+        if (token.length > 80) return '*:*';
+        for (let start = 0; start < token.length; start += 1) {
+          if (start > 0 && token[start - 1] !== ':') continue;
+          for (let end = token.length; end > start; end -= 1) {
+            if (end < token.length && token[end] !== ':') continue;
+            const candidate = token.slice(start, end);
+            if (!isValidIPv6(candidate)) continue;
+            const groups = candidate.split(':').filter(Boolean);
+            const masked = groups.length >= 2 ? `${groups[0]}:${groups[1]}:*:*` : '*:*';
+            return token.slice(0, start) + masked + maskIpv6Token(token.slice(end));
+          }
+        }
+        return token;
+      };
       return String(text)
         .replace(/\b(\d{1,3}\.\d{1,3})\.\d{1,3}\.\d{1,3}\b/g, '$1.*.*')
         // 标签冒号可紧邻地址；仅尝试冒号边界，避免把时间戳当成 IPv6。
-        .replace(/[0-9a-f:]+/gi, (token) => {
-          if (!token.includes(':')) return token;
-          if (token.length > 80) return '*:*';
-          for (let start = 0; start < token.length; start += 1) {
-            if (start > 0 && token[start - 1] !== ':') continue;
-            for (let end = token.length; end > start; end -= 1) {
-              if (end < token.length && token[end] !== ':') break;
-              const candidate = token.slice(start, end);
-              if (!isValidIPv6(candidate)) continue;
-              const groups = candidate.split(':').filter(Boolean);
-              const masked = groups.length >= 2 ? `${groups[0]}:${groups[1]}:*:*` : '*:*';
-              return token.slice(0, start) + masked + token.slice(end);
-            }
-          }
-          return token;
-        })
+        .replace(/[0-9a-f:]+/gi, maskIpv6Token)
         .replace(/\b[0-9a-f-]{6,}\.local\b/gi, '*.local');
     }
 
@@ -1344,27 +1345,37 @@
         const script = document.createElement('script');
         let timer = null;
 
-        const cleanup = () => {
-          if (timer) clearTimeout(timer);
-          if (signal) signal.removeEventListener('abort', onAbort);
+        const removeCallback = () => {
           try { delete window[callbackName]; } catch { window[callbackName] = undefined; }
+        };
+        const cleanup = (settledByScript = false) => {
+          if (timer) { clearTimeout(timer); timer = null; }
+          if (signal) signal.removeEventListener('abort', onAbort);
+          if (settledByScript) {
+            removeCallback();
+          } else {
+            // 超时或取消时脚本可能仍在下载；先置为空函数吞掉晚到调用，避免抛出未捕获 TypeError
+            const gc = setTimeout(removeCallback, 30000);
+            if (gc && typeof gc.unref === 'function') gc.unref();
+            window[callbackName] = () => { clearTimeout(gc); removeCallback(); };
+          }
           script.remove();
         };
-        const fail = (err) => { cleanup(); reject(err); };
+        const fail = (err, settledByScript = false) => { cleanup(settledByScript); reject(err); };
         const onAbort = () => fail(new DOMException('已取消', 'AbortError'));
 
-        window[callbackName] = (data) => { cleanup(); resolve(data); };
+        window[callbackName] = (data) => { cleanup(true); resolve(data); };
 
         timer = setTimeout(() => fail(new Error('JSONP 超时')), timeout);
 
         if (signal) {
-          if (signal.aborted) return fail(new DOMException('已取消', 'AbortError'));
+          if (signal.aborted) return fail(new DOMException('已取消', 'AbortError'), true);
           signal.addEventListener('abort', onAbort, { once: true });
         }
 
         script.referrerPolicy = 'no-referrer';
         script.async = true;
-        script.onerror = () => fail(new Error('JSONP 加载失败'));
+        script.onerror = () => fail(new Error('JSONP 加载失败'), true);
         script.src = urlTemplate.replace('{cb}', callbackName);
         document.head.appendChild(script);
       });
@@ -1939,8 +1950,11 @@
       scheduleSiteOverview();
       setText(siteEl(group, site.id, 'route'), result === 'ok' ? '● 探测连通' : result === 'failed' ? '! 未确认连通' : cancelled ? '未完成' : '检测中');
       const evidence = state.pingEvidence && state.pingEvidence[group][site.id];
+      const evidenceKind = evidence
+        ? (evidence.kind === 'image' ? '图片' : evidence.opaque ? 'Fetch（不透明响应）' : 'Fetch')
+        : '';
       setText(siteEl(group, site.id, 'evidence'), evidence
-        ? `${evidence.backup ? '备用资源' : '响应资源'}：${evidence.resource || evidence.host} · ${evidence.kind === 'image' ? '图片' : 'Fetch'}`
+        ? `${evidence.backup ? '备用资源' : '响应资源'}：${evidence.resource || evidence.host} · ${evidenceKind}`
         : '实际路径待客户端确认');
 
       badge.removeAttribute('title');
@@ -2356,6 +2370,7 @@
           // 阶梯起跑的探测要以「该任务自己的起跑时刻」计时，否则第 3 路会被前两路的等待时间污染
           resolve({ ms: ok ? Math.max(1, Math.round(elapsed)) : -1, reasons,
             evidence: ok && task ? { host: hostOf(task.url), kind: task.kind,
+              opaque: !!task.opaque,
               resource: task.url.split(/[?#]/)[0], backup: !!task.backup } : null });
         };
 
@@ -2400,8 +2415,10 @@
           })
             .then((res) => {
               if (settled) return;
-              if (res.type === 'opaque' || res.ok) finish(true, task);
-              else fail(task, `HTTP ${res.status}`);
+              if (res.type === 'opaque' || res.ok) {
+                task.opaque = res.type === 'opaque';
+                finish(true, task);
+              } else fail(task, `HTTP ${res.status}`);
             })
             .catch((err) => {
               if (settled) return;
@@ -2535,7 +2552,15 @@
 
     function ipComparisonKey(ip) {
       if (!isValidIPv6(ip)) return ip;
-      const [left, right] = ip.toLowerCase().split('::');
+      let v = ip.trim().toLowerCase();
+      if (v.includes('.')) {
+        const lastColon = v.lastIndexOf(':');
+        const octets = v.slice(lastColon + 1).split('.').map(Number);
+        const hi = ((octets[0] << 8) | octets[1]).toString(16);
+        const lo = ((octets[2] << 8) | octets[3]).toString(16);
+        v = `${v.slice(0, lastColon)}:${hi}:${lo}`;
+      }
+      const [left, right] = v.split('::');
       const a = left ? left.split(':') : [];
       const b = right ? right.split(':') : [];
       const groups = right === undefined ? a : [...a, ...Array(8 - a.length - b.length).fill('0'), ...b];
@@ -3091,7 +3116,6 @@
             const cut = findBreakPoint(token);
             if (cut > 0 && ctx.measureText(line + token.slice(0, cut)).width <= maxWidth) {
               lines.push(line + token.slice(0, cut));
-              line = token.slice(cut);
               // 剩余部分可能仍然过长，继续处理
               let rest = token.slice(cut);
               while (ctx.measureText(rest).width > maxWidth) {
@@ -3279,10 +3303,15 @@
         probes: [{ url: url.href, image: false, fetch: true, cacheBust: false }]
       };
 
-      const res = await probeLatency(site, SITE_TIMEOUT, signal);
-
-      // 旧实现被新一轮点击取消后直接 return，按钮会永久停在 disabled 状态
-      if (customScope && customScope.signal === signal) btn.disabled = false;
+      let res = { ms: -1, reasons: [] };
+      try {
+        res = await siteLimit(() => probeLatency(site, SITE_TIMEOUT, signal), signal);
+      } catch {
+        // 排队期间被取消
+      } finally {
+        // 旧实现被新一轮点击取消后直接 return，按钮会永久停在 disabled 状态
+        if (customScope && customScope.signal === signal) btn.disabled = false;
+      }
       if (signal.aborted) return;
 
       setText(out, res.ms > 0 ? `响应耗时：${res.ms} ms（跨域响应可能不透明，状态及最终地址未验证）` : '请求失败或超时（可能受浏览器策略限制）');
