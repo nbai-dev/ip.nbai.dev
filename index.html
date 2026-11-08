@@ -663,7 +663,7 @@
         <div class="brand-text">
           <div class="brand-title-wrap">
             <h1 class="brand-title">NBAI · IP 与网络分流诊断</h1>
-            <span class="version-badge" data-ref="version">v2.14.3</span>
+            <span class="version-badge" data-ref="version">v2.14.4</span>
           </div>
           <span class="brand-sub">ip.nbai.dev · 浏览器本地检测</span>
         </div>
@@ -962,7 +962,7 @@
       <div class="footer-brand">
         <span class="brand-logo" aria-hidden="true">NB</span>
         <div>
-          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.14.3</span></div>
+          <div class="footer-title">NBAI · IP 与网络分流诊断 <span class="version-badge" data-ref="version">v2.14.4</span></div>
           <div class="footer-note">© 2026 NBAI · 检测在浏览器本地完成，无需登录</div>
         </div>
       </div>
@@ -982,7 +982,7 @@
   <!-- 诊断摘要弹窗 -->
   <dialog class="report-modal" id="reportModal" aria-labelledby="reportTitle">
     <div class="modal-top">
-      <div class="modal-title" id="reportTitle"><span aria-hidden="true">📋</span> 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.14.3</span></div>
+      <div class="modal-title" id="reportTitle"><span aria-hidden="true">📋</span> 网络分流诊断报告 <span class="version-badge" data-ref="version">v2.14.4</span></div>
       <button type="button" class="btn" data-action="close-report">关闭</button>
     </div>
     <div class="tab-row" aria-label="报告格式">
@@ -1022,7 +1022,7 @@
     /* ============================================================
      * 0. 常量与数据
      * ==========================================================*/
-    const VERSION = 'v2.14.3';
+    const VERSION = 'v2.14.4';
     const REPO_URL = 'https://github.com/nbai-dev/ip.nbai.dev';
     const SITE_URL = 'https://ip.nbai.dev';
     const STORE_PREFIX = 'nbai:';
@@ -1337,47 +1337,66 @@
       }
     }
 
-    /** JSONP：自定义回调名，支持超时/取消，避免 window 全局污染 */
+    /** JSONP 在无同源权限的沙箱内执行，仅接收白名单数据字段。 */
     function jsonp(urlTemplate, options = {}) {
       const { timeout = 4000, signal } = options;
       return new Promise((resolve, reject) => {
-        const callbackName = '__nbai_cb_' + Math.random().toString(36).slice(2, 10);
-        const script = document.createElement('script');
-        let timer = null;
-
-        const removeCallback = () => {
-          try { delete window[callbackName]; } catch { window[callbackName] = undefined; }
-        };
-        const cleanup = (settledByScript = false) => {
-          if (timer) { clearTimeout(timer); timer = null; }
+        if (signal && signal.aborted) return reject(new DOMException('已取消', 'AbortError'));
+        const frame = document.createElement('iframe');
+        frame.hidden = true;
+        frame.setAttribute('sandbox', 'allow-scripts');
+        frame.referrerPolicy = 'no-referrer';
+        let timer;
+        let settled = false;
+        const finish = (error, data) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          window.removeEventListener('message', onMessage);
           if (signal) signal.removeEventListener('abort', onAbort);
-          if (settledByScript) {
-            removeCallback();
-          } else {
-            // 超时或取消时脚本可能仍在下载；先置为空函数吞掉晚到调用，避免抛出未捕获 TypeError
-            const gc = setTimeout(removeCallback, 30000);
-            if (gc && typeof gc.unref === 'function') gc.unref();
-            window[callbackName] = () => { clearTimeout(gc); removeCallback(); };
-          }
-          script.remove();
+          frame.remove();
+          if (error) reject(error); else resolve(data);
         };
-        const fail = (err, settledByScript = false) => { cleanup(settledByScript); reject(err); };
-        const onAbort = () => fail(new DOMException('已取消', 'AbortError'));
-
-        window[callbackName] = (data) => { cleanup(true); resolve(data); };
-
-        timer = setTimeout(() => fail(new Error('JSONP 超时')), timeout);
-
-        if (signal) {
-          if (signal.aborted) return fail(new DOMException('已取消', 'AbortError'), true);
-          signal.addEventListener('abort', onAbort, { once: true });
+        const onAbort = () => finish(new DOMException('已取消', 'AbortError'));
+        const onMessage = (event) => {
+          // 沙箱的 origin 为 null；必须验证发送窗口，不能只检查 origin。
+          if (event.source !== frame.contentWindow || event.origin !== 'null') return;
+          const payload = event.data;
+          if (!payload || payload.type !== 'nbai-jsonp') return;
+          if (payload.error) return finish(new Error('JSONP 加载失败'));
+          const data = Object.create(null);
+          for (const key of ['ip', 'pro', 'city', 'region', 'addr']) {
+            if (typeof payload[key] === 'string') data[key] = payload[key].slice(0, 512);
+          }
+          if (!isIP(data.ip)) return finish(new Error('JSONP 无有效 IP'));
+          finish(null, data);
+        };
+        // 仅此固定服务允许执行脚本，避免意外扩大第三方代码的来源。
+        const url = new URL(urlTemplate.replace('{cb}', '__nbai_result'));
+        if (url.origin !== 'https://whois.pconline.com.cn' || url.pathname !== '/ipJson.jsp') {
+          return reject(new Error('JSONP 来源不受支持'));
         }
-
-        script.referrerPolicy = 'no-referrer';
-        script.async = true;
-        script.onerror = () => fail(new Error('JSONP 加载失败'), true);
-        script.src = urlTemplate.replace('{cb}', callbackName);
-        document.head.appendChild(script);
+        const boot = function (src) {
+          window.__nbai_result = (value) => {
+            const data = { type: 'nbai-jsonp' };
+            for (const key of ['ip', 'pro', 'city', 'region', 'addr']) {
+              if (value && typeof value[key] === 'string') data[key] = value[key].slice(0, 512);
+            }
+            parent.postMessage(data, '*');
+          };
+          const script = document.createElement('script');
+          script.referrerPolicy = 'no-referrer';
+          script.onerror = () => parent.postMessage({ type: 'nbai-jsonp', error: true }, '*');
+          script.src = src;
+          document.head.appendChild(script);
+        };
+        frame.srcdoc = '<!doctype html><meta name="referrer" content="no-referrer">' +
+          '<meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; script-src &#39;unsafe-inline&#39; https://whois.pconline.com.cn; base-uri &#39;none&#39;; form-action &#39;none&#39;">' +
+          '<scr' + 'ipt>(' + boot.toString() + ')(' + JSON.stringify(url.href).replace(/</g, '\\u003c') + ');</scr' + 'ipt>';
+        window.addEventListener('message', onMessage);
+        if (signal) signal.addEventListener('abort', onAbort, { once: true });
+        timer = setTimeout(() => finish(new Error('JSONP 超时')), timeout);
+        try { document.body.appendChild(frame); } catch (error) { finish(error); }
       });
     }
 
@@ -1805,7 +1824,7 @@
       if (cn.some((ip) => gl.some((other) => ipComparisonKey(ip) === ipComparisonKey(other)))) {
         return '观察：国内与国际探测存在相同出口；相同 IP 不能单独证明全局代理或 TUN，实际路径仍需客户端确认。';
       }
-      if (!cn.some((ip) => gl.some((other) => isValidIPv4(ip) === isValidIPv4(other)))) {
+      if (!cn.some((ip) => gl.some((other) => isValidIPv4(ipComparisonKey(ip)) === isValidIPv4(ipComparisonKey(other))))) {
         return '观察：出口地址族不同，暂不能比较分流情况；需取得同地址族样本。';
       }
       return '观察：同地址族参考样本出口不同，存在分流迹象；逐站实际路径仍需客户端确认。';
@@ -1948,13 +1967,13 @@
       failure.hidden = result !== 'failed';
       setText(failure, result === 'failed' ? '资源未响应或被拦截，不等于网站不可用' : '');
       scheduleSiteOverview();
-      setText(siteEl(group, site.id, 'route'), result === 'ok' ? '● 探测连通' : result === 'failed' ? '! 未确认连通' : cancelled ? '未完成' : '检测中');
+      setText(siteEl(group, site.id, 'route'), result === 'ok' ? '● 资源请求已完成' : result === 'failed' ? '! 未确认连通' : cancelled ? '未完成' : '检测中');
       const evidence = state.pingEvidence && state.pingEvidence[group][site.id];
       const evidenceKind = evidence
         ? (evidence.kind === 'image' ? '图片' : evidence.opaque ? 'Fetch（不透明响应）' : 'Fetch')
         : '';
       setText(siteEl(group, site.id, 'evidence'), evidence
-        ? `${evidence.backup ? '备用资源' : '响应资源'}：${evidence.resource || evidence.host} · ${evidenceKind}`
+        ? `${evidence.backup ? '备用请求' : '请求资源'}：${evidence.resource || evidence.host} · ${evidenceKind}（状态及最终地址${evidence.opaque || evidence.kind === 'image' ? '未验证' : '仅 Fetch 可见'}）`
         : '实际路径待客户端确认');
 
       badge.removeAttribute('title');
@@ -1963,7 +1982,7 @@
       // 而不是一个永远不变的静态标签。
       const item = badge.closest('.site-item');
       if (item) {
-        const stateText = result === 'ok' ? `响应 ${ms} 毫秒，探测连通`
+        const stateText = result === 'ok' ? `资源请求 ${ms} 毫秒，${evidence && evidence.opaque ? '不透明响应，状态及最终地址未验证' : '业务可用性及实际路径未验证'}`
           : result === 'failed' ? '资源未响应或被拦截，未确认连通'
           : cancelled ? '未完成' : '探测中';
         item.setAttribute('aria-label', `${site.name}，${stateText}，点击重测`);
@@ -2531,7 +2550,12 @@
       const typeIndex = parts.indexOf('typ');
       const type = candidate.type || (typeIndex >= 0 ? parts[typeIndex + 1] : '');
       if (!['host', 'srflx'].includes(type)) return; // TURN relay 不是本机出口。
-      const address = String(candidate.address || parts[4] || '').trim();
+      let address = String(candidate.address || parts[4] || '').trim();
+      // IPv4-mapped IPv6 表示同一个 IPv4 端点，先还原再分类私网/公网。
+      if (isValidIPv6(address)) {
+        const canonical = ipComparisonKey(address);
+        if (isValidIPv4(canonical)) address = canonical;
+      }
       if (/^[a-z0-9-]+\.local$/i.test(address)) { localIps.add(address); return; }
       if (!isIP(address) || address === '0.0.0.0' || ipComparisonKey(address) === '0:0:0:0:0:0:0:0') return;
       if (isValidIPv4(address)) {
@@ -2564,7 +2588,11 @@
       const a = left ? left.split(':') : [];
       const b = right ? right.split(':') : [];
       const groups = right === undefined ? a : [...a, ...Array(8 - a.length - b.length).fill('0'), ...b];
-      return groups.map((g) => parseInt(g, 16).toString(16)).join(':');
+      const expanded = groups.map((g) => parseInt(g, 16));
+      if (expanded.slice(0, 5).every((g) => g === 0) && expanded[5] === 0xffff) {
+        return [expanded[6] >> 8, expanded[6] & 255, expanded[7] >> 8, expanded[7] & 255].join('.');
+      }
+      return expanded.map((g) => g.toString(16)).join(':');
     }
 
     function evaluateWebrtc() {
@@ -2572,10 +2600,11 @@
       if (w.status !== 'done') return;
       const direct = state.ip.cn_direct;
       const directIp = direct && !direct.loading && !direct.error ? direct.ip : '';
-      const http4 = state.v4 || (isValidIPv4(directIp) ? directIp : '');
-      const http6 = state.v6 || (isValidIPv6(directIp) ? directIp : '');
+      const samples = [state.v4, state.v6, directIp].filter(isIP).map(ipComparisonKey);
+      const http4 = samples.find(isValidIPv4) || '';
+      const http6 = samples.find(isValidIPv6) || '';
       const pubs = w.publicIp;
-      const reference = (ip) => isValidIPv4(ip) ? http4 : http6;
+      const reference = (ip) => isValidIPv4(ipComparisonKey(ip)) ? http4 : http6;
       const different = pubs.find((ip) => reference(ip) && ipComparisonKey(ip) !== ipComparisonKey(reference(ip)));
       const missing = pubs.some((ip) => !reference(ip));
       const leak = !!different;
